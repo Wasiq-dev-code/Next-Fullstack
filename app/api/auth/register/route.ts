@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // The next.js edge server! That's why Connecting to database before database operations :(
+    // Connecting to database before it's operations.
     await connectToDatabase()
 
 
