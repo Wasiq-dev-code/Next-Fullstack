@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
     // Connecting to database before it's operations.
     await connectToDatabase()
 
+    console.log("Db connected")
+
 
     const existingUser = await User.findOne({email})
 
