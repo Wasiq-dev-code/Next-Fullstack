@@ -1,4 +1,6 @@
 "use client"
+import { apiClient, RegisterData} from '@/lib/api-client'
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
@@ -9,36 +11,30 @@ function RegisterPage
   const [confirmPassword, setConfirmPassword] = useState("")
   const router = useRouter()
 
+  const registerMutation = useMutation({
+      mutationFn:(data:RegisterData) => apiClient.register(data),
+      onSuccess: () => {
+        router.push("/login");
+      },
+
+      onError: (error) => {
+        console.error("Registration failed:", error);
+      }
+    })
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     if(password !== confirmPassword) {
       alert("Passwords do not match")
+       return;
     }
 
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if(!res.ok) {
-        throw new Error("Registration failed")
-      }
-
-
-      const data = await res.json()
-
-      console.log(data)
-      router.push('/login')
-    } catch (error) {
-      console.error("Registration failed", error)
-    }
+    registerMutation.mutate({
+      email,
+      password
+    })
   }
-
 
   return (
     <div>
@@ -62,8 +58,16 @@ function RegisterPage
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        <button type="submit">Register</button>
+        <button type="submit" disabled={registerMutation.isPending}>
+          {registerMutation.isPending ? "Loading..." : "Register"}
+        </button>
       </form>
+
+      {registerMutation.isError && (
+        <p style={{ color: "red" }}>
+          {String(registerMutation.error)}
+        </p>
+      )}
       <p>already have an account? <a href="/login">Login</a></p>
     </div>
   )

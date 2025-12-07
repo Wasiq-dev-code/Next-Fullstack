@@ -1,3 +1,4 @@
+import { IUser } from "@/model/User.model"
 import { IVideo } from "@/model/Video.model"
 
 export type VideoFormData = Omit<IVideo, "_id">
@@ -6,6 +7,11 @@ type FetchOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE",
   body?: any,
   headers?: Record<string, string>
+}
+
+export type RegisterData = {
+  email: string,
+  password: string
 }
 
 class ApiClient {
@@ -43,6 +49,14 @@ class ApiClient {
       body: videoData
     })
   }
+
+  async register(data: RegisterData) {
+  return await this.fetch<IUser>("/auth/register", {
+    method: "POST",
+    body: data
+  })
+}
+
 
 }
 
