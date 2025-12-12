@@ -19,6 +19,7 @@ export async function GET() {
     return NextResponse.json(videos)
 
   } catch (error) {
+     console.error("Error while getting videos:", error);
     return NextResponse.json(
       {
         error:"Fetching videos failed"
@@ -40,6 +41,8 @@ export async function POST(request: NextRequest) {
     )
    }
 
+   const userId = session.user.id
+
    await connectToDatabase()
 
    const body: IVideo = await request.json()
@@ -50,6 +53,7 @@ export async function POST(request: NextRequest) {
     !body.thumbnailUrl ||
     !body.videoUrl 
    ) {
+
   return NextResponse.json(
       {error:"Required fields missing"}, 
       {status:400}
@@ -59,6 +63,7 @@ export async function POST(request: NextRequest) {
    const videoData = {
     ...body,
     controls: body?.controls ?? true,
+    owner: userId,
     transformation: {
       height: 1920,
      width: 1080,
@@ -77,6 +82,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
+     console.error("Error creating video:", error);
     return NextResponse.json(
       {
         error:"Failed to create Video",

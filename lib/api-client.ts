@@ -39,8 +39,8 @@ class ApiClient {
     return response.json()
   }
 
-  async getVideos() {
-    return await this.fetch("/videos")
+  async getVideos(): Promise<IVideo[]> {
+    return await this.fetch<IVideo[]>("/videos")
   }
 
   async createVideo (videoData:VideoFormData) {

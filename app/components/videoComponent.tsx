@@ -1,3 +1,4 @@
+"use client"
 import Link from "next/link";
 import { IVideo } from "@/model/Video.model";
 
