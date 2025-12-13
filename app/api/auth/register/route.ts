@@ -1,27 +1,29 @@
 import { connectToDatabase } from "@/lib/db";
-import User from "@/model/User.model";
+import User, { IUser } from "@/model/User.model";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     // Destructure request json for accessing email and password from client
-    const {email,password} = await request.json()
+    const body:IUser = await request.json()
 
     // Email and password should be fill
-    if(!email || !password) {
+    if(
+      !body.email ||
+      !body.profilePhoto ||
+      !body.username ||
+      !body.password
+    ) {
       return NextResponse.json(
-        {error: "Email and password are required"},
-        {status: 400}
-      )
+            {error:"Required fields missing"}, 
+            {status:400}
+          )
     }
 
     // Connecting to database before it's operations.
     await connectToDatabase()
 
-    console.log("Db connected")
-
-
-    const existingUser = await User.findOne({email})
+    const existingUser = await User.findOne({email:body.email})
 
     // User should not be in DB
     if(existingUser) {
@@ -33,8 +35,10 @@ export async function POST(request: NextRequest) {
 
     // Creating User
     const newUser = await User.create({
-      email,
-      password
+      email:body.email,
+      password:body.password,
+      profilePhoto: body.profilePhoto,
+      username: body.username
     })
 
     // Converting mongoose doc to js object and removing the password for better security

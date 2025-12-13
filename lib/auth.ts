@@ -14,41 +14,30 @@ export const authOptions:NextAuthOptions = {
         password: {label: "Password", type: "password"}
       },
       
-      async authorize(credentials){
-        if(!credentials?.email || !credentials?.password) {
-          throw new Error("Email and Password are required")
+        async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and Password are required");
         }
-        
-        try {
-         await connectToDatabase()
 
-         const user = await User.findOne({
-          email: credentials.email
-         })
+        await connectToDatabase();
 
-         if(!user) {
-          throw new Error("No User found with this")
-         }
+        const user = await User.findOne({ email: credentials.email });
 
-         const isvalid = await bcrypt.compare(
+        if (!user) throw new Error("No user found");
+
+        const isValid = await bcrypt.compare(
           credentials.password,
           user.password
-         )
+        );
 
-         if(!isvalid) {
-        throw new Error("Invalid password")
-         }
+        if (!isValid) throw new Error("Invalid password");
 
-         return {
+        return {
           id: user._id.toString(),
-          email: user.email
-         }
-
-        } catch (error) {
-          console.error("Auth error ", error)
-          throw error
-        }
-      }
+          email: user.email,
+          passwordChangedAt: user.passwordChangedAt,
+        };
+      },
     })
 ],
 // Extra work needed on callback
@@ -56,6 +45,7 @@ callbacks:{
   async jwt({token, user}){
     if(user) {
       token.id = user.id
+      token.passwordChangedAt = user.passwordChangedAt
     }
     return token
   },
@@ -63,6 +53,7 @@ callbacks:{
   async session({ session, token }) {
     if(session.user) {
       session.user.id = token.id as string
+      session.user.passwordChangedAt = token.passwordChangedAt as Date
     }
     return session
   }

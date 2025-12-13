@@ -4,6 +4,9 @@ import bcrypt from "bcryptjs";
 export interface IUser {
   email: string
   password:string
+  username: string
+  profilePhoto: string
+  passwordChangedAt?: Date
   _id?:mongoose.Types.ObjectId
   createdAt?:Date
   updatedAt?:Date
@@ -11,6 +14,11 @@ export interface IUser {
 
 //generics<IUser>
 const userSchema = new Schema<IUser>({
+  username: {
+    type:String,
+    required:true
+  },
+
   email:{
     type:String,
     required:true,
@@ -20,8 +28,16 @@ const userSchema = new Schema<IUser>({
   password:{
     type:String,
     required:true
+  },
+
+  profilePhoto: {
+     type:String,
+    required:true
+  },
+
+  passwordChangedAt: {
+    type: Date
   }
-  
 }
 ,{
   timestamps:true
@@ -33,6 +49,10 @@ userSchema.pre("save", async function(next) {
   }
   next()
 })
+
+userSchema.methods.isPasswordCorrect = async function (password: string) {
+  return await bcrypt.compare(password, this.password)
+}
 
 const User = models?.User || model<IUser>("User", userSchema)
 
