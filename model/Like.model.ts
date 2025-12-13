@@ -1,51 +1,53 @@
-import mongoose, {model,models,Schema} from "mongoose";
+import mongoose, { model, models, Schema } from 'mongoose';
 
 export interface ILike {
-  _id?:mongoose.Types.ObjectId,
-  video?: mongoose.Types.ObjectId,
-  comment?: mongoose.Types.ObjectId,
-  userLiked: mongoose.Types.ObjectId,
-  createdAt?:Date,
-  updatedAt?:Date
+  _id?: mongoose.Types.ObjectId;
+  video?: mongoose.Types.ObjectId;
+  comment?: mongoose.Types.ObjectId;
+  userLiked: mongoose.Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const likeSchema = new Schema<ILike>( {
-   video: {
+const likeSchema = new Schema<ILike>(
+  {
+    video: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Video",
+      ref: 'Video',
       required: false,
     },
     comment: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
+      ref: 'Comment',
       required: false,
     },
     userLiked: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
-}, {
-  timestamps:true
-})
+  },
+  {
+    timestamps: true,
+  },
+);
 
-//Validator for Like Schema
-likeSchema.pre("save", function (next) {
-  if (!this.video && !this.comment) {
-    return next(new Error("Either video or comment must be provided."));
-  }
-  if (this.video && this.comment) {
-    return next(new Error("Only one of video or comment should be provided."));
-  }
-  next();
-});
+likeSchema.path('video').validate(function () {
+  return !!this.video !== !!this.comment;
+}, 'Either video or comment must be provided, not both.');
 
-// Ensure a user can like a video only once
-likeSchema.index({ userLiked: 1, video: 1 }, { unique: true, sparse: true });
+// Video likes
+likeSchema.index(
+  { userLiked: 1, video: 1 },
+  { unique: true, partialFilterExpression: { video: { $exists: true } } },
+);
 
-// Ensure a user can like a comment only once
-likeSchema.index({ userLiked: 1, comment: 1 }, { unique: true, sparse: true });
+// Comment likes
+likeSchema.index(
+  { userLiked: 1, comment: 1 },
+  { unique: true, partialFilterExpression: { comment: { $exists: true } } },
+);
 
-const Like = models?.Like || model<ILike>("Like", likeSchema)
+const Like = models?.Like || model<ILike>('Like', likeSchema);
 
-export default Like
+export default Like;

@@ -1,74 +1,76 @@
-import User from "@/model/User.model";
-import { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { connectToDatabase } from "./db";
-import bcrypt from "bcryptjs";
+import User from '@/model/User.model';
+import { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { connectToDatabase } from './db';
+import bcrypt from 'bcryptjs';
 
-export const authOptions:NextAuthOptions = {
+export const authOptions: NextAuthOptions = {
   // Google and github providers are need to be implement
   providers: [
     CredentialsProvider({
-      name: "Credentials",
-      credentials:{
-        email: {label: "Email", type: "text"},
-        password: {label: "Password", type: "password"}
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'text' },
+        password: { label: 'Password', type: 'password' },
       },
-      
-        async authorize(credentials) {
+
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and Password are required");
+          throw new Error('Email and Password are required');
         }
 
         await connectToDatabase();
 
         const user = await User.findOne({ email: credentials.email });
 
-        if (!user) throw new Error("No user found");
+        if (!user) throw new Error('No user found');
 
         const isValid = await bcrypt.compare(
           credentials.password,
-          user.password
+          user.password,
         );
 
-        if (!isValid) throw new Error("Invalid password");
+        if (!isValid) throw new Error('Invalid password');
 
         return {
           id: user._id.toString(),
           email: user.email,
           passwordChangedAt: user.passwordChangedAt,
+          emailChangedAt: user.emailChangedAt,
         };
       },
-    })
-],
-// Extra work needed on callback
-callbacks:{
-  async jwt({token, user}){
-    if(user) {
-      token.id = user.id
-      token.passwordChangedAt = user.passwordChangedAt
-    }
-    return token
+    }),
+  ],
+  // Extra work needed on callback
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.passwordChangedAt = user.passwordChangedAt;
+        token.emailChangedAt = user.emailChangedAt;
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.passwordChangedAt = token.passwordChangedAt as Date;
+        session.user.emailChangedAt = token.emailChangedAt as Date;
+      }
+      return session;
+    },
   },
 
-  async session({ session, token }) {
-    if(session.user) {
-      session.user.id = token.id as string
-      session.user.passwordChangedAt = token.passwordChangedAt as Date
-    }
-    return session
-  }
-},
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
 
-pages: {
-  signIn: "/login",
-  error: "/login"
-},
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60,
+  },
 
-
-session: {
-  strategy:"jwt",
-  maxAge: 30 * 24 * 60 * 60,
-},
-
-secret: process.env.NEXTAUTH_SECRET
-}
+  secret: process.env.NEXTAUTH_SECRET,
+};
