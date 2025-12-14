@@ -1,24 +1,26 @@
-import mongoose,{model,models,Schema} from "mongoose"
+import mongoose, { model, models, Schema } from 'mongoose';
 
 export interface IComment {
-  commentedBy: mongoose.Types.ObjectId,
-  commentedVideo: mongoose.Types.ObjectId,
-  parentComment?: mongoose.Types.ObjectId | null,
-  content: string,
-  _id?:mongoose.Types.ObjectId,
-  createdAt?:Date,
-  updatedAt?:Date  
+  commentedBy: mongoose.Types.ObjectId;
+  commentedVideo: mongoose.Types.ObjectId;
+  parentComment?: mongoose.Types.ObjectId | null;
+  content: string;
+  repliesCount: number;
+  _id?: mongoose.Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const commentSchema = new Schema<IComment>({
-     commentedBy: {
+const commentSchema = new Schema<IComment>(
+  {
+    commentedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     commentedVideo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Video",
+      ref: 'Video',
       required: true,
     },
     content: {
@@ -27,18 +29,23 @@ const commentSchema = new Schema<IComment>({
     },
     parentComment: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
+      ref: 'Comment',
       default: null,
     },
-},
-{
-  timestamps: true
-}
-)
+
+    repliesCount: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
 commentSchema.index({ commentedVideo: 1, parentComment: 1 });
 commentSchema.index({ parentComment: 1 });
 
-const Comment = models?.Comment || model<IComment>("Comment", commentSchema)
+const Comment = models?.Comment || model<IComment>('Comment', commentSchema);
 
-export default Comment
+export default Comment;
