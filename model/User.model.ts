@@ -6,6 +6,7 @@ export interface IUser {
   password: string;
   username: string;
   profilePhoto: string;
+  isPrivate?: boolean;
   passwordChangedAt?: Date;
   emailChangedAt?: Date;
   _id?: mongoose.Types.ObjectId;
@@ -43,6 +44,11 @@ const userSchema = new Schema<IUser>(
 
     emailChangedAt: {
       type: Date,
+    },
+
+    isPrivate: {
+      type: Boolean,
+      default: false,
     },
   },
   {
