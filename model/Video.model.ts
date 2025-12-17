@@ -25,6 +25,7 @@ export interface IVideo {
     width: number;
     quality?: number;
   };
+  randomScore: number;
 }
 
 const videoSchema = new Schema<IVideo>(
@@ -38,6 +39,7 @@ const videoSchema = new Schema<IVideo>(
       },
       fileId: {
         type: String,
+        select: false,
         required: true,
       },
     },
@@ -52,6 +54,7 @@ const videoSchema = new Schema<IVideo>(
       },
       fileId: {
         type: String,
+        select: false,
         required: true,
       },
     },
@@ -65,6 +68,11 @@ const videoSchema = new Schema<IVideo>(
       height: { type: Number, default: VIDEO_DIMENSIONS.height },
       width: { type: Number, default: VIDEO_DIMENSIONS.width },
       quality: { type: Number, min: 1, max: 100 },
+    },
+    randomScore: {
+      type: Number,
+      select: false,
+      index: true,
     },
   },
   {

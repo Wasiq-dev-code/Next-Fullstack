@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
       !body.thumbnail?.url ||
       !body.thumbnail?.fileId ||
       !body.video?.url ||
-      !body.video?.fileId
+      !body.video?.fileId ||
+      !body.randomScore
     ) {
       return NextResponse.json(
         { error: 'Required fields missing' },
@@ -32,13 +33,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const videoData = {
+    const videoData: IVideo = {
       title: body.title,
       description: body.description,
       thumbnail: {
         url: body.thumbnail.url,
         fileId: body.thumbnail.fileId,
       },
+      randomScore: Math.random(),
       video: {
         url: body.video.url,
         fileId: body.video.fileId,
