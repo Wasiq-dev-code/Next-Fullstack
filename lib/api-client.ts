@@ -1,6 +1,12 @@
 import { IUser } from '@/model/User.model';
 import { IVideo } from '@/model/Video.model';
-import { FetchOptions, RegisterData, VideoFormData } from './types/result';
+import {
+  FeedRequest,
+  FeedResponse,
+  FetchOptions,
+  RegisterData,
+  VideoFormData,
+} from './types/result';
 
 class ApiClient {
   private async fetch<T>(
@@ -32,7 +38,7 @@ class ApiClient {
   }
 
   async createVideo(videoData: VideoFormData) {
-    return await this.fetch<IVideo>('/videos', {
+    return await this.fetch<IVideo>('/videos/[videoId]/myvideos', {
       method: 'POST',
       body: videoData,
     });
@@ -40,6 +46,13 @@ class ApiClient {
 
   async register(data: RegisterData) {
     return await this.fetch<IUser>('/auth/register', {
+      method: 'POST',
+      body: data,
+    });
+  }
+
+  async fetchRandomFeed(data: FeedRequest): Promise<FeedResponse> {
+    return await this.fetch<FeedResponse>('/videos', {
       method: 'POST',
       body: data,
     });

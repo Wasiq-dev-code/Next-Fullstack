@@ -1,50 +1,80 @@
-"use client"
-import { IVideo } from "@/model/Video.model"
-import VideoComponent from "./videoComponent"
-import { useEffect, useRef } from "react";
-import { useNotification } from "./notification";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+'use client';
+import { useCallback, useEffect, useState } from 'react';
+import { useNotification } from './notification';
+import { apiClient } from '@/lib/api-client';
+import type { FeedRequest, FeedResponse, VideoFeed } from '@/lib/types/result';
 
+export default function VideoFeed() {
+  const [videos, setVideos] = useState<VideoFeed[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [cursor, setCursor] = useState<number | null>(0);
 
-export default function VideoFeed(){
-  const {showNotification} = useNotification()
-  const hasShownNotification = useRef(false)
+  const loadVideos = useCallback(async () => {
+    if (loading || !hasMore) return;
 
-  const { data, isLoading } = useQuery<IVideo[]>({
-  queryKey: ["videos"],
-  queryFn: async (): Promise<IVideo[]> => {
-    const res = await apiClient.getVideos(); 
-    return res as IVideo[];
-  },
-});
+    setLoading(true);
+    const payload: FeedRequest = {
+      cursor: cursor,
+      excludeIds: videos.slice(-100).map((v) => v._id),
+    };
+    try {
+      const data: FeedResponse = await apiClient.fetchRandomFeed(payload);
+
+      if (data.videos && data.videos.length > 0) {
+        setVideos((prev) => [...prev, ...data.videos]);
+        setCursor(data.nextCursor || cursor);
+        setHasMore(data.nextCursor !== null);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading videos:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [videos, loading, hasMore, cursor]);
 
   useEffect(() => {
-    if(!data) return
+    loadVideos();
+  }, [loadVideos]);
 
-    if (data.length === 0 && !hasShownNotification.current) {
-      showNotification("No videos available at the moment", "info");
-      hasShownNotification.current = true
+  useEffect(() => {
+    function handleScroll() {
+      const scrollTop = window.scrollY;
+
+      const fullHeight = document.body.scrollHeight;
+
+      const windowHeight = window.innerHeight;
+
+      const distanceFromBottom = fullHeight - scrollTop - windowHeight;
+
+      if (distanceFromBottom < 300) {
+        loadVideos();
+      }
     }
 
-    if(data.length > 0) {
-      hasShownNotification.current = false
-    }
-  }, [data,showNotification]);
+    window.addEventListener('scroll', handleScroll);
 
-  if(isLoading) return <p className="text-center py-10">Loading videos...</p>;
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadVideos]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {data?.map((video) => (
-        <VideoComponent key={video._id?.toString()} video={video}/>
+    <div>
+      {videos.map((video) => (
+        <div key={video._id}>{/* Render video */}</div>
       ))}
+      {loading && (
+        <div className="text-center py-8">
+          <p>Loading...</p>
+        </div>
+      )}
 
-      {data?.length === 0 && (
-        <div className="col-span-full text-center py-12">
-          <p className="text-base-content/70">No videos found</p>
+      {!hasMore && !loading && (
+        <div className="text-center py-8">
+          <p>No more videos</p>
         </div>
       )}
     </div>
-  )
+  );
 }
