@@ -14,22 +14,16 @@ export async function POST(
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        {
-          error: 'Unauthorized Request',
-        },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { videoId } = params;
 
+    const { videoId } = params;
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
       return NextResponse.json({ error: 'Invalid videoId' }, { status: 400 });
     }
 
     const { content } = await req.json();
-
-    if (!content || !content.trim()) {
+    if (!content?.trim()) {
       return NextResponse.json(
         { error: 'Comment cannot be empty' },
         { status: 400 },
@@ -38,25 +32,75 @@ export async function POST(
 
     await connectToDatabase();
 
-    const comment = await Comment.create({
+    // 1️⃣ Create raw comment
+    const created = await Comment.create({
       commentedBy: session.user.id,
       commentedVideo: videoId,
       content: content.trim(),
     });
 
+    // 2️⃣ Re-fetch with aggregation (single document)
+    const [comment] = await Comment.aggregate([
+      { $match: { _id: created._id } },
+
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'commentedBy',
+          foreignField: '_id',
+          as: 'owner',
+          pipeline: [
+            {
+              $project: {
+                username: 1,
+                profilePhoto: 1,
+              },
+            },
+          ],
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'likes',
+          let: { commentId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$comment', '$$commentId'] } } },
+            { $count: 'count' },
+          ],
+          as: 'likes',
+        },
+      },
+
+      {
+        $addFields: {
+          owner: { $first: '$owner' },
+          likesCount: { $ifNull: [{ $first: '$likes.count' }, 0] },
+          repliesCount: { $ifNull: ['$repliesCount', 0] },
+        },
+      },
+
+      {
+        $project: {
+          likes: 0,
+          commentedBy: 0,
+          commentedVideo: 0,
+          __v: 0,
+        },
+      },
+    ]);
+
     return NextResponse.json(
       {
-        comment,
-        message: 'Comment Successfully Created',
+        comment: comment,
+        message: 'Comment created',
       },
-      {
-        status: 200,
-      },
+      { status: 201 },
     );
-  } catch (error) {
-    console.error('VideoComment operation failed', error);
+  } catch (err) {
+    console.error('Create comment failed', err);
     return NextResponse.json(
-      { error: 'Error while creating videoComment' },
+      { error: 'Failed to create comment' },
       { status: 500 },
     );
   }

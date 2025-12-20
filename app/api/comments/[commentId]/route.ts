@@ -12,61 +12,90 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.id) {
-      return NextResponse.json(
-        {
-          error: 'Unauthorized Request',
-        },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { commentId } = params;
 
+    const { commentId } = params;
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       return NextResponse.json({ error: 'Invalid commentId' }, { status: 400 });
     }
 
     const { content } = await req.json();
-
-    if (!content || !content.trim()) {
+    if (!content?.trim()) {
       return NextResponse.json(
-        { error: 'Comment cannot be empty' },
+        { error: 'Reply cannot be empty' },
         { status: 400 },
       );
     }
 
     await connectToDatabase();
 
-    const parentComment = await Comment.findById(commentId);
-
-    if (!parentComment) {
+    const parent = await Comment.findById(commentId);
+    if (!parent) {
       return NextResponse.json(
-        { error: 'parent Comment is not available' },
+        { error: 'Parent comment not found' },
         { status: 404 },
       );
     }
 
-    const reply = await Comment.create({
+    const created = await Comment.create({
       commentedBy: session.user.id,
-      commentedVideo: parentComment.commentedVideo,
+      commentedVideo: parent.commentedVideo,
+      parentComment: parent._id,
       content: content.trim(),
-      parentComment: parentComment._id,
     });
 
-    await Comment.findByIdAndUpdate(parentComment._id, {
+    await Comment.findByIdAndUpdate(parent._id, {
       $inc: { repliesCount: 1 },
     });
 
+    const [reply] = await Comment.aggregate([
+      { $match: { _id: created._id } },
+
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'commentedBy',
+          foreignField: '_id',
+          as: 'owner',
+          pipeline: [
+            {
+              $project: {
+                username: 1,
+                profilePhoto: 1,
+              },
+            },
+          ],
+        },
+      },
+
+      {
+        $addFields: {
+          owner: { $first: '$owner' },
+          likesCount: 0,
+        },
+      },
+
+      {
+        $project: {
+          commentedBy: 0,
+          commentedVideo: 0,
+          parentComment: 0,
+          __v: 0,
+        },
+      },
+    ]);
+
     return NextResponse.json(
       {
-        reply,
+        reply: reply,
         message: 'Reply added successfully',
       },
       { status: 201 },
     );
-  } catch (error) {
-    console.error('Reply creation failed', error);
+  } catch (err) {
+    console.error('Reply creation failed', err);
     return NextResponse.json(
       { error: 'Failed to create reply' },
       { status: 500 },

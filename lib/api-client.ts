@@ -1,12 +1,18 @@
 import { IUser } from '@/model/User.model';
 import { IVideo } from '@/model/Video.model';
+import { FetchOptions, RegisterData, VideoFormData } from './types/result';
+
 import {
   FeedRequest,
   FeedResponse,
-  FetchOptions,
-  RegisterData,
-  VideoFormData,
-} from './types/result';
+  SingleVideoRes,
+  VideoDetails,
+} from './types/video';
+import {
+  CommentListResponse,
+  CreateCommentResponse,
+  CreateReplyResponse,
+} from './types/comment';
 
 class ApiClient {
   private async fetch<T>(
@@ -56,6 +62,51 @@ class ApiClient {
       method: 'POST',
       body: data,
     });
+  }
+
+  async fetchSingleVideo(videoId: string): Promise<VideoDetails> {
+    const res = await this.fetch<SingleVideoRes>(`/videos/${videoId}`);
+    return res.video;
+  }
+
+  async createVideoComment(
+    videoId: string,
+    payload: { content: string },
+  ): Promise<CreateCommentResponse> {
+    return this.fetch<CreateCommentResponse>(`/comments/${videoId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async fetchVideoComments(
+    videoId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<CommentListResponse> {
+    return await this.fetch<CommentListResponse>(
+      `/comments/${videoId}/comments?page=${page}&limit=${limit}`,
+    );
+  }
+
+  async createReply(
+    commentId: string,
+    payload: { content: string },
+  ): Promise<CreateReplyResponse> {
+    return this.fetch<CreateReplyResponse>(`/comments/${commentId}/replies`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async fetchReplies(
+    commentId: string,
+    page = 1,
+    limit = 5,
+  ): Promise<CommentListResponse> {
+    return this.fetch<CommentListResponse>(
+      `/comments/${commentId}/replies?page=${page}&limit=${limit}`,
+    );
   }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import VideoFeed from '../components/videoFeed';
+import VideoFeed from '../components/videos/videoFeed';
 
 export default function Home() {
   return (

@@ -1,10 +1,10 @@
-"use client"
-import VideoFeed from "./components/videoFeed";
+'use client';
+import VideoFeed from './components/videos/videoFeed';
 
 export default function Home() {
   return (
     <main className="p-6">
-      <VideoFeed/>
+      <VideoFeed />
     </main>
   );
 }

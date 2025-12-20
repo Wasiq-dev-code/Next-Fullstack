@@ -44,8 +44,7 @@ export async function GET(
             {
               $project: {
                 username: 1,
-                fullname: 1,
-                avatar: 1,
+                profilePhoto: 1,
               },
             },
           ],
@@ -89,9 +88,11 @@ export async function GET(
       {
         $project: {
           isPrivate: 0,
-          controls: 0,
           thumbnail: { fileId: 0 },
           video: { fileId: 0 },
+          randomScore: 0,
+          createdAt: 0,
+          updatedAt: 0,
         },
       },
     ]);
