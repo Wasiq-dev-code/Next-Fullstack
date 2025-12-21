@@ -10,30 +10,24 @@ export async function GET(
   { params }: { params: { userId: string } },
 ) {
   try {
-    const profileUserId = params.userId;
     const session = await getServerSession(authOptions);
+    const viewerUserId = session?.user?.id || null;
 
-    if (!profileUserId) {
-      return NextResponse.json(
-        { error: 'UserId is not available in param' },
-        { status: 400 },
-      );
+    const targetUserId = params.userId === 'me' ? viewerUserId : params.userId;
+
+    if (!targetUserId || !mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
     }
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized Request' },
-        { status: 401 },
-      );
-    }
-
-    const viewerUserId = session.user.id;
 
     await connectToDatabase();
 
+    const viewerObjectId = viewerUserId
+      ? new mongoose.Types.ObjectId(viewerUserId)
+      : null;
+
     const profile = await User.aggregate([
       {
-        $match: { _id: new mongoose.Types.ObjectId(profileUserId) },
+        $match: { _id: new mongoose.Types.ObjectId(targetUserId) },
       },
 
       // Followers of this profile
@@ -56,24 +50,38 @@ export async function GET(
         },
       },
 
+      {
+        $lookup: {
+          from: 'videos',
+          localField: '_id',
+          foreignField: 'owner',
+          as: 'videos',
+        },
+      },
+
       // Check if logged-in user follows THIS profile
       {
         $addFields: {
           followersCount: { $size: '$followers' },
           followToCount: { $size: '$followTo' },
+          postsCount: { $size: '$videos' },
 
-          isFollowed: {
-            $in: [
-              new mongoose.Types.ObjectId(viewerUserId),
-              {
-                $map: {
-                  input: '$followers',
-                  as: 'f',
-                  in: '$$f.follower',
-                },
-              },
-            ],
-          },
+          isFollowed: viewerObjectId
+            ? {
+                $in: [
+                  viewerObjectId,
+                  {
+                    $map: {
+                      input: '$followers',
+                      as: 'f',
+                      in: '$$f.follower',
+                    },
+                  },
+                ],
+              }
+            : false,
+
+          isMe: viewerObjectId ? { $eq: ['$_id', viewerObjectId] } : false,
         },
       },
       {
@@ -97,7 +105,7 @@ export async function GET(
 
     return NextResponse.json(
       {
-        profile,
+        profile: profile[0],
         message: 'Profile Fetched Successfully',
       },
       { status: 200 },

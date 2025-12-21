@@ -17,7 +17,6 @@ export default function CommentItem({ comment }: { comment: Comment }) {
           <p>
             <b>{comment.owner.username}</b> {comment.content}
           </p>
-
           <button
             className="text-xs text-gray-500"
             onClick={() => setShowReplies((p) => !p)}
