@@ -24,24 +24,44 @@ export async function POST(
 
     await connectToDatabase();
 
+    const totalLikes = await Like.countDocuments({
+      comment: commentId,
+    });
+
+    if (!totalLikes) {
+      return NextResponse.json({
+        liked: false,
+        message: 'Unsuccessfull to count comment likes',
+      });
+    }
+
     const deleted = await Like.findOneAndDelete({
       userLiked: userId,
       comment: commentId,
     });
 
     if (deleted) {
-      // await Comment.updateOne({ _id: commentId }, { $inc: { likesCount: -1 } });
-
       return NextResponse.json({
+        totalCommentLikes: totalLikes,
         liked: false,
         message: 'Comment unliked successfully',
       });
     }
 
-    await Like.create({ userLiked: userId, comment: commentId });
-    // await Comment.updateOne({ _id: commentId }, { $inc: { likesCount: 1 } });
+    const created = await Like.create({
+      userLiked: userId,
+      comment: commentId,
+    });
+
+    if (!created) {
+      return NextResponse.json({
+        liked: false,
+        message: 'Unsuccessfull to create Like on Comment',
+      });
+    }
 
     return NextResponse.json({
+      totalCommentLikes: totalLikes,
       liked: true,
       message: 'Comment liked successfully',
     });

@@ -1,9 +1,15 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNotification } from '../providers/notification';
 import { apiClient } from '@/lib/api-client';
 import type { FeedRequest, FeedResponse, VideoFeed } from '@/lib/types/video';
 import Link from 'next/link';
+
+type stateType = {
+  loading: boolean | null;
+  hasMore: boolean;
+  cursor: number;
+};
 
 export default function VideoFeed() {
   const [videos, setVideos] = useState<VideoFeed[]>([]);
@@ -11,13 +17,20 @@ export default function VideoFeed() {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [cursor, setCursor] = useState<number | null>(0);
   const { showNotification } = useNotification();
+  const stateRef = useRef<stateType>({
+    loading: false,
+    hasMore: true,
+    cursor: 0,
+  });
 
   const loadVideos = useCallback(async () => {
-    if (loading || !hasMore) return;
+    const state = stateRef.current;
+    if (state.loading || !state.hasMore) return;
 
+    state.loading = true;
     setLoading(true);
     const payload: FeedRequest = {
-      cursor: cursor,
+      cursor: state.cursor,
       excludeIds: videos.slice(-100).map((v) => v._id),
     };
     try {
@@ -25,10 +38,13 @@ export default function VideoFeed() {
 
       if (data.videos && data.videos.length > 0) {
         setVideos((prev) => [...prev, ...data.videos]);
-        setCursor(data.nextCursor || cursor);
-        setHasMore(data.nextCursor !== null);
+        state.cursor = data.nextCursor || state.cursor;
+        setCursor(state.cursor);
+        state.hasMore = data.nextCursor !== null;
+        setHasMore(state.hasMore);
         showNotification('Videos loaded', 'success');
       } else {
+        state.hasMore = false;
         setHasMore(false);
         showNotification('No more videos', 'info');
       }
@@ -36,9 +52,10 @@ export default function VideoFeed() {
       console.error('Error loading videos:', error);
       showNotification('Failed to load videos', 'error');
     } finally {
+      state.loading = false;
       setLoading(false);
     }
-  }, [videos, loading, hasMore, cursor, showNotification]);
+  }, [videos, showNotification]);
 
   useEffect(() => {
     loadVideos();

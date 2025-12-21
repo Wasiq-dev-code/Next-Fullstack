@@ -1,9 +1,10 @@
 'use client';
 
 import CommentsSection from '@/app/comments/videoComments/[videoId]/page';
+import ToggleLikeOnVideo from '@/app/components/likes/ToggleLikeOnVideo';
 import VideoPlayer from '@/app/components/videos/videoPlayer';
 import { apiClient } from '@/lib/api-client';
-import { VideoDetails } from '@/lib/types/video';
+import { SingleVideoRes, VideoDetails } from '@/lib/types/video';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function SingleVideoPage({
@@ -14,13 +15,16 @@ export default function SingleVideoPage({
   const { videoId } = params;
   const [loading, setLoading] = useState(false);
   const [video, setVideo] = useState<VideoDetails | null>(null);
+  const [likeCount, setLikeCount] = useState<number>(0);
+  const [isliked, setIsLiked] = useState<boolean>(false);
 
   const fetchSingleVideo = useCallback(async () => {
     setLoading(true);
     try {
-      const singleVideo: VideoDetails =
-        await apiClient.fetchSingleVideo(videoId);
-      setVideo(singleVideo);
+      const res: SingleVideoRes = await apiClient.fetchSingleVideo(videoId);
+      setVideo(res.data.singleVideo);
+      setLikeCount(res.data.likeCount);
+      setIsLiked(res.data.isLiked);
     } catch (error) {
       console.error('Error while fetching singleVideo', error);
     } finally {
@@ -37,6 +41,11 @@ export default function SingleVideoPage({
   return (
     <>
       <VideoPlayer video={video} />
+      <ToggleLikeOnVideo
+        videoId={video._id}
+        initialLikes={likeCount}
+        initialLiked={isliked}
+      ></ToggleLikeOnVideo>
       <CommentsSection videoId={video._id} />
     </>
   );

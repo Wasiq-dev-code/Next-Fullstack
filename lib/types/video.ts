@@ -19,7 +19,6 @@ export type VideoDetails = BaseFeed & {
     url: string;
   };
   description: string;
-  likes: number;
   uploadedAt: string;
   controls?: boolean;
   transformation?: {
@@ -29,9 +28,15 @@ export type VideoDetails = BaseFeed & {
   };
 };
 
+export type VideoData = {
+  singleVideo: VideoDetails;
+  likeCount: number;
+  isLiked: boolean;
+};
+
 export type SingleVideoRes = {
   message: string;
-  video: VideoDetails;
+  data: VideoData;
 };
 
 export type FeedResponse = {

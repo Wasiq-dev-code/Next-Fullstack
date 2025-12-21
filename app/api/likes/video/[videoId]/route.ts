@@ -24,24 +24,41 @@ export async function POST(
 
     await connectToDatabase();
 
+    const totalLikes = await Like.countDocuments({
+      video: videoId,
+    });
+
+    if (!totalLikes) {
+      return NextResponse.json({
+        liked: false,
+        message: 'Unsuccessfull to count video likes',
+      });
+    }
+
     const deleted = await Like.findOneAndDelete({
       userLiked: userId,
       video: videoId,
     });
 
     if (deleted) {
-      // await Video.updateOne({ _id: videoId }, { $inc: { likesCount: -1 } });
-
       return NextResponse.json({
         liked: false,
         message: 'Video unliked successfully',
+        totalVideoLikes: totalLikes,
       });
     }
 
-    await Like.create({ userLiked: userId, video: videoId });
-    // await Video.updateOne({ _id: videoId }, { $inc: { likesCount: 1 } });
+    const created = await Like.create({ userLiked: userId, video: videoId });
+
+    if (!created) {
+      return NextResponse.json({
+        liked: false,
+        message: 'Unsuccessfull to create video likes',
+      });
+    }
 
     return NextResponse.json({
+      totalVideoLikes: totalLikes,
       liked: true,
       message: 'Video liked successfully',
     });

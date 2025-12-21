@@ -13,6 +13,7 @@ import {
   CreateCommentResponse,
   CreateReplyResponse,
 } from './types/comment';
+import { LikeCommentResponse, LikeVideoResponse } from './types/like';
 
 class ApiClient {
   private async fetch<T>(
@@ -64,9 +65,8 @@ class ApiClient {
     });
   }
 
-  async fetchSingleVideo(videoId: string): Promise<VideoDetails> {
-    const res = await this.fetch<SingleVideoRes>(`/videos/${videoId}`);
-    return res.video;
+  async fetchSingleVideo(videoId: string): Promise<SingleVideoRes> {
+    return await this.fetch<SingleVideoRes>(`/videos/${videoId}`);
   }
 
   async createVideoComment(
@@ -107,6 +107,18 @@ class ApiClient {
     return this.fetch<CommentListResponse>(
       `/comments/${commentId}/replies?page=${page}&limit=${limit}`,
     );
+  }
+
+  async toggleVideoLike(videoId: string): Promise<LikeVideoResponse> {
+    return await this.fetch(`/likes/video/${videoId}`, {
+      method: 'POST',
+    });
+  }
+
+  async toggleCommentLike(commentId: string): Promise<LikeCommentResponse> {
+    return await this.fetch(`/likes/comment/${commentId}`, {
+      method: 'POST',
+    });
   }
 }
 

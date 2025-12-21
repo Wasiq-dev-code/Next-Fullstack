@@ -4,6 +4,7 @@ import Comment from '@/model/Comment.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
+import { requireAuth } from '@/lib/requireAuth';
 
 // Create Video's comment
 export async function POST(
@@ -32,14 +33,14 @@ export async function POST(
 
     await connectToDatabase();
 
-    // 1️⃣ Create raw comment
+    // Create raw comment
     const created = await Comment.create({
       commentedBy: session.user.id,
       commentedVideo: videoId,
       content: content.trim(),
     });
 
-    // 2️⃣ Re-fetch with aggregation (single document)
+    // Re-fetch with aggregation (single document)
     const [comment] = await Comment.aggregate([
       { $match: { _id: created._id } },
 
@@ -106,7 +107,7 @@ export async function POST(
   }
 }
 
-// Get All Comments and their replies Of Video
+// Get All Comments
 export async function GET(
   req: NextRequest,
   { params }: { params: { videoId: string } },
@@ -123,6 +124,12 @@ export async function GET(
     const skip = (page - 1) * limit;
 
     await connectToDatabase();
+
+    const auth = await requireAuth();
+    if (!auth.ok) {
+      return auth.error;
+    }
+    // const userId = auth.data;
 
     const comments = await Comment.aggregate([
       {

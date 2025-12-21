@@ -2,6 +2,9 @@ import { connectToDatabase } from '@/lib/db';
 import Video from '@/model/Video.model';
 import mongoose from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import Like from '@/model/Like.model';
 
 // getvideoByid
 export async function GET(
@@ -23,6 +26,12 @@ export async function GET(
     }
 
     await connectToDatabase();
+
+    // Get current user session
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id
+      ? new mongoose.Types.ObjectId(session.user.id)
+      : null;
 
     const video = await Video.aggregate([
       {
@@ -58,24 +67,7 @@ export async function GET(
       },
 
       {
-        $lookup: {
-          from: 'likes',
-          let: { fetchVideoId: '$_id' },
-          pipeline: [
-            { $match: { $expr: { $eq: ['$video', '$$fetchVideoId'] } } },
-            {
-              $count: 'count',
-            },
-          ],
-          as: 'likes',
-        },
-      },
-
-      {
         $addFields: {
-          likes: {
-            $ifNull: [{ $first: '$likes.count' }, 0],
-          },
           uploadedAt: {
             $dateToString: {
               format: '%Y-%m-%d %H:%M',
@@ -108,10 +100,33 @@ export async function GET(
       );
     }
 
+    // Count likes
+    const likeCount = await Like.countDocuments({ video: videoId });
+
+    if (!likeCount) {
+      return NextResponse.json(
+        {
+          error: 'Like count in video is not available',
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    // Check if user liked
+    const userLiked = userId
+      ? await Like.exists({ video: videoId, userLiked: userId })
+      : false;
+
     return NextResponse.json(
       {
         message: 'Successfully fetched',
-        video: video[0],
+        data: {
+          singleVideo: video[0],
+          likeCount: likeCount,
+          isLiked: userLiked,
+        },
       },
       {
         status: 200,
