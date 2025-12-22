@@ -2,7 +2,7 @@
 
 import CommentsSection from '@/app/comments/videoComments/[videoId]/page';
 import ToggleLikeOnVideo from '@/app/components/likes/ToggleLikeOnVideo';
-import VideoPlayer from '@/app/components/videos/videoPlayer';
+import VideoPlayer from '@/app/(feed)/components/videos/videoPlayer';
 import { apiClient } from '@/lib/api-client';
 import { SingleVideoRes, VideoDetails } from '@/lib/types/video';
 import { useCallback, useEffect, useState } from 'react';

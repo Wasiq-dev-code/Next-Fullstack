@@ -5,7 +5,9 @@ import Video, { IVideo } from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { deleteFileFromImageKit } from '@/lib/imageKitDelete';
-import { VideoQuery } from '@/lib/types/result';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import Like from '@/model/Like.model';
 
 // Create Video
 export async function POST(request: NextRequest) {
@@ -157,56 +159,141 @@ export async function DELETE(
   }
 }
 
-// myvideos
-export async function GET(req: NextRequest) {
+// GetVideoById
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { videoId: string } },
+) {
   try {
+    const { videoId } = params;
+
+    if (!mongoose.Types.ObjectId.isValid(videoId) || !videoId.trim()) {
+      return NextResponse.json(
+        {
+          error: 'Invalid videoId',
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
     await connectToDatabase();
 
-    const auth = await requireAuth();
-    if (!auth.ok) return auth.error;
+    // Get current user session
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id
+      ? new mongoose.Types.ObjectId(session.user.id)
+      : null;
 
-    const userId = auth.data;
+    const video = await Video.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(videoId),
+        },
+      },
 
-    const { searchParams } = req.nextUrl;
-    const cursor = searchParams.get('cursor');
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'owner',
+          foreignField: '_id',
+          as: 'owner',
+          pipeline: [
+            {
+              $match: { isPrivate: false },
+            },
+            {
+              $project: {
+                username: 1,
+                profilePhoto: 1,
+              },
+            },
+          ],
+        },
+      },
 
-    if (cursor && isNaN(Date.parse(cursor))) {
-      return NextResponse.json({ error: 'Invalid cursor' }, { status: 400 });
+      {
+        $addFields: {
+          owner: { $first: '$owner' },
+        },
+      },
+
+      {
+        $addFields: {
+          uploadedAt: {
+            $dateToString: {
+              format: '%Y-%m-%d %H:%M',
+              date: '$createdAt',
+            },
+          },
+        },
+      },
+
+      {
+        $project: {
+          isPrivate: 0,
+          thumbnail: { fileId: 0 },
+          video: { fileId: 0 },
+          randomScore: 0,
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      },
+    ]);
+
+    if (!video?.[0]) {
+      return NextResponse.json(
+        {
+          error: 'video not found',
+        },
+        {
+          status: 404,
+        },
+      );
     }
 
-    const LIMIT: number = 10;
+    // Count likes
+    const likeCount = await Like.countDocuments({ video: videoId });
 
-    const query: VideoQuery = {
-      owner: new mongoose.Types.ObjectId(userId),
-    };
-
-    if (cursor) {
-      query.createdAt = { $lt: new Date(cursor) };
+    if (!likeCount) {
+      return NextResponse.json(
+        {
+          error: 'Like count in video is not available',
+        },
+        {
+          status: 404,
+        },
+      );
     }
 
-    const videos = await Video.find(query)
-      .select('-thumbnail.fileId -video.fileId ')
-      .sort({ createdAt: -1 })
-      .limit(LIMIT)
-      .lean();
+    // Check if user liked
+    const userLiked = userId
+      ? await Like.exists({ video: videoId, userLiked: userId })
+      : false;
 
     return NextResponse.json(
       {
-        videos,
-        nextCursor:
-          videos.length > 0
-            ? videos[videos.length - 1].createdAt.toISOString()
-            : null,
+        message: 'Successfully fetched',
+        data: {
+          singleVideo: video[0],
+          likeCount: likeCount,
+          isLiked: userLiked,
+        },
       },
       {
         status: 200,
       },
     );
   } catch (error) {
-    console.error('Get my videos error:', error);
+    console.error('Fetching video failed', error);
     return NextResponse.json(
-      { error: 'Failed to fetch videos' },
-      { status: 500 },
+      {
+        error: 'Error while fetching video',
+      },
+      {
+        status: 500,
+      },
     );
   }
 }

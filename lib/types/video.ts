@@ -4,7 +4,9 @@ export type BaseFeed = {
   thumbnail: {
     url: string;
   };
+  likesCount: number;
   owner: {
+    _id: string;
     username: string;
     profilePhoto: string;
   };

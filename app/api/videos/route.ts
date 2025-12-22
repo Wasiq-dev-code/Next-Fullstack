@@ -14,17 +14,59 @@ export async function POST(req: NextRequest) {
 
     const limitedExcludeIds = excludeIds.slice(-MAX_EXCLUDE);
 
-    const videos = await Video.find({
-      randomScore: { $gt: cursor },
-      _id: { $nin: limitedExcludeIds },
-    })
-      .select(
-        '-thumbnail.fileId -video -isPrivate -randomScore -controls -transformation',
-      )
-      .sort({ randomScore: 1 })
-      .limit(LIMIT)
-      .populate('owner', 'username profilePhoto')
-      .lean();
+    const videos = await Video.aggregate([
+      {
+        $match: {
+          randomScore: { $gt: cursor },
+          _id: { $nin: limitedExcludeIds },
+        },
+      },
+      { $sort: { randomScore: 1 } },
+      { $limit: LIMIT },
+
+      // owner info
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'owner',
+          foreignField: '_id',
+          as: 'owner',
+        },
+      },
+      { $unwind: '$owner' },
+
+      // likes count
+      {
+        $lookup: {
+          from: 'likes',
+          localField: '_id',
+          foreignField: 'video',
+          as: 'likes',
+        },
+      },
+      {
+        $addFields: {
+          likesCount: { $size: '$likes' },
+        },
+      },
+
+      // final shape
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          description: 1,
+          'thumbnail.url': 1,
+          createdAt: 1,
+          likesCount: 1,
+          owner: {
+            _id: '$owner._id',
+            username: '$owner.username',
+            profilePhoto: '$owner.profilePhoto',
+          },
+        },
+      },
+    ]);
 
     return NextResponse.json({
       videos,

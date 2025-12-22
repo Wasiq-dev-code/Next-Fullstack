@@ -1,9 +1,9 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNotification } from '../providers/notification';
+import { useNotification } from '../../../components/providers/notification';
 import { apiClient } from '@/lib/api-client';
 import type { FeedRequest, FeedResponse, VideoFeed } from '@/lib/types/video';
-import Link from 'next/link';
+import VideoInfo from './VideoInfo';
 
 type stateType = {
   loading: boolean | null;
@@ -84,9 +84,7 @@ export default function VideoFeed() {
   return (
     <div>
       {videos.map((video) => (
-        <Link key={video._id} href={`/video/${video._id}`}>
-          <div key={video._id}>{/* Render video */}</div>
-        </Link>
+        <VideoInfo key={video._id} videoObj={video} />
       ))}
       {loading && (
         <div className="text-center py-8">

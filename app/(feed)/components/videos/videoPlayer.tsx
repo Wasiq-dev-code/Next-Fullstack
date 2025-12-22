@@ -1,6 +1,6 @@
 'use client';
 
-import { VideoDetails } from '@/lib/types/result';
+import { VideoDetails } from '@/lib/types/video';
 import Image from 'next/image';
 
 interface VideoPlayerProps {

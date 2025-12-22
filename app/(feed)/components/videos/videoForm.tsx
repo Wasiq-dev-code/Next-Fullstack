@@ -1,7 +1,7 @@
 'use client';
 import { apiClient } from '@/lib/api-client';
 import { useState } from 'react';
-import UploadExample from '../fileUploads';
+import UploadExample from '../../../components/fileUploads';
 
 const VideoForm = () => {
   const [title, setTitle] = useState('');
