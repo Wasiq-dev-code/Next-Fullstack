@@ -1,4 +1,4 @@
-import React from 'react';
+'use client';
 import ProfileInfo from '../components/ProfileInfo';
 import ProfileVideos from '../components/ProfileVideos';
 

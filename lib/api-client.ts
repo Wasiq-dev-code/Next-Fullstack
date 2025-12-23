@@ -1,12 +1,11 @@
-import { IUser } from '@/model/User.model';
-import { IVideo } from '@/model/Video.model';
-import { FetchOptions, RegisterData, VideoFormData } from './types/result';
+import { FetchOptions } from './types/result';
 
 import {
+  CreateVideoDTO,
+  CreateVideoResponse,
   FeedRequest,
   FeedResponse,
   SingleVideoRes,
-  VideoDetails,
 } from './types/video';
 import {
   CommentListResponse,
@@ -14,6 +13,8 @@ import {
   CreateReplyResponse,
 } from './types/comment';
 import { LikeCommentResponse, LikeVideoResponse } from './types/like';
+import { ProfileResponse, ProfileVideoResponse } from './types/profile';
+import { RegisterUserDTO, RegisterUserResponse } from './types/user';
 
 class ApiClient {
   private async fetch<T>(
@@ -40,19 +41,15 @@ class ApiClient {
     return response.json();
   }
 
-  async getVideos(): Promise<IVideo[]> {
-    return await this.fetch<IVideo[]>('/videos');
-  }
-
-  async createVideo(videoData: VideoFormData) {
-    return await this.fetch<IVideo>('/videos/[videoId]/myvideos', {
+  async createVideo(videoData: CreateVideoDTO): Promise<CreateVideoResponse> {
+    return await this.fetch<CreateVideoResponse>('/videos/myvideos', {
       method: 'POST',
       body: videoData,
     });
   }
 
-  async register(data: RegisterData) {
-    return await this.fetch<IUser>('/auth/register', {
+  async register(data: RegisterUserDTO): Promise<RegisterUserResponse> {
+    return await this.fetch<RegisterUserResponse>('/user/register', {
       method: 'POST',
       body: data,
     });
@@ -119,6 +116,16 @@ class ApiClient {
     return await this.fetch(`/likes/comment/${commentId}`, {
       method: 'POST',
     });
+  }
+
+  async profileInformation(userId: string): Promise<ProfileResponse> {
+    return await this.fetch<ProfileResponse>(`/user/${userId}`);
+  }
+
+  async profileVideos(userId: string): Promise<ProfileVideoResponse> {
+    return await this.fetch<ProfileVideoResponse>(
+      `/videos/${userId}/UserVideos`,
+    );
   }
 }
 

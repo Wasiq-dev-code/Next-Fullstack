@@ -50,3 +50,25 @@ export type FeedRequest = {
   cursor: number | null;
   excludeIds: string[];
 };
+
+export interface CreateVideoDTO {
+  title: string;
+  description: string;
+  thumbnail: {
+    url: string;
+    fileId: string;
+  };
+  video: {
+    url: string;
+    fileId: string;
+  };
+  controls?: boolean;
+  transformation?: {
+    quality?: number;
+  };
+}
+
+export type CreateVideoResponse = {
+  message: string;
+  videoId: string;
+};

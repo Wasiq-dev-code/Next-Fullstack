@@ -6,6 +6,7 @@ import Video from '@/model/Video.model';
 import mongoose from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 
+// ProfileVideos Route
 export async function GET(
   req: NextRequest,
   { params }: { params: { userId: string } },
@@ -54,6 +55,18 @@ export async function GET(
       { $match: query },
       { $sort: { createdAt: -1 } },
       { $limit: LIMIT },
+
+      // owner info
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'owner',
+          foreignField: '_id',
+          as: 'owner',
+        },
+      },
+      { $unwind: '$owner' },
+
       {
         $lookup: {
           from: 'likes',
@@ -69,12 +82,17 @@ export async function GET(
       },
       {
         $project: {
+          _id: 1,
           title: 1,
           description: 1,
           'thumbnail.url': 1,
           createdAt: 1,
-          owner: 1,
           likesCount: 1,
+          owner: {
+            _id: '$owner._id',
+            username: '$owner.username',
+            profilePhoto: '$owner.profilePhoto',
+          },
         },
       },
     ]);

@@ -1,5 +1,5 @@
-import React from 'react';
+'use client';
 
-export default function ProfileVideos() {
+export default function ProfileVideos({ userId }: string) {
   return <div></div>;
 }

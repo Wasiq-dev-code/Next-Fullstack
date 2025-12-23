@@ -26,6 +26,8 @@ export interface IVideo {
     quality?: number;
   };
   randomScore: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const videoSchema = new Schema<IVideo>(
@@ -33,31 +35,14 @@ const videoSchema = new Schema<IVideo>(
     title: { type: String, required: true },
     description: { type: String, required: true },
     thumbnail: {
-      url: {
-        type: String,
-        required: true,
-      },
-      fileId: {
-        type: String,
-        select: false,
-        required: true,
-      },
-    },
-    isPrivate: {
-      type: Boolean,
-      default: false,
+      url: { type: String, required: true },
+      fileId: { type: String, required: true, select: false },
     },
     video: {
-      url: {
-        type: String,
-        required: true,
-      },
-      fileId: {
-        type: String,
-        select: false,
-        required: true,
-      },
+      url: { type: String, required: true },
+      fileId: { type: String, required: true, select: false },
     },
+    isPrivate: { type: Boolean, default: false },
     controls: { type: Boolean, default: true },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
@@ -71,18 +56,16 @@ const videoSchema = new Schema<IVideo>(
     },
     randomScore: {
       type: Number,
-      select: false,
       index: true,
+      select: false,
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-// Specifically for Infinite scrolling
+// For infinite scrolling per user
 videoSchema.index({ owner: 1, createdAt: -1 });
 
-const Video = models?.Video || model<IVideo>('Video', videoSchema);
+const Video = models.Video || model<IVideo>('Video', videoSchema);
 
 export default Video;

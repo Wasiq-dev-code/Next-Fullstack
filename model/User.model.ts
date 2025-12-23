@@ -5,7 +5,10 @@ export interface IUser {
   email: string;
   password: string;
   username: string;
-  profilePhoto: string;
+  profilePhoto: {
+    url: string;
+    fileId: string;
+  };
   isPrivate?: boolean;
   passwordChangedAt?: Date;
   emailChangedAt?: Date;
@@ -34,8 +37,8 @@ const userSchema = new Schema<IUser>(
     },
 
     profilePhoto: {
-      type: String,
-      required: true,
+      url: { type: String, required: true },
+      fileId: { type: String, required: true },
     },
 
     passwordChangedAt: {

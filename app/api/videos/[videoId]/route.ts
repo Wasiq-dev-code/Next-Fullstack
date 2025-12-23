@@ -1,79 +1,13 @@
 import { connectToDatabase } from '@/lib/db';
 import { requireAuth } from '@/lib/requireAuth';
 import { withVideoAuth } from '@/lib/withVideoAuth';
-import Video, { IVideo } from '@/model/Video.model';
+import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { deleteFileFromImageKit } from '@/lib/imageKitDelete';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Like from '@/model/Like.model';
-
-// Create Video
-export async function POST(request: NextRequest) {
-  try {
-    await connectToDatabase();
-
-    const auth = await requireAuth();
-
-    if (!auth.ok) return auth.error;
-
-    const body: IVideo = await request.json();
-
-    if (
-      !body.title ||
-      !body.description ||
-      !body.thumbnail?.url ||
-      !body.thumbnail?.fileId ||
-      !body.video?.url ||
-      !body.video?.fileId ||
-      !body.randomScore
-    ) {
-      return NextResponse.json(
-        { error: 'Required fields missing' },
-        { status: 400 },
-      );
-    }
-
-    const videoData: IVideo = {
-      title: body.title,
-      description: body.description,
-      thumbnail: {
-        url: body.thumbnail.url,
-        fileId: body.thumbnail.fileId,
-      },
-      randomScore: Math.random(),
-      video: {
-        url: body.video.url,
-        fileId: body.video.fileId,
-      },
-      controls: body.controls ?? true,
-      owner: new mongoose.Types.ObjectId(auth.data),
-      transformation: {
-        height: 1920,
-        width: 1080,
-        quality: body.transformation?.quality ?? 100,
-      },
-    };
-    const newVideo = await Video.create(videoData);
-
-    return NextResponse.json(
-      {
-        message: 'Successfully created a video',
-        newVideo,
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error('Error creating video:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to create Video',
-      },
-      { status: 500 },
-    );
-  }
-}
 
 // Update video
 export async function PATCH(

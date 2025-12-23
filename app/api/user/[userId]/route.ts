@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 
+// Profile Information Route
 export async function GET(
   req: NextRequest,
   { params }: { params: { userId: string } },
@@ -26,11 +27,8 @@ export async function GET(
       : null;
 
     const profile = await User.aggregate([
-      {
-        $match: { _id: new mongoose.Types.ObjectId(targetUserId) },
-      },
+      { $match: { _id: new mongoose.Types.ObjectId(targetUserId) } },
 
-      // Followers of this profile
       {
         $lookup: {
           from: 'follows',
@@ -39,8 +37,6 @@ export async function GET(
           as: 'followers',
         },
       },
-
-      // Accounts this profile follows
       {
         $lookup: {
           from: 'follows',
@@ -49,7 +45,6 @@ export async function GET(
           as: 'followTo',
         },
       },
-
       {
         $lookup: {
           from: 'videos',
@@ -59,7 +54,6 @@ export async function GET(
         },
       },
 
-      // Check if logged-in user follows THIS profile
       {
         $addFields: {
           followersCount: { $size: '$followers' },
@@ -84,29 +78,27 @@ export async function GET(
           isMe: viewerObjectId ? { $eq: ['$_id', viewerObjectId] } : false,
         },
       },
+
       {
         $project: {
           username: 1,
-          email: 1,
           profilePhoto: 1,
           followersCount: 1,
           followToCount: 1,
+          postsCount: 1,
           isFollowed: 1,
+          isMe: 1,
         },
       },
     ]);
 
     if (!profile.length) {
-      return NextResponse.json(
-        { error: 'Profile is not provided' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     return NextResponse.json(
       {
         profile: profile[0],
-        message: 'Profile Fetched Successfully',
       },
       { status: 200 },
     );

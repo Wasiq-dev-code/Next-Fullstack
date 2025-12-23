@@ -21,8 +21,3 @@ export type FetchOptions = {
   body?: any;
   headers?: Record<string, string>;
 };
-
-export type RegisterData = {
-  email: string;
-  password: string;
-};
