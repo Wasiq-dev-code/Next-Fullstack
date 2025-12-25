@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import type { Comment, CommentListResponse } from '@/lib/types/comment';
 import { useNotification } from '@/app/components/providers/notification';
-import CommentItem from '@/app/components/comments/CommentItem';
+import CommentItem from '@/app/video/components/CommentItem';
 import CreateComment from '@/app/components/comments/CreateComment';
 
 export default function CommentsSection({ videoId }: { videoId: string }) {
@@ -51,7 +51,7 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
       ></CreateComment>
 
       {comments.map((comment) => (
-        <CommentItem key={comment._id} comment={comment} />
+        <CommentItem key={comment._id} videoId={videoId} comment={comment} />
       ))}
 
       {loading && <p>Loading comments…</p>}

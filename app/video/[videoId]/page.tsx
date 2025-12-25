@@ -1,7 +1,7 @@
 'use client';
 
-import CommentsSection from '@/app/comments/videoComments/[videoId]/page';
-import ToggleLikeOnVideo from '@/app/components/likes/ToggleLikeOnVideo';
+import CommentsSection from '@/app/video/components/CommentSection';
+import ToggleLikeOnVideo from '@/app/video/components/ToggleLikeOnVideo';
 import VideoPlayer from '@/app/(feed)/components/videos/videoPlayer';
 import { apiClient } from '@/lib/api-client';
 import { SingleVideoRes, VideoDetails } from '@/lib/types/video';

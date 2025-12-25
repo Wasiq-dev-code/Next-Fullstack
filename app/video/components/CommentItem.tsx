@@ -1,9 +1,15 @@
 'use client';
 import { Comment } from '@/lib/types/comment';
 import { useState } from 'react';
-import ReplyList from '@/app/comments/replies/[commentId]/page';
+import ReplyList from '@/app/video/components/ReplyList';
 
-export default function CommentItem({ comment }: { comment: Comment }) {
+export default function CommentItem({
+  comment,
+  videoId,
+}: {
+  comment: Comment;
+  videoId: string;
+}) {
   const [showReplies, setShowReplies] = useState(false);
   return (
     <div className="mb-4">
@@ -26,7 +32,9 @@ export default function CommentItem({ comment }: { comment: Comment }) {
         </div>
       </div>
 
-      {showReplies && <ReplyList parentCommentId={comment._id} />}
+      {showReplies && (
+        <ReplyList parentCommentId={comment._id} videoId={videoId} />
+      )}
     </div>
   );
 }

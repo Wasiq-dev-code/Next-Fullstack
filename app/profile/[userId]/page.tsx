@@ -6,7 +6,7 @@ export default function page({ params }: { params: { userId: string } }) {
   return (
     <div>
       <ProfileInfo></ProfileInfo>
-      <ProfileVideos></ProfileVideos>
+      {/* <ProfileVideos></ProfileVideos> */}
     </div>
   );
 }
