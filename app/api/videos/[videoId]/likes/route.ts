@@ -24,43 +24,23 @@ export async function POST(
 
     await connectToDatabase();
 
-    const totalLikes = await Like.countDocuments({
-      video: videoId,
-    });
-
-    if (!totalLikes) {
-      return NextResponse.json({
-        liked: false,
-        message: 'Unsuccessfull to count video likes',
-      });
-    }
-
     const deleted = await Like.findOneAndDelete({
       userLiked: userId,
       video: videoId,
     });
 
-    if (deleted) {
-      return NextResponse.json({
-        liked: false,
-        message: 'Video unliked successfully',
-        totalVideoLikes: totalLikes,
-      });
+    if (!deleted) {
+      await Like.create({ userLiked: userId, video: videoId });
     }
 
-    const created = await Like.create({ userLiked: userId, video: videoId });
-
-    if (!created) {
-      return NextResponse.json({
-        liked: false,
-        message: 'Unsuccessfull to create video likes',
-      });
-    }
+    const totalVideoLikes = await Like.countDocuments({ video: videoId });
 
     return NextResponse.json({
-      totalVideoLikes: totalLikes,
-      liked: true,
-      message: 'Video liked successfully',
+      liked: !deleted,
+      totalVideoLikes,
+      message: deleted
+        ? 'Video unliked successfully'
+        : 'Video liked successfully',
     });
   } catch (error) {
     console.error('Video like toggle failed', error);

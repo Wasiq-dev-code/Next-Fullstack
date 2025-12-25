@@ -5,10 +5,10 @@ import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
 import Comment from '@/model/Comment.model';
 
-// Create reply
+//  CREATE REPLY
 export async function POST(
   req: NextRequest,
-  { params }: { params: { commentId: string } },
+  { params }: { params: { videoId: string; commentId: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,6 +17,7 @@ export async function POST(
     }
 
     const { commentId } = params;
+
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       return NextResponse.json({ error: 'Invalid commentId' }, { status: 400 });
     }
@@ -89,7 +90,7 @@ export async function POST(
 
     return NextResponse.json(
       {
-        reply: reply,
+        reply,
         message: 'Reply added successfully',
       },
       { status: 201 },
@@ -102,23 +103,21 @@ export async function POST(
     );
   }
 }
-
-// Delete reply and parentcomment
+//  DELETE COMMENT / REPLY
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { commentId: string } },
+  { params }: { params: { videoId: string; commentId: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
       return NextResponse.json(
-        {
-          error: 'Unauthorized Request',
-        },
+        { error: 'Unauthorized Request' },
         { status: 401 },
       );
     }
+
     const { commentId } = params;
 
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
@@ -128,12 +127,10 @@ export async function DELETE(
     await connectToDatabase();
 
     const comment = await Comment.findById(commentId);
-
     if (!comment) {
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
     }
 
-    // Ownership check
     if (comment.commentedBy.toString() !== session.user.id) {
       return NextResponse.json(
         { error: 'You do not own this comment' },
@@ -141,14 +138,14 @@ export async function DELETE(
       );
     }
 
-    // CASE 1: Reply delete
+    // Reply delete > decrement parent
     if (comment.parentComment) {
       await Comment.findByIdAndUpdate(comment.parentComment, {
         $inc: { repliesCount: -1 },
       });
     }
 
-    // CASE 2: Parent comment delete → delete its replies
+    // Parent delete > delete all replies
     if (!comment.parentComment) {
       await Comment.deleteMany({ parentComment: comment._id });
     }
@@ -170,11 +167,10 @@ export async function DELETE(
     );
   }
 }
-
-// Get All replies of Parentcomment Of Video
+//  GET REPLIES
 export async function GET(
   req: NextRequest,
-  { params }: { params: { commentId: string } },
+  { params }: { params: { videoId: string; commentId: string } },
 ) {
   try {
     const { commentId } = params;

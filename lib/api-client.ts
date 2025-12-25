@@ -44,14 +44,14 @@ class ApiClient {
   async createVideo(videoData: CreateVideoDTO): Promise<CreateVideoResponse> {
     return await this.fetch<CreateVideoResponse>('/videos/createVideo', {
       method: 'POST',
-      body: videoData,
+      body: JSON.stringify(videoData),
     });
   }
 
   async registerUser(data: RegisterUserDTO): Promise<RegisterUserResponse> {
     return await this.fetch<RegisterUserResponse>('/user/register', {
       method: 'POST',
-      body: data,
+      body: JSON.stringify(data),
     });
   }
 
@@ -70,7 +70,7 @@ class ApiClient {
     videoId: string,
     payload: { content: string },
   ): Promise<CreateCommentResponse> {
-    return this.fetch<CreateCommentResponse>(`/comments/${videoId}/comments`, {
+    return this.fetch<CreateCommentResponse>(`/videos/${videoId}/comments`, {
       method: 'POST',
       body: JSON.stringify(payload),
     });
@@ -82,38 +82,46 @@ class ApiClient {
     limit = 10,
   ): Promise<CommentListResponse> {
     return await this.fetch<CommentListResponse>(
-      `/comments/${videoId}/comments?page=${page}&limit=${limit}`,
+      `/videos/${videoId}/comments?page=${page}&limit=${limit}`,
     );
   }
 
   async createReply(
+    videoId: string,
     commentId: string,
     payload: { content: string },
   ): Promise<CreateReplyResponse> {
-    return this.fetch<CreateReplyResponse>(`/comments/${commentId}/replies`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return this.fetch<CreateReplyResponse>(
+      `/videos/${videoId}/comments/${commentId}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+    );
   }
 
   async fetchReplies(
+    videoId: string,
     commentId: string,
     page = 1,
     limit = 5,
   ): Promise<CommentListResponse> {
     return this.fetch<CommentListResponse>(
-      `/comments/${commentId}/replies?page=${page}&limit=${limit}`,
+      `/videos/${videoId}/comments/${commentId}?page=${page}&limit=${limit}`,
     );
   }
 
   async toggleVideoLike(videoId: string): Promise<LikeVideoResponse> {
-    return await this.fetch(`/likes/video/${videoId}`, {
+    return await this.fetch(`/videos/${videoId}/likes`, {
       method: 'POST',
     });
   }
 
-  async toggleCommentLike(commentId: string): Promise<LikeCommentResponse> {
-    return await this.fetch(`/likes/comment/${commentId}`, {
+  async toggleCommentLike(
+    videoId: string,
+    commentId: string,
+  ): Promise<LikeCommentResponse> {
+    return await this.fetch(`/videos/${videoId}/comments/${commentId}/likes`, {
       method: 'POST',
     });
   }

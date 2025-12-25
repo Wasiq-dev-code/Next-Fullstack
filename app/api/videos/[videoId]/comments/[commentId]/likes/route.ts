@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { commentId: string } },
+  { params }: { params: { videoId: string; commentId: string } },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -24,46 +24,30 @@ export async function POST(
 
     await connectToDatabase();
 
-    const totalLikes = await Like.countDocuments({
-      comment: commentId,
-    });
-
-    if (!totalLikes) {
-      return NextResponse.json({
-        liked: false,
-        message: 'Unsuccessfull to count comment likes',
-      });
-    }
-
+    // Toggle like
     const deleted = await Like.findOneAndDelete({
       userLiked: userId,
       comment: commentId,
     });
 
-    if (deleted) {
-      return NextResponse.json({
-        totalCommentLikes: totalLikes,
-        liked: false,
-        message: 'Comment unliked successfully',
+    if (!deleted) {
+      await Like.create({
+        userLiked: userId,
+        comment: commentId,
       });
     }
 
-    const created = await Like.create({
-      userLiked: userId,
+    // Count AFTER toggle
+    const totalCommentLikes = await Like.countDocuments({
       comment: commentId,
     });
 
-    if (!created) {
-      return NextResponse.json({
-        liked: false,
-        message: 'Unsuccessfull to create Like on Comment',
-      });
-    }
-
     return NextResponse.json({
-      totalCommentLikes: totalLikes,
-      liked: true,
-      message: 'Comment liked successfully',
+      totalCommentLikes,
+      liked: !deleted,
+      message: deleted
+        ? 'Comment unliked successfully'
+        : 'Comment liked successfully',
     });
   } catch (error) {
     console.error('Comment like toggle failed', error);
