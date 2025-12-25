@@ -14,6 +14,7 @@ export default withAuth(
           pathname === '/' ||
           pathname === '/login' ||
           pathname === '/register' ||
+          pathname === '/api/user/register' ||
           pathname.startsWith('/api/auth')
         ) {
           return true;
@@ -31,7 +32,7 @@ export default withAuth(
         if (
           (passwordChangedAt &&
             issuedAtMs < new Date(passwordChangedAt).getTime()) ||
-          (emailChangedAt && new Date(emailChangedAt).getTime())
+          (emailChangedAt && issuedAtMs < new Date(emailChangedAt).getTime())
         ) {
           return false; // force logout
         }
@@ -47,7 +48,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    // "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$).*)",
-    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$).*)',
   ],
 };

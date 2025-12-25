@@ -4,7 +4,7 @@ import { withVideoAuth } from '@/lib/withVideoAuth';
 import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import { deleteFileFromImageKit } from '@/lib/imageKitDelete';
+import { deleteFileFromImageKit } from '@/lib/imageKitOps';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Like from '@/model/Like.model';

@@ -7,6 +7,7 @@ export async function requireAuth(): Promise<Result<string>> {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
+    console.error('Unauthecticated User');
     return {
       ok: false,
       error: NextResponse.json({ message: 'Unauthorized' }, { status: 401 }),

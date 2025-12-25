@@ -62,10 +62,6 @@ export interface CreateVideoDTO {
     url: string;
     fileId: string;
   };
-  controls?: boolean;
-  transformation?: {
-    quality?: number;
-  };
 }
 
 export type CreateVideoResponse = {

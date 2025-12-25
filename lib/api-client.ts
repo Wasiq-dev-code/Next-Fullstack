@@ -42,13 +42,13 @@ class ApiClient {
   }
 
   async createVideo(videoData: CreateVideoDTO): Promise<CreateVideoResponse> {
-    return await this.fetch<CreateVideoResponse>('/videos/myvideos', {
+    return await this.fetch<CreateVideoResponse>('/videos/createVideo', {
       method: 'POST',
       body: videoData,
     });
   }
 
-  async register(data: RegisterUserDTO): Promise<RegisterUserResponse> {
+  async registerUser(data: RegisterUserDTO): Promise<RegisterUserResponse> {
     return await this.fetch<RegisterUserResponse>('/user/register', {
       method: 'POST',
       body: data,

@@ -46,8 +46,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.passwordChangedAt = user.passwordChangedAt;
-        token.emailChangedAt = user.emailChangedAt;
+        token.passwordChangedAt = user.passwordChangedAt
+          ? new Date(user.passwordChangedAt).toISOString()
+          : undefined;
+        token.emailChangedAt = user.emailChangedAt
+          ? new Date(user.emailChangedAt).toISOString()
+          : undefined;
       }
       return token;
     },
@@ -55,8 +59,12 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.passwordChangedAt = token.passwordChangedAt as Date;
-        session.user.emailChangedAt = token.emailChangedAt as Date;
+        session.user.passwordChangedAt = token.passwordChangedAt
+          ? new Date(token.passwordChangedAt).toISOString()
+          : undefined;
+        session.user.emailChangedAt = token.emailChangedAt
+          ? new Date(token.emailChangedAt).toISOString()
+          : undefined;
       }
       return session;
     },
