@@ -130,9 +130,13 @@ class ApiClient {
     return await this.fetch<ProfileResponse>(`/user/${userId}`);
   }
 
-  async profileVideos(userId: string): Promise<ProfileVideoResponse> {
+  async profileVideos(
+    userId: string,
+    cursor: string | null,
+  ): Promise<ProfileVideoResponse> {
+    const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
     return await this.fetch<ProfileVideoResponse>(
-      `/videos/${userId}/UserVideos`,
+      `/user/${userId}/videos${query}`,
     );
   }
 }

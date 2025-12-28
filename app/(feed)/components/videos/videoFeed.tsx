@@ -1,84 +1,87 @@
 'use client';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNotification } from '../../../components/providers/notification';
 import { apiClient } from '@/lib/api-client';
+import { useNotification } from '../../../components/providers/notification';
 import type { FeedRequest, FeedResponse, VideoFeed } from '@/lib/types/video';
 import VideoInfo from './VideoInfo';
 
-type stateType = {
-  loading: boolean | null;
-  hasMore: boolean;
-  cursor: number;
-};
+const SCROLL_THRESHOLD = 300;
+const MAX_EXCLUDE = 100;
 
 export default function VideoFeed() {
   const [videos, setVideos] = useState<VideoFeed[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const [cursor, setCursor] = useState<number | null>(0);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [cursor, setCursor] = useState<number>(0);
+
   const { showNotification } = useNotification();
-  const stateRef = useRef<stateType>({
-    loading: false,
-    hasMore: true,
-    cursor: 0,
-  });
+
+  // Guard against parallel calls
+  const fetchingRef = useRef(false);
 
   const loadVideos = useCallback(async () => {
-    const state = stateRef.current;
-    if (state.loading || !state.hasMore) return;
+    if (fetchingRef.current || !hasMore) return;
 
-    state.loading = true;
+    fetchingRef.current = true;
     setLoading(true);
+
     const payload: FeedRequest = {
-      cursor: state.cursor,
-      excludeIds: videos.slice(-100).map((v) => v._id),
+      cursor,
+      excludeIds: videos.slice(-MAX_EXCLUDE).map((v) => v._id),
     };
+
     try {
       const data: FeedResponse = await apiClient.fetchRandomFeed(payload);
 
-      if (data.videos && data.videos.length > 0) {
-        setVideos((prev) => [...prev, ...data.videos]);
-        state.cursor = data.nextCursor || state.cursor;
-        setCursor(state.cursor);
-        state.hasMore = data.nextCursor !== null;
-        setHasMore(state.hasMore);
-        showNotification('Videos loaded', 'success');
-      } else {
-        state.hasMore = false;
+      if (!data.videos || data.videos.length === 0) {
         setHasMore(false);
-        showNotification('No more videos', 'info');
+        return;
+      }
+
+      setVideos((prev) => [...prev, ...data.videos]);
+
+      if (data.nextCursor !== null) {
+        setCursor(data.nextCursor);
+      } else {
+        setHasMore(false);
       }
     } catch (error) {
-      console.error('Error loading videos:', error);
+      console.error('Feed load failed:', error);
       showNotification('Failed to load videos', 'error');
     } finally {
-      state.loading = false;
+      fetchingRef.current = false;
       setLoading(false);
     }
-  }, [videos, showNotification]);
+  }, [cursor, videos, hasMore, showNotification]);
 
+  // Initial load
   useEffect(() => {
     loadVideos();
-  }, [loadVideos]);
+  }, []);
 
+  // Throttled scroll handler
   useEffect(() => {
-    function handleScroll() {
-      const scrollTop = window.scrollY;
+    let ticking = false;
 
-      const fullHeight = document.body.scrollHeight;
+    const onScroll = () => {
+      if (ticking) return;
 
-      const windowHeight = window.innerHeight;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const distanceFromBottom =
+          document.body.scrollHeight - window.scrollY - window.innerHeight;
 
-      const distanceFromBottom = fullHeight - scrollTop - windowHeight;
+        if (distanceFromBottom < SCROLL_THRESHOLD) {
+          loadVideos();
+        }
 
-      if (distanceFromBottom < 300) {
-        loadVideos();
-      }
-    }
+        ticking = false;
+      });
+    };
 
-    window.addEventListener('scroll', handleScroll);
-
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
   }, [loadVideos]);
 
   return (
@@ -86,15 +89,16 @@ export default function VideoFeed() {
       {videos.map((video) => (
         <VideoInfo key={video._id} videoObj={video} />
       ))}
+
       {loading && (
-        <div className="text-center py-8">
-          <p>Loading...</p>
+        <div className="py-10 text-center text-sm text-gray-500">
+          Loading more videos…
         </div>
       )}
 
-      {!hasMore && !loading && (
-        <div className="text-center py-8">
-          <p>No more videos</p>
+      {!hasMore && !loading && videos.length > 0 && (
+        <div className="py-10 text-center text-sm text-gray-400">
+          You, ve reached the end
         </div>
       )}
     </div>

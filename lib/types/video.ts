@@ -8,7 +8,7 @@ export type BaseFeed = {
   owner: {
     _id: string;
     username: string;
-    profilePhoto: string;
+    profilePhoto: { url: string };
   };
 };
 

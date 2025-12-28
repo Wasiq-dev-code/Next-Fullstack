@@ -32,7 +32,11 @@ export async function GET(
     // Private profile protection
     if (user.isPrivate && authUserId !== userId) {
       return NextResponse.json(
-        { videos: [], nextCursor: null },
+        {
+          message: 'Profile is private',
+          videos: [],
+          nextCursor: null,
+        },
         { status: 200 },
       );
     }

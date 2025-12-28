@@ -19,7 +19,7 @@ export default function VideoInfo({ videoObj }: props) {
       {showProfile && (
         <Link href={`/profile/${videoObj.owner._id}`}>
           {videoObj.owner._id}
-          {videoObj.owner.profilePhoto}
+          {videoObj.owner.profilePhoto.url}
           {videoObj.owner.username}
         </Link>
       )}
