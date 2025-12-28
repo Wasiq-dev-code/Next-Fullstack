@@ -4,7 +4,6 @@ import Comment from '@/model/Comment.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import { requireAuth } from '@/lib/requireAuth';
 
 // Create Video's comment
 export async function POST(
@@ -125,11 +124,10 @@ export async function GET(
 
     await connectToDatabase();
 
-    const auth = await requireAuth();
-    if (!auth.ok) {
-      return auth.error;
-    }
-    // const userId = auth.data;
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id
+      ? new mongoose.Types.ObjectId(session.user.id)
+      : null;
 
     const comments = await Comment.aggregate([
       {
@@ -172,16 +170,44 @@ export async function GET(
         },
       },
 
+      // Current user liked or not
+      ...(userId
+        ? [
+            {
+              $lookup: {
+                from: 'likes',
+                let: { commentId: '$_id' },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $eq: ['$comment', '$$commentId'] },
+                          { $eq: ['$userLiked', userId] },
+                        ],
+                      },
+                    },
+                  },
+                ],
+                as: 'userLike',
+              },
+            },
+            { $limit: 1 },
+          ]
+        : []),
+
       {
         $addFields: {
           owner: { $first: '$owner' },
           likesCount: { $ifNull: [{ $first: '$likes.count' }, 0] },
+          isLiked: userId ? { $gt: [{ $size: '$userLike' }, 0] } : false,
         },
       },
 
       {
         $project: {
           likes: 0,
+          userLike: 0,
         },
       },
     ]);

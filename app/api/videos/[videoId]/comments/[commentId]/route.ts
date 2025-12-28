@@ -185,6 +185,11 @@ export async function GET(
 
     await connectToDatabase();
 
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id
+      ? new mongoose.Types.ObjectId(session.user.id)
+      : null;
+
     const comments = await Comment.aggregate([
       {
         $match: {
@@ -225,16 +230,44 @@ export async function GET(
         },
       },
 
+      ...(userId
+        ? [
+            {
+              $lookup: {
+                from: 'likes',
+                let: { commentId: '$_id' },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $eq: ['$comment', '$$commentId'] },
+                          { $eq: ['$userLiked', userId] },
+                        ],
+                      },
+                    },
+                  },
+                  { $limit: 1 },
+                ],
+                as: 'userLike',
+              },
+            },
+          ]
+        : []),
+
+      // Shape response
       {
         $addFields: {
           owner: { $first: '$owner' },
           likesCount: { $ifNull: [{ $first: '$likes.count' }, 0] },
+          isLiked: userId ? { $gt: [{ $size: '$userLike' }, 0] } : false,
         },
       },
 
       {
         $project: {
           likes: 0,
+          userLike: 0,
         },
       },
     ]);

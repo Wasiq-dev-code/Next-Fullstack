@@ -1,5 +1,4 @@
 import { connectToDatabase } from '@/lib/db';
-import { requireAuth } from '@/lib/requireAuth';
 import { withVideoAuth } from '@/lib/withVideoAuth';
 import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';

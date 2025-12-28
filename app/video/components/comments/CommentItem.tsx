@@ -1,7 +1,10 @@
 'use client';
 import { Comment } from '@/lib/types/comment';
 import { useState } from 'react';
-import ReplyList from '@/app/video/components/ReplyList';
+import ReplyList from '@/app/video/components/comments/ReplyList';
+import { LikeButton } from '../likes/LikeButton';
+import { apiClient } from '@/lib/api-client';
+import { LikeCommentResponse } from '@/lib/types/like';
 
 export default function CommentItem({
   comment,
@@ -23,12 +26,19 @@ export default function CommentItem({
           <p>
             <b>{comment.owner.username}</b> {comment.content}
           </p>
+          <LikeButton
+            initialLiked={comment.isLiked}
+            initialLikes={comment.likesCount}
+            onToggle={() => apiClient.toggleCommentLike(videoId, comment._id)}
+            normalize={(res: LikeCommentResponse) => ({
+              liked: res.liked,
+              likesCount: res.totalCommentLikes,
+            })}
+          ></LikeButton>
           <button
             className="text-xs text-gray-500"
             onClick={() => setShowReplies((p) => !p)}
-          >
-            Reply ({comment.likesCount} likes)
-          </button>
+          ></button>
         </div>
       </div>
 

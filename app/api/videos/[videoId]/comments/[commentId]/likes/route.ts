@@ -43,8 +43,8 @@ export async function POST(
     });
 
     return NextResponse.json({
-      totalCommentLikes,
       liked: !deleted,
+      totalCommentLikes,
       message: deleted
         ? 'Comment unliked successfully'
         : 'Comment liked successfully',

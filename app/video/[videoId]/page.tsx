@@ -1,11 +1,12 @@
 'use client';
 
-import CommentsSection from '@/app/video/components/CommentSection';
-import ToggleLikeOnVideo from '@/app/video/components/ToggleLikeOnVideo';
+import CommentsSection from '@/app/video/components/comments/CommentSection';
 import VideoPlayer from '@/app/(feed)/components/videos/videoPlayer';
 import { apiClient } from '@/lib/api-client';
 import { SingleVideoRes, VideoDetails } from '@/lib/types/video';
 import { useCallback, useEffect, useState } from 'react';
+import { LikeButton } from '../components/likes/LikeButton';
+import { LikeVideoResponse } from '@/lib/types/like';
 
 export default function SingleVideoPage({
   params,
@@ -41,11 +42,15 @@ export default function SingleVideoPage({
   return (
     <>
       <VideoPlayer video={video} />
-      <ToggleLikeOnVideo
-        videoId={video._id}
-        initialLikes={likeCount}
+      <LikeButton
         initialLiked={isliked}
-      ></ToggleLikeOnVideo>
+        initialLikes={likeCount}
+        onToggle={() => apiClient.toggleVideoLike(video._id)}
+        normalize={(res: LikeVideoResponse) => ({
+          liked: res.liked,
+          likesCount: res.totalVideoLikes,
+        })}
+      ></LikeButton>
       <CommentsSection videoId={video._id} />
     </>
   );

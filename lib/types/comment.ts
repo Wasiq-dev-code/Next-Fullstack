@@ -8,6 +8,7 @@ export interface Comment {
   content: string;
   owner: CommentOwner;
   likesCount: number;
+  isLiked: boolean;
   repliesCount?: number;
   createdAt: string;
 }
