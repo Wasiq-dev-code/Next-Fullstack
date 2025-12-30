@@ -1,85 +1,52 @@
 'use client';
+
 import UploadExample from '@/app/components/fileUploads';
 import { useNotification } from '@/app/components/providers/notification';
-import { apiClient } from '@/lib/api-client';
-import { useState } from 'react';
-
-export type UploadedFile = {
-  url: string;
-  fileId: string;
-};
+import { useRegisterVideo } from '../hooks/common/useRegisterVideo';
 
 export default function RegisterVideo() {
-  const [title, setTitle] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [video, setVideo] = useState<UploadedFile | null>(null);
-  const [thumbnail, setThumbnail] = useState<UploadedFile | null>(null);
-  const [submitting, setSubmitting] = useState<boolean>(false);
   const { showNotification } = useNotification();
 
-  const canSubmit =
-    Boolean(title.trim()) &&
-    Boolean(description.trim()) &&
-    Boolean(video) &&
-    Boolean(thumbnail) &&
-    !submitting;
+  const {
+    title,
+    description,
+    errors,
+    submitting,
+    canSubmit,
+    setTitle,
+    setDescription,
+    setVideo,
+    setThumbnail,
+    submit,
+  } = useRegisterVideo(showNotification);
 
-  const rollbackDelete = async (fileId: string) => {
-    try {
-      await fetch(`/api/auth/imageKit-del/${fileId}`, {
-        method: 'DELETE',
-      });
-    } catch (err) {
-      console.error('Rollback delete failed:', err);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!canSubmit) return;
-    setSubmitting(true);
-    try {
-      const dataObj = await apiClient.createVideo({
-        title: title.trim(),
-        description: description.trim(),
-        thumbnail: {
-          url: thumbnail!.url,
-          fileId: thumbnail!.fileId,
-        },
-        video: {
-          url: video!.url,
-          fileId: video!.fileId,
-        },
-      });
-      if (!dataObj?.message) throw new Error('Invalid API response');
-
-      showNotification(dataObj.message, 'success');
-
-      setTitle('');
-      setDescription('');
-      setThumbnail(null);
-      setVideo(null);
-    } catch (err) {
-      showNotification('Error Registering Video', 'error');
-
-      if (!thumbnail?.fileId) await rollbackDelete(thumbnail!.fileId);
-      if (!video?.fileId) await rollbackDelete(video!.fileId);
-    } finally {
-      setSubmitting(false);
-    }
-  };
   return (
     <div>
       <h2>Create Video</h2>
-      <input
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <textarea
-        placeholder="Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
+
+      {/* Title */}
+      <div>
+        <input
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        {errors.title && <p style={{ color: 'red' }}>{errors.title}</p>}
+      </div>
+
+      {/* Description */}
+      <div>
+        <textarea
+          placeholder="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        {errors.description && (
+          <p style={{ color: 'red' }}>{errors.description}</p>
+        )}
+      </div>
+
+      {/* Thumbnail */}
       <div>
         <h4>Thumbnail</h4>
         <UploadExample
@@ -87,19 +54,22 @@ export default function RegisterVideo() {
           visibility="private"
           onSuccess={(res) => setThumbnail(res)}
         />
-        {thumbnail && <p>Thumbnail uploaded ✔</p>}
+        {errors.thumbnail && <p style={{ color: 'red' }}>{errors.thumbnail}</p>}
       </div>
 
+      {/* Video */}
       <div>
         <h4>Video</h4>
         <UploadExample
           FileType="video"
           visibility="private"
-          onSuccess={(res: UploadedFile) => setVideo(res)}
+          onSuccess={(res) => setVideo(res)}
         />
-        {video && <p>Video uploaded ✔</p>}
+        {errors.video && <p style={{ color: 'red' }}>{errors.video}</p>}
       </div>
-      <button disabled={!canSubmit} onClick={handleSubmit}>
+
+      {/* Submit */}
+      <button disabled={!canSubmit} onClick={submit}>
         {submitting ? 'Creating...' : 'Create Video'}
       </button>
     </div>

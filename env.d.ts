@@ -3,5 +3,7 @@ namespace NodeJS {
     NEXT_PUBLIC_IMAGEKIT_KEY: string;
     NEXT_PUBLIC_URL_ENDPOINT: string;
     IMAGE_PRIVATE_KEY: string;
+    GOOGLE_CLIENT_ID: string;
+    GOOGLE_CLIENT_SECRET: string;
   }
 }

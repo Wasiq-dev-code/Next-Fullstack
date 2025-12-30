@@ -17,5 +17,5 @@ export type ProfileResponse = {
 
 export type ProfileVideoResponse = VideoFeed & {
   videos: VideoFeed[];
-  nextCursor: string | null;
+  nextCursor: number | null;
 };

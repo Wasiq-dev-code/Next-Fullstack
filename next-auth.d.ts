@@ -6,12 +6,16 @@ declare module 'next-auth' {
       id: string;
       passwordChangedAt?: string;
       emailChangedAt?: string;
+      name?: string;
+      image?: string;
     } & DefaultSession['user'];
   }
 
   interface User {
     passwordChangedAt?: Date;
     emailChangedAt?: Date;
+    name?: string;
+    image?: string;
   }
 }
 
@@ -20,5 +24,7 @@ declare module 'next-auth/jwt' {
     id?: string;
     passwordChangedAt?: string;
     emailChangedAt?: string;
+    name?: string;
+    image?: string;
   }
 }

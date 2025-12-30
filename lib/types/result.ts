@@ -17,7 +17,7 @@ export type VideoAuthData = {
 export type VideoFormData = Omit<IVideo, '_id'>;
 
 export type FetchOptions = {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   body?: any;
   headers?: Record<string, string>;
 };

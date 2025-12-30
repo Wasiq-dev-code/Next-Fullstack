@@ -1,5 +1,7 @@
 import { authOptions } from '@/lib/auth';
 import { connectToDatabase } from '@/lib/db';
+import { deleteFileFromImageKit } from '@/lib/imageKitOps';
+import { changeOtherFieldsSchema } from '@/lib/validators/changeOtherFields.schema';
 import User from '@/model/User.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,35 +13,39 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { username, email } = await req.json();
+    const body = await req.json();
 
-    if (!username && !email) {
-      return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
+    const parsed = changeOtherFieldsSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { issues: parsed.error.flatten().fieldErrors },
+        { status: 400 },
+      );
     }
 
+    const { username, email, profilePhoto } = parsed.data;
     await connectToDatabase();
 
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<{
+      username: string;
+      email: string;
+      profilePhoto: {
+        url: string;
+        fileId: string;
+      };
+      emailChangedAt: Date;
+    }> = {};
 
     if (username) {
-      if (username.length < 3) {
-        return NextResponse.json(
-          { error: 'Username too short' },
-          { status: 400 },
-        );
-      }
       updateData.username = username;
     }
 
     if (email) {
-      if (!email.includes('@')) {
-        return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
-      }
-
       const emailExists = await User.findOne({ email });
       if (emailExists && emailExists._id.toString() !== session.user.id) {
         return NextResponse.json(
-          { error: 'Email already in use' },
+          { issues: { email: ['Email already in use'] } },
           { status: 409 },
         );
       }
@@ -48,11 +54,24 @@ export async function PATCH(req: NextRequest) {
       updateData.emailChangedAt = new Date(); // 🔐 force logout
     }
 
+    if (profilePhoto) {
+      const userOldProfilePhoto = await User.findById(session.user.id).select(
+        '+profilePhoto.fileId',
+      );
+      updateData.profilePhoto = profilePhoto;
+
+      const deleted = await deleteFileFromImageKit(userOldProfilePhoto);
+
+      if (!deleted) {
+        console.warn('Profilephoto cleanup failed');
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       session.user.id,
       { $set: updateData },
       { new: true, runValidators: true },
-    ).select('-password');
+    ).select('+username +email +profilePhoto');
 
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {

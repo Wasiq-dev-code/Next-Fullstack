@@ -1,9 +1,12 @@
 import { connectToDatabase } from '@/lib/db';
 import { requireAuth } from '@/lib/requireAuth';
-import { CreateVideoDTO } from '@/lib/types/video';
 import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
+import {
+  RegisterVideoDTO,
+  registerVideoSchema,
+} from '@/lib/validators/registerVideo';
 
 // Create Video
 export async function POST(request: NextRequest) {
@@ -13,39 +16,41 @@ export async function POST(request: NextRequest) {
     const auth = await requireAuth();
     if (!auth.ok) return auth.error;
 
-    const body: CreateVideoDTO = await request.json();
+    const body: RegisterVideoDTO = await request.json();
 
-    if (
-      !body.title ||
-      !body.description ||
-      !body.thumbnail?.url ||
-      !body.thumbnail?.fileId ||
-      !body.video?.url ||
-      !body.video?.fileId
-    ) {
+    const parsed = registerVideoSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Required fields missing' },
+        {
+          error: 'Validation Failed',
+          issue: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
 
     const video = await Video.create({
-      title: body.title,
-      description: body.description,
+      title: parsed.data.title,
+      description: parsed.data.description,
       thumbnail: {
-        url: body.thumbnail.url,
-        fileId: body.thumbnail.fileId,
+        url: parsed.data.thumbnail.url,
+        fileId: parsed.data.thumbnail.fileId,
       },
       video: {
-        url: body.video.url,
-        fileId: body.video.fileId,
+        url: parsed.data.video.url,
+        fileId: parsed.data.video.fileId,
       },
-      controls: body.controls ?? true,
+
+      // backend decides
+      controls: true,
+
       owner: new mongoose.Types.ObjectId(auth.data),
+
       transformation: {
-        quality: body.transformation?.quality ?? 100,
+        quality: 80,
       },
-      randomScore: Math.random(), // server-only
+
+      randomScore: Math.random(),
     });
 
     return NextResponse.json(

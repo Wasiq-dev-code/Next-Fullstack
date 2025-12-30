@@ -7,6 +7,7 @@ import { deleteFileFromImageKit } from '@/lib/imageKitOps';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Like from '@/model/Like.model';
+import { changeVideoFields } from '@/lib/validators/changeVideoFields';
 
 // Update video
 export async function PATCH(
@@ -20,7 +21,22 @@ export async function PATCH(
     if (!guard.ok) return guard.error;
 
     const body = await req.json();
-    const { title, description, thumbnail } = body;
+
+    const parsed = changeVideoFields.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: 'Error while validation',
+          issue: parsed.error.flatten().fieldErrors,
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
+    const { title, description, thumbnail } = parsed.data;
 
     const video = guard.data.video;
 
@@ -30,6 +46,7 @@ export async function PATCH(
     if (
       thumbnail &&
       thumbnail.fileId &&
+      video.thumbnail &&
       thumbnail.fileId !== video.thumbnail.fileId
     ) {
       const deleted = await deleteFileFromImageKit(video.thumbnail.fileId);

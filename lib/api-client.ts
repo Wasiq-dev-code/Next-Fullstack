@@ -15,6 +15,11 @@ import {
 import { LikeCommentResponse, LikeVideoResponse } from './types/like';
 import { ProfileResponse, ProfileVideoResponse } from './types/profile';
 import { RegisterUserDTO, RegisterUserResponse } from './types/user';
+import {
+  ChangeFieldsResponse,
+  Message,
+  PayloadChangeFields,
+} from './types/profile-softwareenginee';
 
 class ApiClient {
   private async fetch<T>(
@@ -138,6 +143,28 @@ class ApiClient {
     return await this.fetch<ProfileVideoResponse>(
       `/user/${userId}/videos${query}`,
     );
+  }
+
+  async passwordChange(
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<Message> {
+    return await this.fetch('/user/password', {
+      method: 'PATCH',
+      body: {
+        oldPassword,
+        newPassword,
+      },
+    });
+  }
+
+  async changeFields(
+    payload: PayloadChangeFields,
+  ): Promise<ChangeFieldsResponse> {
+    return await this.fetch<ChangeFieldsResponse>('/user/changeFields', {
+      method: 'PATCH',
+      body: payload,
+    });
   }
 }
 

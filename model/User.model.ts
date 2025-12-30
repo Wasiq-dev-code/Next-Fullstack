@@ -33,12 +33,12 @@ const userSchema = new Schema<IUser>(
 
     password: {
       type: String,
-      required: true,
+      required: false,
     },
 
     profilePhoto: {
-      url: { type: String, required: true },
-      fileId: { type: String, required: true },
+      url: { type: String },
+      fileId: { type: String },
     },
 
     passwordChangedAt: {
@@ -60,7 +60,7 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
+  if (this.password && this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 10);
   }
   next();

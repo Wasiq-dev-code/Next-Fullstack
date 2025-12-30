@@ -1,5 +1,6 @@
 import { authOptions } from '@/lib/auth';
 import { connectToDatabase } from '@/lib/db';
+import { passwordChangeSchema } from '@/lib/validators/passwordChange.schema';
 import User from '@/model/User.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
@@ -15,28 +16,21 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const { oldPassword, newPassword } = await req.json();
+    const body = await req.json();
 
-    if (!oldPassword || !newPassword) {
+    const parsed = passwordChangeSchema.safeParse(body);
+
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'fields are missing' },
+        {
+          error: 'Validation failed',
+          issues: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: 'Password length should be 8' },
-        { status: 400 },
-      );
-    }
-
-    if (newPassword === oldPassword) {
-      return NextResponse.json(
-        { error: 'oldPassword and newPassword both are same' },
-        { status: 400 },
-      );
-    }
+    const { oldPassword, newPassword } = parsed.data;
 
     await connectToDatabase();
 

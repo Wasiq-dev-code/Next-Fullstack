@@ -1,5 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
 import { RegisterUserDTO } from '@/lib/types/user';
+import { registerUserSchema } from '@/lib/validators/registerUser.schema';
 import User, { IUser } from '@/model/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -8,42 +9,42 @@ export async function POST(request: NextRequest) {
     // Destructure request json for accessing email and password from client
     const body: RegisterUserDTO = await request.json();
 
-    // Email and password should be fill
-    if (
-      !body.email ||
-      !body.profilePhoto?.url ||
-      !body.profilePhoto?.fileId ||
-      !body.username ||
-      !body.password
-    ) {
+    const parsed = registerUserSchema.safeParse(body);
+
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Required fields missing' },
+        {
+          error: 'Validation failed',
+          issues: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
 
+    const data = parsed.data;
+
     // Connecting to database before it's operations.
     await connectToDatabase();
 
-    const existingUser = await User.findOne({ email: body.email });
+    const existingUser = await User.findOne({ email: data.email });
 
     // User should not be in DB
     if (existingUser) {
       return NextResponse.json(
         { error: 'User is already in DB' },
-        { status: 400 },
+        { status: 409 },
       );
     }
 
     // Creating User
     const newUser: IUser = await User.create({
-      email: body.email,
-      password: body.password,
+      email: data.email,
+      password: data.password,
       profilePhoto: {
-        url: body.profilePhoto.url,
-        fileId: body.profilePhoto.fileId,
+        url: data.profilePhoto.url,
+        fileId: data.profilePhoto.fileId,
       },
-      username: body.username,
+      username: data.username,
     });
 
     return NextResponse.json(

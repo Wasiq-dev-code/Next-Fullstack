@@ -3,6 +3,7 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from './db';
 import bcrypt from 'bcryptjs';
+import Google from 'next-auth/providers/google';
 
 export const authOptions: NextAuthOptions = {
   // Google and github providers are need to be implement
@@ -35,10 +36,17 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user._id.toString(),
           email: user.email,
+          name: user.username,
+          image: user.profilePhoto.url,
           passwordChangedAt: user.passwordChangedAt,
           emailChangedAt: user.emailChangedAt,
         };
       },
+    }),
+
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   // Extra work needed on callback
@@ -46,6 +54,8 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.name = user.name;
+        token.image = user.image ?? undefined;
         token.passwordChangedAt = user.passwordChangedAt
           ? new Date(user.passwordChangedAt).toISOString()
           : undefined;
@@ -59,6 +69,8 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.image = token.image as string;
         session.user.passwordChangedAt = token.passwordChangedAt
           ? new Date(token.passwordChangedAt).toISOString()
           : undefined;
@@ -67,6 +79,28 @@ export const authOptions: NextAuthOptions = {
           : undefined;
       }
       return session;
+    },
+
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        await connectToDatabase();
+
+        const existingUser = await User.findOne({ email: user.email });
+
+        if (!existingUser) {
+          await User.create({
+            email: user.email,
+            username: user.name ?? 'Google User',
+            profilePhoto: user.image
+              ? {
+                  url: user.image,
+                  fileId: 'google-oauth',
+                }
+              : undefined,
+          });
+        }
+      }
+      return true;
     },
   },
 

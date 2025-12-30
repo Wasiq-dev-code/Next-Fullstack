@@ -4,11 +4,19 @@ import { useNotification } from '@/app/components/providers/notification';
 import UploadExample from '@/app/components/fileUploads';
 import { apiClient } from '@/lib/api-client';
 import { useState } from 'react';
-import { Router } from 'next/router';
+import { rollbackDelete } from '@/lib/rollBackDelete';
 
 type UploadedFile = {
   url: string;
   fileId: string;
+};
+
+type FieldErrors = {
+  username?: string;
+  email?: string;
+  password?: string;
+  profilePhoto?: string;
+  general?: string;
 };
 
 export default function UserRegister() {
@@ -17,6 +25,7 @@ export default function UserRegister() {
   const [password, setPassword] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<UploadedFile | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const { showNotification } = useNotification();
 
@@ -27,25 +36,14 @@ export default function UserRegister() {
     Boolean(profilePhoto) &&
     !submitting;
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault(); // Prevent default form submission
-
-    console.log('🔵 Submit clicked', { canSubmit, submitting });
-
-    if (!canSubmit || submitting) {
-      console.log('❌ Submit blocked', { canSubmit, submitting });
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit || submitting) return;
 
     setSubmitting(true);
+    setErrors({});
 
     try {
-      console.log('🚀 Calling registerUser API...', {
-        username,
-        email,
-        profilePhoto,
-      });
-
       const res = await apiClient.registerUser({
         username,
         email,
@@ -56,84 +54,120 @@ export default function UserRegister() {
         },
       });
 
-      console.log('✅ Registration response:', res);
-
-      if (!res) throw new Error('No response');
-
       showNotification(res.message, 'success');
 
-      // reset
       setUsername('');
       setEmail('');
       setPassword('');
       setProfilePhoto(null);
-    } catch (error) {
-      console.error('❌ Registration failed:', error);
-      showNotification('Failed to register user', 'error');
+    } catch (err: any) {
+      try {
+        const data = await err.json?.();
 
-      if (profilePhoto?.fileId) {
-        try {
-          console.log('🗑️ Deleting photo:', profilePhoto.fileId);
-          await fetch('/api/auth/imageKit-del', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileId: profilePhoto.fileId }),
+        if (data?.issues) {
+          setErrors({
+            username: data.issues.username?.[0],
+            email: data.issues.email?.[0],
+            password: data.issues.password?.[0],
+            profilePhoto: data.issues.profilePhoto?.[0],
           });
-          console.log('✅ Photo deleted');
-        } catch (e) {
-          console.error('❌ Delete failed:', e);
+          return;
         }
+
+        if (data?.error) {
+          setErrors({ general: data.error });
+          return;
+        }
+      } catch {
+        setErrors({ general: 'Something went wrong' });
       }
+
+      showNotification('Registration failed', 'error');
+
+      if (!profilePhoto?.fileId) await rollbackDelete(profilePhoto!.fileId);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        handleSubmit();
-      }}
-    >
-      <h2>Register User</h2>
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4">
+      <h2 className="text-xl font-semibold">Register User</h2>
 
-      <input
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        disabled={submitting}
-      />
-
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        disabled={submitting}
-      />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        disabled={submitting}
-      />
+      {errors.general && (
+        <p className="text-red-600 text-sm">{errors.general}</p>
+      )}
 
       <div>
-        <h4>Profile Photo</h4>
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setErrors((p) => ({ ...p, username: undefined }));
+          }}
+          disabled={submitting}
+          className="w-full border p-2 rounded"
+        />
+        {errors.username && (
+          <p className="text-red-500 text-sm">{errors.username}</p>
+        )}
+      </div>
+
+      <div>
+        <input
+          placeholder="Email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setErrors((p) => ({ ...p, email: undefined }));
+          }}
+          disabled={submitting}
+          className="w-full border p-2 rounded"
+        />
+        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+      </div>
+
+      <div>
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setErrors((p) => ({ ...p, password: undefined }));
+          }}
+          disabled={submitting}
+          className="w-full border p-2 rounded"
+        />
+        {errors.password && (
+          <p className="text-red-500 text-sm">{errors.password}</p>
+        )}
+      </div>
+
+      <div>
+        <h4 className="font-medium mb-1">Profile Photo</h4>
         <UploadExample
           FileType="image"
           visibility="public"
           onSuccess={(res) => {
-            console.log('📸 Photo uploaded:', res);
             setProfilePhoto({ url: res.url, fileId: res.fileId });
+            setErrors((p) => ({ ...p, profilePhoto: undefined }));
           }}
         />
-        {profilePhoto && <p>Profile photo uploaded ✔</p>}
+        {profilePhoto && (
+          <p className="text-green-600 text-sm">Photo uploaded ✔</p>
+        )}
+        {errors.profilePhoto && (
+          <p className="text-red-500 text-sm">{errors.profilePhoto}</p>
+        )}
       </div>
 
-      <button type="submit" disabled={!canSubmit}>
+      <button
+        type="submit"
+        disabled={!canSubmit}
+        className="w-full bg-black text-white py-2 rounded disabled:opacity-50"
+      >
         {submitting ? 'Registering...' : 'Register'}
       </button>
     </form>
