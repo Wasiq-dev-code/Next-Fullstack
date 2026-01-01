@@ -1,11 +1,11 @@
 'use client';
 import { apiClient } from '@/lib/api-client';
 import type { Comment, CommentListResponse } from '@/lib/types/comment';
-import { useNotification } from '@/app/components/providers/notification';
-import CommentItem from '@/app/video/components/comments/CommentItem';
+import CommentItem from '@/app/videos/components/comments/CommentItem';
 import CreateComment from './CreateComment';
 import { usePaginatedList } from '../../hooks/common/usePaginatedList';
 
+console.log('CommentItem FILE LOADED');
 export default function CommentsSection({ videoId }: { videoId: string }) {
   const {
     items: comments,
@@ -17,7 +17,6 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
       .fetchVideoComments(videoId, current)
       .then((res: CommentListResponse) => res.comments),
   );
-
   return (
     <div className="mt-6">
       <CreateComment videoId={videoId} onCreated={() => {}}></CreateComment>

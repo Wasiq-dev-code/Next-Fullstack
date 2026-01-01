@@ -10,13 +10,23 @@ export function useLike<T>(
 
   async function toggle() {
     if (loading) return;
-    setLoading(true);
 
+    const prevLiked = liked;
+    const prevLikes = likesCount;
+
+    setLiked(!liked);
+    setLikesCount((c) => (liked ? c - 1 : c + 1));
+
+    setLoading(true);
     try {
       const res = await toggleFn();
       const normalized = normalize(res);
+
       setLiked(normalized.liked);
       setLikesCount(normalized.likesCount);
+    } catch (err) {
+      setLiked(prevLiked);
+      setLikesCount(prevLikes);
     } finally {
       setLoading(false);
     }

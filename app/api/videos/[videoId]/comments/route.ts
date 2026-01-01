@@ -8,8 +8,9 @@ import mongoose from 'mongoose';
 // Create Video's comment
 export async function POST(
   req: NextRequest,
-  { params }: { params: { videoId: string } },
+  { params }: { params: Promise<{ videoId: string }> },
 ) {
+  const { videoId } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -17,12 +18,16 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { videoId } = params;
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
       return NextResponse.json({ error: 'Invalid videoId' }, { status: 400 });
     }
 
-    const { content } = await req.json();
+    const body = await req.json();
+
+    const data = JSON.parse(body);
+
+    const content = data.content;
+    console.log('Wsaiq', content);
     if (!content?.trim()) {
       return NextResponse.json(
         { error: 'Comment cannot be empty' },
@@ -109,10 +114,10 @@ export async function POST(
 // Get All Comments
 export async function GET(
   req: NextRequest,
-  { params }: { params: { videoId: string } },
+  { params }: { params: Promise<{ videoId: string }> },
 ) {
   try {
-    const { videoId } = params;
+    const { videoId } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
       return NextResponse.json({ error: 'Invalid videoId' }, { status: 400 });
@@ -137,7 +142,7 @@ export async function GET(
         },
       },
 
-      { $sort: { createdAt: -1 } },
+      { $sort: { createdAt: -1, _id: -1 } },
       { $skip: skip },
       { $limit: limit },
 
@@ -147,14 +152,20 @@ export async function GET(
           localField: 'commentedBy',
           foreignField: '_id',
           as: 'owner',
-          pipeline: [
-            {
-              $project: {
-                username: 1,
-                profilePhoto: 1,
-              },
-            },
-          ],
+          // pipeline: [
+          //   {
+          //     $project: {
+          //       username: 1,
+          //       'profilePhoto.url': 1,
+          //     },
+          //   },
+          // ],
+        },
+      },
+
+      {
+        $addFields: {
+          owner: { $first: '$owner' },
         },
       },
 
@@ -198,7 +209,11 @@ export async function GET(
 
       {
         $addFields: {
-          owner: { $first: '$owner' },
+          owner: {
+            _id: '$owner._id',
+            username: '$owner.username',
+            profilePhoto: '$owner.profilePhoto.url',
+          },
           likesCount: { $ifNull: [{ $first: '$likes.count' }, 0] },
           isLiked: userId ? { $gt: [{ $size: '$userLike' }, 0] } : false,
         },
@@ -206,11 +221,21 @@ export async function GET(
 
       {
         $project: {
-          likes: 0,
-          userLike: 0,
+          content: 1,
+          repliesCount: 1,
+          createdAt: 1,
+          likesCount: 1,
+          isLiked: 1,
+          owner: {
+            _id: 1,
+            username: 1,
+            profilePhoto: 1,
+          },
         },
       },
     ]);
+
+    console.log(comments);
 
     return NextResponse.json({
       page,

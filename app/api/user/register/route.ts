@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
 
     const parsed = registerUserSchema.safeParse(body);
 
+    console.log(parsed);
+
     if (!parsed.success) {
       return NextResponse.json(
         {

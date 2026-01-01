@@ -24,7 +24,11 @@ export default function ReplyList({ videoId, parentCommentId }: Props) {
 
   return (
     <div className="ml-10 mt-2">
-      <CreateReply parentCommentId={parentCommentId} onCreated={() => {}} />
+      <CreateReply
+        parentCommentId={parentCommentId}
+        videoId={videoId}
+        onCreated={() => {}}
+      />
 
       {replies.map((reply) => (
         <p key={reply._id} className="text-sm">

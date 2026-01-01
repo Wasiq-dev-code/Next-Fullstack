@@ -112,10 +112,10 @@ export async function DELETE(
 // GetVideoById
 export async function GET(
   req: NextRequest,
-  { params }: { params: { videoId: string } },
+  { params }: { params: Promise<{ videoId: string }> },
 ) {
   try {
-    const { videoId } = params;
+    const { videoId } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(videoId) || !videoId.trim()) {
       return NextResponse.json(
@@ -206,20 +206,9 @@ export async function GET(
     // Count likes
     const likeCount = await Like.countDocuments({ video: videoId });
 
-    if (!likeCount) {
-      return NextResponse.json(
-        {
-          error: 'Like count in video is not available',
-        },
-        {
-          status: 404,
-        },
-      );
-    }
-
     // Check if user liked
     const userLiked = userId
-      ? await Like.exists({ video: videoId, userLiked: userId })
+      ? Boolean(await Like.exists({ video: videoId, userLiked: userId }))
       : false;
 
     return NextResponse.json(

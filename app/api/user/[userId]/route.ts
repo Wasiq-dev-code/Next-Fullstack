@@ -8,13 +8,14 @@ import mongoose from 'mongoose';
 // Profile Information Route
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } },
+  { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
+    const { userId } = await params;
     const session = await getServerSession(authOptions);
     const viewerUserId = session?.user?.id || null;
 
-    const targetUserId = params.userId === 'me' ? viewerUserId : params.userId;
+    const targetUserId = userId === 'me' ? viewerUserId : userId;
 
     if (!targetUserId || !mongoose.Types.ObjectId.isValid(targetUserId)) {
       return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });

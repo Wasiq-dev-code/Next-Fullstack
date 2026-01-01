@@ -7,15 +7,15 @@ import mongoose from 'mongoose';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { videoId: string; commentId: string } },
+  { params }: { params: Promise<{ videoId: string; commentId: string }> },
 ) {
   try {
+    const { commentId } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { commentId } = params;
     const userId = session.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(commentId)) {

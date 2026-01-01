@@ -1,13 +1,13 @@
-'use client';
-import ProfileInfo from '../components/ProfileInfo';
-import ProfileVideos from '../components/ProfileVideos';
+import ProfilePage from './ProfilePage';
 
-export default function page({ params }: { params: { userId: string } }) {
-  const { userId } = params;
+type PageProps = {
+  params: { userId: string };
+};
+export default async function page({ params }: PageProps) {
+  const { userId } = await params;
   return (
     <div>
-      <ProfileInfo userId={userId}></ProfileInfo>
-      <ProfileVideos userId={userId}></ProfileVideos>
+      <ProfilePage userId={userId}></ProfilePage>
     </div>
   );
 }

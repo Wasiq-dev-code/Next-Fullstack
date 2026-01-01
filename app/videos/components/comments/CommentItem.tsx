@@ -1,10 +1,12 @@
 'use client';
 import { Comment } from '@/lib/types/comment';
 import { useState } from 'react';
-import ReplyList from '@/app/video/components/comments/ReplyList';
+import ReplyList from '@/app/videos/components/comments/ReplyList';
 import { LikeButton } from '../likes/LikeButton';
 import { apiClient } from '@/lib/api-client';
 import { LikeCommentResponse } from '@/lib/types/like';
+import Image from 'next/image';
+import { UserAvatar } from './UserAvatar';
 
 export default function CommentItem({
   comment,
@@ -14,17 +16,20 @@ export default function CommentItem({
   videoId: string;
 }) {
   const [showReplies, setShowReplies] = useState(false);
+  console.log('Hi hello', comment.owner.profilePhoto);
+
   return (
     <div className="mb-4">
       <div className="flex gap-3">
-        <img
+        <UserAvatar
           src={comment.owner.profilePhoto}
-          className="w-8 h-8 rounded-full"
-        />
+          alt={comment.owner.username}
+        ></UserAvatar>
 
         <div>
-          <p>
-            <b>{comment.owner.username}</b> {comment.content}
+          <p className="text-sm leading-snug">
+            <span className="font-semibold mr-1">{comment.owner.username}</span>
+            {comment.content}
           </p>
           <LikeButton
             initialLiked={comment.isLiked}

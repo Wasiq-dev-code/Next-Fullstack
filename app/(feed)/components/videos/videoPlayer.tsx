@@ -4,42 +4,42 @@ import { VideoDetails } from '@/lib/types/video';
 import Image from 'next/image';
 import Link from 'next/link';
 
-interface VideoPlayerProps {
-  video: VideoDetails;
-}
-
-export default function VideoPlayer({ video }: VideoPlayerProps) {
+export default function VideoPlayer({ video }: { video: VideoDetails }) {
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Owner */}
-
-      <Link href={`/profile/${video.owner._id}`}>
-        <div className="flex items-center gap-3 mt-2">
-          <Image
-            src={video.owner.profilePhoto.url}
-            alt={video.owner.username}
-            width={40}
-            height={40}
-            className="rounded-full"
-          />
-          <span className="font-medium">{video.owner.username}</span>
-        </div>
-      </Link>
-
-      {/* Video */}
-      <video src={video.video.url} controls className="w-full rounded-lg" />
+    <div className="max-w-3xl mx-auto space-y-5">
+      {/* Video Card */}
+      <div className="rounded-2xl overflow-hidden bg-black shadow-lg">
+        <video src={video.video.url} controls className="w-full aspect-video" />
+      </div>
 
       {/* Title */}
-      <h1 className="text-xl font-semibold mt-4">{video.title}</h1>
+      <h1 className="text-xl font-semibold leading-tight">{video.title}</h1>
 
-      {/* Meta */}
-      <div className="flex gap-4 text-sm text-gray-500 mt-2">
+      {/* Meta Row */}
+      <div className="flex items-center justify-between text-sm text-gray-500">
         <span>{video.likesCount} likes</span>
         <span>{video.uploadedAt}</span>
       </div>
 
+      {/* Owner Card */}
+      <Link href={`/profile/${video.owner._id}`}>
+        <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+          <Image
+            src={video.owner.profilePhoto.url}
+            alt={video.owner.username}
+            width={44}
+            height={44}
+            className="rounded-full object-cover"
+          />
+          <div>
+            <p className="font-medium leading-none">{video.owner.username}</p>
+            <p className="text-xs text-gray-500">View profile</p>
+          </div>
+        </div>
+      </Link>
+
       {/* Description */}
-      <p className="mt-4 text-gray-700">{video.description}</p>
+      <p className="text-gray-700 leading-relaxed">{video.description}</p>
     </div>
   );
 }

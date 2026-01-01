@@ -94,13 +94,13 @@ class ApiClient {
   async createReply(
     videoId: string,
     commentId: string,
-    payload: { content: string },
+    content: string,
   ): Promise<CreateReplyResponse> {
     return this.fetch<CreateReplyResponse>(
       `/videos/${videoId}/comments/${commentId}`,
       {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify(content),
       },
     );
   }
@@ -137,7 +137,7 @@ class ApiClient {
 
   async profileVideos(
     userId: string,
-    cursor: string | null,
+    cursor: number | null,
   ): Promise<ProfileVideoResponse> {
     const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
     return await this.fetch<ProfileVideoResponse>(

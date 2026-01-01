@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import type { Comment, CreateReplyResponse } from '@/lib/types/comment';
-import { useNotification } from '../providers/notification';
+import { useNotification } from '@/app/components/providers/notification';
 
 export default function CreateReply({
   parentCommentId,
+  videoId,
   onCreated,
 }: {
   parentCommentId: string;
+  videoId: string;
   onCreated: (reply: Comment) => void;
 }) {
   const [text, setText] = useState('');
@@ -19,10 +21,9 @@ export default function CreateReply({
     if (!text.trim()) return;
 
     const res: CreateReplyResponse = await apiClient.createReply(
+      videoId,
       parentCommentId,
-      {
-        content: text,
-      },
+      text,
     );
 
     onCreated(res.reply);

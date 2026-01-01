@@ -9,12 +9,12 @@ import { NextRequest, NextResponse } from 'next/server';
 // ProfileVideos Route
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } },
+  { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
     await connectToDatabase();
 
-    const { userId } = params;
+    const { userId } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
