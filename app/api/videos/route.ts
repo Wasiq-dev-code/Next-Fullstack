@@ -10,8 +10,11 @@ const MAX_EXCLUDE = 100 as const;
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
-    const { excludeIds = [], cursor = 0 } = await req.json();
+    const body = await req.json();
 
+    const { excludeIds, cursor } = body;
+
+    // Length will not grow beyond 100
     const limitedExcludeIds = excludeIds.slice(-MAX_EXCLUDE);
 
     const videos = await Video.aggregate([

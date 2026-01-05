@@ -7,11 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     // Destructure request json for accessing email and password from client
-    const body: RegisterUserDTO = await request.json();
+    const body = await request.json();
 
-    const parsed = registerUserSchema.safeParse(body);
+    const bodyData: RegisterUserDTO = JSON.parse(body);
 
-    console.log(parsed);
+    const parsed = registerUserSchema.safeParse(bodyData);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
         fileId: data.profilePhoto.fileId,
       },
       username: data.username,
+      provider: 'credentials',
     });
 
     return NextResponse.json(

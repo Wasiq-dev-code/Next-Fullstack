@@ -4,7 +4,6 @@ import { useNotification } from '@/app/components/providers/notification';
 import UploadExample from '@/app/components/fileUploads';
 import { apiClient } from '@/lib/api-client';
 import { useState } from 'react';
-import { rollbackDelete } from '@/lib/rollBackDelete';
 
 type UploadedFile = {
   url: string;
@@ -84,7 +83,18 @@ export default function UserRegister() {
 
       showNotification('Registration failed', 'error');
 
-      if (!profilePhoto?.fileId) await rollbackDelete(profilePhoto!.fileId);
+      if (!profilePhoto?.fileId) {
+        const deletedFile = await fetch(`/api/auth/imageKit-del`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: profilePhoto?.fileId,
+        });
+        if (deletedFile.ok) {
+          showNotification('File deleted on imagekit', 'info');
+        }
+      }
     } finally {
       setSubmitting(false);
     }

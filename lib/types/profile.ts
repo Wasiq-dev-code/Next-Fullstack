@@ -19,3 +19,35 @@ export type ProfileVideoResponse = VideoFeed & {
   videos: VideoFeed[];
   nextCursor: number | null;
 };
+
+export type ProfilePrivateResponse = {
+  message: string;
+  isPrivate: boolean;
+};
+
+export type Message = {
+  message: string;
+};
+
+export type ChangeFields = {
+  email: string;
+  username: string;
+  profilePhoto: {
+    url: string;
+    fileId: string;
+  };
+};
+
+export type ChangeFieldsResponse = {
+  user: ChangeFields;
+  message: string;
+};
+
+export type PayloadChangeFields = {
+  email?: string;
+  username?: string;
+  profilePhoto?: {
+    url: string;
+    fileId: string;
+  };
+};

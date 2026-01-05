@@ -16,7 +16,6 @@ export default function CommentItem({
   videoId: string;
 }) {
   const [showReplies, setShowReplies] = useState(false);
-  console.log('Hi hello', comment.owner.profilePhoto);
 
   return (
     <div className="mb-4">

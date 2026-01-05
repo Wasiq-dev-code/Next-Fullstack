@@ -149,17 +149,6 @@ export async function GET(
           localField: 'owner',
           foreignField: '_id',
           as: 'owner',
-          pipeline: [
-            {
-              $match: { isPrivate: false },
-            },
-            {
-              $project: {
-                username: 1,
-                profilePhoto: 1,
-              },
-            },
-          ],
         },
       },
 
@@ -182,12 +171,14 @@ export async function GET(
 
       {
         $project: {
-          isPrivate: 0,
-          thumbnail: { fileId: 0 },
-          video: { fileId: 0 },
-          randomScore: 0,
-          createdAt: 0,
-          updatedAt: 0,
+          title: 1,
+          description: 1,
+          thumbnail: { url: 1 },
+          video: { url: 1 },
+          'owner.profilePhoto.url': 1,
+          'owner.username': 1,
+          'owner._id': 1,
+          uploadedAt: 1,
         },
       },
     ]);

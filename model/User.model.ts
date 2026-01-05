@@ -12,6 +12,7 @@ export interface IUser {
   isPrivate?: boolean;
   passwordChangedAt?: Date;
   emailChangedAt?: Date;
+  provider: string;
   _id?: mongoose.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -52,6 +53,11 @@ const userSchema = new Schema<IUser>(
     isPrivate: {
       type: Boolean,
       default: false,
+    },
+    provider: {
+      type: String,
+      enum: ['credentials', 'google'],
+      required: true,
     },
   },
   {

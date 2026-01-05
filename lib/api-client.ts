@@ -13,13 +13,15 @@ import {
   CreateReplyResponse,
 } from './types/comment';
 import { LikeCommentResponse, LikeVideoResponse } from './types/like';
-import { ProfileResponse, ProfileVideoResponse } from './types/profile';
-import { RegisterUserDTO, RegisterUserResponse } from './types/user';
 import {
   ChangeFieldsResponse,
   Message,
   PayloadChangeFields,
-} from './types/profile-softwareenginee';
+  ProfilePrivateResponse,
+  ProfileResponse,
+  ProfileVideoResponse,
+} from './types/profile';
+import { RegisterUserDTO, RegisterUserResponse } from './types/user';
 
 class ApiClient {
   private async fetch<T>(
@@ -164,6 +166,12 @@ class ApiClient {
     return await this.fetch<ChangeFieldsResponse>('/user/changeFields', {
       method: 'PATCH',
       body: payload,
+    });
+  }
+
+  async isPrivate(): Promise<ProfilePrivateResponse> {
+    return await this.fetch<ProfilePrivateResponse>(`/user/profile/private`, {
+      method: 'POST',
     });
   }
 }

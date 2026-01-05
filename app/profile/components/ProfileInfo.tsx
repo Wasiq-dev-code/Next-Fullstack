@@ -3,10 +3,15 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import type { Profile, ProfileResponse } from '@/lib/types/profile';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import PrivateProfile from '../private/page';
 
 export default function ProfileInfo({ userId }: { userId: string }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+  const user = session?.user.id;
 
   useEffect(() => {
     apiClient
@@ -81,6 +86,17 @@ export default function ProfileInfo({ userId }: { userId: string }) {
                 <button className="mt-16 px-8 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                   {profile.isFollowed ? 'Unfollow' : 'Follow'}
                 </button>
+              )}
+              {user === profile._id && (
+                <>
+                  <Link href={`/profile/edit`}>
+                    <button className="mt-16 px-8 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                      Edit profile
+                    </button>
+                  </Link>
+
+                  <PrivateProfile />
+                </>
               )}
             </div>
 

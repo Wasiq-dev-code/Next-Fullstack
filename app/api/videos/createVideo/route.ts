@@ -16,9 +16,12 @@ export async function POST(request: NextRequest) {
     const auth = await requireAuth();
     if (!auth.ok) return auth.error;
 
-    const body: RegisterVideoDTO = await request.json();
+    const body = await request.json();
 
-    const parsed = registerVideoSchema.safeParse(body);
+    const finalBody: RegisterVideoDTO = JSON.parse(body);
+
+    const parsed = registerVideoSchema.safeParse(finalBody);
+
     if (!parsed.success) {
       return NextResponse.json(
         {
@@ -50,7 +53,7 @@ export async function POST(request: NextRequest) {
         quality: 80,
       },
 
-      randomScore: Math.random(),
+      randomScore: Math.random(), // For random feeds
     });
 
     return NextResponse.json(

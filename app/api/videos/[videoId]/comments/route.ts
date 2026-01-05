@@ -27,7 +27,6 @@ export async function POST(
     const data = JSON.parse(body);
 
     const content = data.content;
-    console.log('Wsaiq', content);
     if (!content?.trim()) {
       return NextResponse.json(
         { error: 'Comment cannot be empty' },
@@ -234,8 +233,6 @@ export async function GET(
         },
       },
     ]);
-
-    console.log(comments);
 
     return NextResponse.json({
       page,

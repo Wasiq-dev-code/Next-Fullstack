@@ -18,6 +18,7 @@ export default function SingleVideoPage({ videoId }: { videoId: string }) {
     setLoading(true);
     try {
       const res: SingleVideoRes = await apiClient.fetchSingleVideo(videoId);
+
       setVideo(res.data.singleVideo);
       setLikeCount(res.data.likeCount);
       setIsLiked(res.data.isLiked);

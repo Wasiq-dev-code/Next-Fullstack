@@ -12,8 +12,6 @@ export default function VideoInfo({ videoObj }: props) {
   const [showProfile, setShowProfile] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
 
-  console.log(videoObj);
-
   return (
     <div className="p-6 space-y-6">
       {/* Video Thumbnail and Info Section */}

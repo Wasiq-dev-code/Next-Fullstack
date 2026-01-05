@@ -1,12 +1,10 @@
 'use client';
 
 import UploadExample from '@/app/components/fileUploads';
-import { useNotification } from '@/app/components/providers/notification';
+
 import { useRegisterVideo } from '../hooks/common/useRegisterVideo';
 
 export default function RegisterVideo() {
-  const { showNotification } = useNotification();
-
   const {
     title,
     description,
@@ -18,7 +16,7 @@ export default function RegisterVideo() {
     setVideo,
     setThumbnail,
     submit,
-  } = useRegisterVideo(showNotification);
+  } = useRegisterVideo();
 
   return (
     <div>

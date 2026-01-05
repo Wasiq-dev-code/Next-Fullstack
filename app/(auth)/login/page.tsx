@@ -1,30 +1,32 @@
 'use client';
+
 import { useNotification } from '@/app/components/providers/notification';
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
-
-const isValidEmail = (email: string) => {
-  const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-  return emailRegex.test(email);
-};
-
-const isValidPassword = (password: string) => {
-  return password.length >= 6;
-};
+import { useRouter } from 'next/navigation';
 
 function LoginComponent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
   const { showNotification } = useNotification();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (loading) return;
 
+    // Basic client-side validation
+    if (!email || !password) {
+      showNotification('Email and password are required', 'error');
+      return;
+    }
+
     setLoading(true);
+
     try {
-      // if (isValidEmail(email) && isValidPassword(password)) {
       const result = await signIn('credentials', {
         redirect: false,
         email,
@@ -32,18 +34,16 @@ function LoginComponent() {
       });
 
       if (result?.error) {
-        showNotification(`${result?.error}`, 'error');
+        showNotification(result.error, 'error');
+        return;
       }
 
-      // Redirect to feed page
-      // } else {
-      showNotification('Login', 'success');
-      setPassword('');
-      setEmail('');
-      // }
+      // Success
+      showNotification('Login successful', 'success');
+      router.push('/'); // or wherever you want
     } catch (error) {
       console.error(error);
-      showNotification('Error while login', 'error');
+      showNotification('Something went wrong. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -51,27 +51,35 @@ function LoginComponent() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Login Form</h2>
+      <h2>Login</h2>
+
       <div>
-        <label>Email:</label>
+        <label>Email</label>
         <input
-          type="text"
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter email"
+          disabled={loading}
         />
       </div>
+
       <div>
-        <label>Password:</label>
+        <label>Password</label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Enter password"
+          disabled={loading}
         />
       </div>
-      <button type="submit">Login</button>
-      {loading && <p>Loading..</p>}
+
+      <button type="submit" disabled={loading}>
+        {loading ? 'Logging in...' : 'Login'}
+      </button>
+
+      <button onClick={() => signIn('google')}>Continue with Google</button>
     </form>
   );
 }

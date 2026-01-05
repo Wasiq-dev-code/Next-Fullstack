@@ -11,7 +11,7 @@ export async function DELETE(
   {
     params,
   }: {
-    params: { fileId: string };
+    params: Promise<{ fileId: string }>;
   },
 ) {
   try {
@@ -20,15 +20,16 @@ export async function DELETE(
     if (!auth.ok) return auth.error;
 
     const userId = auth.data;
+    const fileId = (await params).fileId;
 
-    if (!params?.fileId) {
+    if (!fileId) {
       return NextResponse.json(
         { error: 'fileId missing in params' },
         { status: 400 },
       );
     }
 
-    const owner = await getImageKitFileOwner(params.fileId);
+    const owner = await getImageKitFileOwner(fileId);
 
     if (!owner || owner !== userId) {
       return NextResponse.json(
@@ -36,7 +37,7 @@ export async function DELETE(
         { status: 403 },
       );
     }
-    const deleted = await deleteFileFromImageKit(params.fileId);
+    const deleted = await deleteFileFromImageKit(fileId);
 
     if (!deleted) {
       return NextResponse.json(
@@ -48,7 +49,7 @@ export async function DELETE(
     return NextResponse.json(
       {
         message: 'File deleted successfully',
-        fileId: params.fileId,
+        fileId: fileId,
       },
       { status: 200 },
     );

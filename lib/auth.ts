@@ -4,6 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from './db';
 import bcrypt from 'bcryptjs';
 import Google from 'next-auth/providers/google';
+import { loginUserSchema } from './validators/loginUser';
 
 export const authOptions: NextAuthOptions = {
   // Google and github providers are need to be implement
@@ -16,28 +17,41 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and Password are required');
+        // 1. Validate input shape
+        const parsed = loginUserSchema.safeParse(credentials);
+
+        if (!parsed.success) {
+          throw new Error('Invalid email or password');
         }
 
+        const { email, password } = parsed.data;
+
+        // 2. Ensure DB connection
         await connectToDatabase();
 
-        const user = await User.findOne({ email: credentials.email });
-
-        if (!user) throw new Error('No user found');
-
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password,
+        // 3. Find user
+        const user = await User.findOne({ email }).select(
+          '+password +passwordChangedAt +emailChangedAt',
         );
 
-        if (!isValid) throw new Error('Invalid password');
+        // 4. Generic auth failure (do NOT reveal which one)
+        if (!user) {
+          throw new Error('Invalid email or password');
+        }
 
+        // 5. Verify password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+          throw new Error('Invalid email or password');
+        }
+
+        // 6. Return safe user object (NextAuth session payload)
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.username,
-          image: user.profilePhoto.url,
+          image: user.profilePhoto?.url ?? null,
           passwordChangedAt: user.passwordChangedAt,
           emailChangedAt: user.emailChangedAt,
         };
@@ -85,12 +99,19 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === 'google') {
         await connectToDatabase();
 
-        const existingUser = await User.findOne({ email: user.email });
+        let existingUser = await User.findOne({ email: user.email });
 
-        if (!existingUser) {
-          await User.create({
+        if (existingUser) {
+          if (existingUser.provider === 'credentials') {
+            throw new Error(
+              'Account already exists with email and password. Please login using credentials.',
+            );
+          }
+        } else {
+          existingUser = await User.create({
             email: user.email,
             username: user.name ?? 'Google User',
+            provider: 'google',
             profilePhoto: user.image
               ? {
                   url: user.image,
@@ -99,6 +120,8 @@ export const authOptions: NextAuthOptions = {
               : undefined,
           });
         }
+        // Question..
+        user.id = existingUser._id.toString();
       }
       return true;
     },

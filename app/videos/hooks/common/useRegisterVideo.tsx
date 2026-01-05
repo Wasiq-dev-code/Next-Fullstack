@@ -1,16 +1,12 @@
 import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { rollbackDelete } from '@/lib/rollBackDelete';
+import { useNotification } from '@/app/components/providers/notification';
 
 type UploadedFile = {
   url: string;
   fileId: string;
 };
-
-type ShowNotification = (
-  message: string,
-  type: 'success' | 'error' | 'warning' | 'info',
-) => void;
 
 type Errors = {
   title?: string;
@@ -19,13 +15,15 @@ type Errors = {
   thumbnail?: string;
 };
 
-export function useRegisterVideo(showNotification: ShowNotification) {
+export function useRegisterVideo() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [video, setVideo] = useState<UploadedFile | null>(null);
   const [thumbnail, setThumbnail] = useState<UploadedFile | null>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
+
+  const { showNotification } = useNotification();
 
   const canSubmit =
     Boolean(title.trim()) &&
@@ -71,8 +69,8 @@ export function useRegisterVideo(showNotification: ShowNotification) {
       console.error(err);
       showNotification('Error Registering Video', 'error');
 
-      if (thumbnail?.fileId) rollbackDelete(thumbnail.fileId);
-      if (video?.fileId) rollbackDelete(video.fileId);
+      if (thumbnail?.fileId) await rollbackDelete(thumbnail.fileId);
+      if (video?.fileId) await rollbackDelete(video.fileId);
     } finally {
       setSubmitting(false);
     }

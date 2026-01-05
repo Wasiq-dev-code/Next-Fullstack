@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Providers from './components/providers/providers';
 import { NotificationProvider } from './components/providers/notification';
+import Header from './components/Header';
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -29,7 +30,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <NotificationProvider>{children}</NotificationProvider>
+          <NotificationProvider>
+            <Header />
+            {children}
+          </NotificationProvider>
         </Providers>
       </body>
     </html>
