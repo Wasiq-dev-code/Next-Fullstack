@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { apiClient } from '@/lib/api-client';
-import { rollbackDelete } from '@/lib/rollBackDelete';
 import { useNotification } from '@/app/components/providers/notification';
+import { AppDispatch, RootState } from '@/store/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { createVideoThunk } from '@/store/thunks/videoUpload.thunk';
 
-type UploadedFile = {
+export type UploadedFile = {
   url: string;
   fileId: string;
 };
@@ -18,12 +19,14 @@ type Errors = {
 export function useRegisterVideo() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [video, setVideo] = useState<UploadedFile | null>(null);
-  const [thumbnail, setThumbnail] = useState<UploadedFile | null>(null);
   const [errors, setErrors] = useState<Errors>({});
-  const [submitting, setSubmitting] = useState(false);
 
   const { showNotification } = useNotification();
+
+  const dispatch: AppDispatch = useDispatch();
+  const { submitting, thumbnail, video } = useSelector(
+    (state: RootState) => state.videoRegister,
+  );
 
   const canSubmit =
     Boolean(title.trim()) &&
@@ -42,37 +45,21 @@ export function useRegisterVideo() {
   };
 
   const submit = async () => {
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length) {
-      setErrors(validationErrors);
+    if (!thumbnail || !video || !title || !description) {
+      setErrors(validate());
       return;
     }
-
-    setSubmitting(true);
     setErrors({});
 
     try {
-      const res = await apiClient.createVideo({
-        title: title.trim(),
-        description: description.trim(),
-        thumbnail: thumbnail!,
-        video: video!,
-      });
-
-      showNotification(res.message, 'success');
+      await dispatch(createVideoThunk({ title, description })).unwrap();
+      showNotification('Video uploaded Successfully', 'success');
 
       setTitle('');
       setDescription('');
-      setVideo(null);
-      setThumbnail(null);
     } catch (err) {
+      showNotification('Video upload failed', 'error');
       console.error(err);
-      showNotification('Error Registering Video', 'error');
-
-      if (thumbnail?.fileId) await rollbackDelete(thumbnail.fileId);
-      if (video?.fileId) await rollbackDelete(video.fileId);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -82,12 +69,11 @@ export function useRegisterVideo() {
     video,
     thumbnail,
     errors,
+    setErrors,
     submitting,
     canSubmit,
     setTitle,
     setDescription,
-    setVideo,
-    setThumbnail,
     submit,
   };
 }

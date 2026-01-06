@@ -1,8 +1,9 @@
 'use client';
 
 import UploadExample from '@/app/components/fileUploads';
-
 import { useRegisterVideo } from '../hooks/common/useRegisterVideo';
+import { useDispatch } from 'react-redux';
+import { setThumbnail, setVideo } from '@/store/slice/videoUpload.slice';
 
 export default function RegisterVideo() {
   const {
@@ -12,11 +13,12 @@ export default function RegisterVideo() {
     submitting,
     canSubmit,
     setTitle,
+    setErrors,
     setDescription,
-    setVideo,
-    setThumbnail,
     submit,
   } = useRegisterVideo();
+
+  const dispatch = useDispatch();
 
   return (
     <div>
@@ -50,7 +52,10 @@ export default function RegisterVideo() {
         <UploadExample
           FileType="image"
           visibility="private"
-          onSuccess={(res) => setThumbnail(res)}
+          onSuccess={(res) => {
+            dispatch(setThumbnail(res));
+            setErrors((prev) => ({ ...prev, thumbnail: undefined }));
+          }}
         />
         {errors.thumbnail && <p style={{ color: 'red' }}>{errors.thumbnail}</p>}
       </div>
@@ -61,7 +66,10 @@ export default function RegisterVideo() {
         <UploadExample
           FileType="video"
           visibility="private"
-          onSuccess={(res) => setVideo(res)}
+          onSuccess={(res) => {
+            dispatch(setVideo(res));
+            setErrors((prev) => ({ ...prev, video: undefined }));
+          }}
         />
         {errors.video && <p style={{ color: 'red' }}>{errors.video}</p>}
       </div>
