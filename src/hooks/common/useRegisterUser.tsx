@@ -1,3 +1,4 @@
+'use client';
 import { useNotification } from '@/src/app/components/providers/notification';
 import { AppDispatch, RootState } from '@/src/store/store';
 import { registerUserThunk } from '@/src/store/thunks/userRegister.thunk';

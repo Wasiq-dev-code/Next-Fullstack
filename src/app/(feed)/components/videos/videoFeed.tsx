@@ -7,7 +7,7 @@ import type {
   FeedRequest,
   FeedResponse,
   VideoFeed as VideoFeedType,
-} from '@/src/lib/types/video';
+} from '@/src/types/video';
 import VideoInfo from './VideoInfo';
 
 const SCROLL_THRESHOLD = 300;

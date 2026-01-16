@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 import {
   RegisterVideoDTO,
   registerVideoSchema,
-} from '@/src/lib/validators/registerVideo';
+} from '@/src/validators/registerVideo';
 
 // Create Video
 export async function POST(request: NextRequest) {

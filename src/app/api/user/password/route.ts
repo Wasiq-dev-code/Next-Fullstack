@@ -1,6 +1,6 @@
 import { authOptions } from '@/src/lib/auth';
 import { connectToDatabase } from '@/src/lib/db';
-import { passwordChangeSchema } from '@/src/lib/validators/passwordChange.schema';
+import { passwordChangeSchema } from '@/src/validators/passwordChange.schema';
 import User from '@/src/model/User.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';

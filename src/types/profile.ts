@@ -51,3 +51,8 @@ export type PayloadChangeFields = {
     fileId: string;
   };
 };
+
+export type isPrivateResponse = {
+  message: string;
+  isPrivate: boolean;
+};

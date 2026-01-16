@@ -1,10 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { registerUserThunk } from '../thunks/userRegister.thunk';
-
-type UploadedFile = {
-  url: string;
-  fileId: string;
-};
+import { UploadedFile } from '@/types/file';
 
 const initialState = {
   profilePhoto: null as UploadedFile | null,

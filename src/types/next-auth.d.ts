@@ -8,6 +8,8 @@ declare module 'next-auth' {
       emailChangedAt?: string;
       name?: string;
       image?: string;
+      provider: string;
+      isPrivate: boolean;
     } & DefaultSession['user'];
   }
 
@@ -16,6 +18,8 @@ declare module 'next-auth' {
     emailChangedAt?: Date;
     name?: string;
     image?: string;
+    provider: string;
+    isPrivate: boolean;
   }
 }
 
@@ -26,5 +30,7 @@ declare module 'next-auth/jwt' {
     emailChangedAt?: string;
     name?: string;
     image?: string;
+    provider: string;
+    isPrivate: boolean;
   }
 }

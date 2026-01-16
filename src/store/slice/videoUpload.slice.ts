@@ -1,10 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { createVideoThunk } from '../thunks/videoUpload.thunk';
-
-type UploadedFile = {
-  url: string;
-  fileId: string;
-};
+import { UploadedFile } from '@/types/file';
 
 const initialState = {
   video: null as UploadedFile | null,

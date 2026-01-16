@@ -1,7 +1,7 @@
 import { authOptions } from '@/src/lib/auth';
 import { connectToDatabase } from '@/src/lib/db';
 import { deleteFileFromImageKit } from '@/src/lib/imageKitOps';
-import { changeOtherFieldsSchema } from '@/src/lib/validators/changeOtherFields.schema';
+import { changeOtherFieldsSchema } from '@/src/validators/changeOtherFields.schema';
 import User from '@/src/model/User.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest) {
       }
 
       updateData.email = email;
-      updateData.emailChangedAt = new Date(); // 🔐 force logout
+      updateData.emailChangedAt = new Date(); // force logout
     }
 
     if (profilePhoto) {

@@ -54,6 +54,8 @@ export const authOptions: NextAuthOptions = {
           image: user.profilePhoto?.url ?? null,
           passwordChangedAt: user.passwordChangedAt,
           emailChangedAt: user.emailChangedAt,
+          provider: user.provider,
+          isPrivate: user.isPrivate,
         };
       },
     }),
@@ -76,6 +78,8 @@ export const authOptions: NextAuthOptions = {
         token.emailChangedAt = user.emailChangedAt
           ? new Date(user.emailChangedAt).toISOString()
           : undefined;
+        token.provider = user.provider;
+        token.isPrivate = user.isPrivate;
       }
       return token;
     },
@@ -91,6 +95,8 @@ export const authOptions: NextAuthOptions = {
         session.user.emailChangedAt = token.emailChangedAt
           ? new Date(token.emailChangedAt).toISOString()
           : undefined;
+        session.user.provider = token.provider as string;
+        session.user.isPrivate = token.isPrivate as boolean;
       }
       return session;
     },

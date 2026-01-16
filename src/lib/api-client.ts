@@ -15,6 +15,7 @@ import {
 import { LikeCommentResponse, LikeVideoResponse } from '../types/like';
 import {
   ChangeFieldsResponse,
+  isPrivateResponse,
   Message,
   PayloadChangeFields,
   ProfilePrivateResponse,
@@ -63,7 +64,7 @@ class ApiClient {
   }
 
   async fetchRandomFeed(data: FeedRequest): Promise<FeedResponse> {
-    return await this.fetch<FeedResponse>('/videos', {
+    return await this.fetch<FeedResponse>('/videos/randomFeed', {
       method: 'POST',
       body: data,
     });
@@ -169,10 +170,8 @@ class ApiClient {
     });
   }
 
-  async isPrivate(): Promise<ProfilePrivateResponse> {
-    return await this.fetch<ProfilePrivateResponse>(`/user/profile/private`, {
-      method: 'POST',
-    });
+  async togglePrivateProfile(): Promise<isPrivateResponse> {
+    return await this.fetch<isPrivateResponse>('/user/profile/private');
   }
 }
 

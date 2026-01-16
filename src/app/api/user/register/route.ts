@@ -1,6 +1,6 @@
 import { connectToDatabase } from '@/src/lib/db';
-import { RegisterUserDTO } from '@/src/lib/types/user';
-import { registerUserSchema } from '@/src/lib/validators/registerUser.schema';
+import { RegisterUserDTO } from '@/types/user';
+import { registerUserSchema } from '@/validators/registerUser.schema';
 import User, { IUser } from '@/src/model/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 

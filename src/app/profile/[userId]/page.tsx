@@ -1,4 +1,4 @@
-import ProfilePage from './ProfilePage';
+import ProfilePage from './layout';
 
 type PageProps = {
   params: { userId: string };
