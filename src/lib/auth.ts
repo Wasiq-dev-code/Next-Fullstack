@@ -128,6 +128,10 @@ export const authOptions: NextAuthOptions = {
         }
         // Question..
         user.id = existingUser._id.toString();
+        user.provider = existingUser.provider;
+        user.isPrivate = existingUser.isPrivate;
+        user.passwordChangedAt = existingUser.passwordChangedAt;
+        user.emailChangedAt = existingUser.emailChangedAt;
       }
       return true;
     },

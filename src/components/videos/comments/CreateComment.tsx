@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { apiClient } from '@/src/lib/api-client';
 import type { Comment, CreateCommentResponse } from '@/src/lib/types/comment';
-import { useNotification } from '@/src/app/components/providers/notification';
+import { useNotification } from '@/components/providers/notification';
 
 export default function CreateComment({
   videoId,

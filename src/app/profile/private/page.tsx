@@ -1,6 +1,6 @@
 'use client';
 
-import { useNotification } from '@/src/app/components/providers/notification';
+import { useNotification } from '@/components/providers/notification';
 import { apiClient } from '@/src/lib/api-client';
 import { useState } from 'react';
 

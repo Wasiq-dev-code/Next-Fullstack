@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/src/lib/api-client';
-import { useNotification } from '../../../components/providers/notification';
+import { useNotification } from '../providers/notification';
 import type {
   FeedRequest,
   FeedResponse,

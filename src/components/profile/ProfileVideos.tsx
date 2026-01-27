@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/src/lib/api-client';
-import VideoInfo from '@/src/app/(feed)/components/videos/VideoInfo';
+import VideoInfo from '@/components/feed/VideoInfo';
 
 import { ProfileVideoResponse } from '@/src/lib/types/profile';
 import { VideoFeed } from '@/src/lib/types/video';

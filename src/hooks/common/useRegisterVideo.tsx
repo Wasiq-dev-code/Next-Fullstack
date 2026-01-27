@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNotification } from '@/src/app/components/providers/notification';
+import { useNotification } from '@/components/providers/notification';
 import { AppDispatch, RootState } from '@/src/store/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { createVideoThunk } from '@/src/store/thunks/videoUpload.thunk';

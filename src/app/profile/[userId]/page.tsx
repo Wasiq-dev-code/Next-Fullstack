@@ -1,13 +1,17 @@
-import ProfilePage from './layout';
+import ProfileInfo from '../../../components/profile/ProfileInfo';
+import ProfileVideos from '../../../components/profile/ProfileVideos';
 
 type PageProps = {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 };
-export default async function page({ params }: PageProps) {
+
+export default async function ProfilePage({ params }: PageProps) {
   const { userId } = await params;
+
   return (
-    <div>
-      <ProfilePage userId={userId}></ProfilePage>
-    </div>
+    <>
+      <ProfileInfo userId={userId} />
+      <ProfileVideos userId={userId} />
+    </>
   );
 }

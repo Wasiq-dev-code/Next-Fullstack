@@ -1,23 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-
-const settingsNav = [
-  {
-    title: 'Profile',
-    href: '/settings/profile',
-  },
-  {
-    title: 'Account',
-    href: '/settings/account',
-  },
-  {
-    title: 'Security',
-    href: '/settings/security',
-  },
-];
+import { settingsNav } from '@/lib/SettingNav';
+import SettingsSidebar from '../../components/settings/SettingSidebar';
 
 export default function SettingsLayout({
   children,
@@ -33,31 +17,16 @@ export default function SettingsLayout({
           </h2>
 
           {settingsNav.map((item) => (
-            <SidebarLink key={item.href} href={item.href} title={item.title} />
+            <SettingsSidebar
+              key={item.href}
+              href={item.href}
+              title={item.title}
+            />
           ))}
         </aside>
 
         <main className="bg-background border rounded-xl p-6">{children}</main>
       </div>
     </div>
-  );
-}
-
-function SidebarLink({ href, title }: { href: string; title: string }) {
-  const pathname = usePathname();
-  const isActive = pathname === href;
-
-  return (
-    <Link
-      href={href}
-      className={cn(
-        'block rounded-md px-3 py-2 text-sm transition-colors',
-        isActive
-          ? 'bg-muted font-medium text-foreground'
-          : 'text-muted-foreground hover:bg-muted',
-      )}
-    >
-      {title}
-    </Link>
   );
 }

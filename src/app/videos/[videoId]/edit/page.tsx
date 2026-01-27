@@ -1,86 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { apiClient } from '@/src/lib/api-client';
-import { useNotification } from '@/src/app/components/providers/notification';
-import UploadExample from '@/src/app/components/fileUploads';
-import { rollbackDelete } from '@/src/lib/rollBackDelete';
+import { useNotification } from '@/components/providers/notification';
+import UploadExample from '@/components/fileUploads';
+import useEditVideo from '@/hooks/common/editVideo';
 
-type UploadedFile = {
-  url: string;
-  fileId: string;
-};
-
-type ErrorFields = {
-  title?: string;
-  description?: string;
-  thumbnail?: string;
-  _form?: string;
-};
-
-export default function ChangeVideoFields() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [thumbnail, setThumbnail] = useState<UploadedFile | null>(null);
-
-  const [errors, setErrors] = useState<ErrorFields>({});
-  const [loading, setLoading] = useState(false);
-
-  const { showNotification } = useNotification();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
-
-    setErrors({});
-    setLoading(true);
-
-    try {
-      const payload: Record<string, any> = {};
-
-      if (title.trim()) payload.title = title.trim();
-      if (description.trim()) payload.description = description.trim();
-      if (thumbnail) payload.thumbnail = thumbnail;
-
-      if (!title.trim() && !description.trim() && !thumbnail) {
-        setErrors({ _form: 'Nothing to update' });
-        setLoading(false);
-        return;
-      }
-
-      const res = await apiClient.changeFields(payload);
-
-      showNotification(res.message, 'success');
-
-      setTitle('');
-      setDescription('');
-    } catch (err: any) {
-      const res = err?.response;
-
-      // Zod validation errors
-      if (res?.status === 400 && res.data?.issues) {
-        setErrors(res.data.issues);
-        return;
-      }
-
-      // description conflict
-      if (res?.status === 409) {
-        setErrors({ description: 'description already in use' });
-        return;
-      }
-
-      // Fallback
-      setErrors({ _form: 'Something went wrong' });
-      showNotification('Failed to update profile', 'error');
-
-      // If thumbnail issue? will delete image from imagekit
-      if (thumbnail?.fileId) {
-        await rollbackDelete(thumbnail.fileId);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function ChangeVideoFields({ videoId }: { videoId: string }) {
+  const {
+    description,
+    errors,
+    handleSubmit,
+    loading,
+    setDescription,
+    setErrors,
+    setThumbnail,
+    setTitle,
+    thumbnail,
+    title,
+  } = useEditVideo({ videoId });
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md">

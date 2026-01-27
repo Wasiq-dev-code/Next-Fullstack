@@ -1,6 +1,6 @@
 'use client';
 
-import UploadExample from '@/src/app/components/fileUploads';
+import UploadExample from '@/components/fileUploads';
 import { useRegisterVideo } from '../../../hooks/common/useRegisterVideo';
 import { useDispatch } from 'react-redux';
 import { setThumbnail, setVideo } from '@/src/store/slice/videoUpload.slice';

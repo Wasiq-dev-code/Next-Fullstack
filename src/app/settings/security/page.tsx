@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { apiClient } from '@/lib/api-client';
-import { useNotification } from '@/app/components/providers/notification';
+import { useNotification } from '@/components/providers/notification';
 import { signOut, useSession } from 'next-auth/react';
 
 export default function SecuritySettingsPage() {
@@ -56,10 +56,12 @@ export default function SecuritySettingsPage() {
     }
   }
 
-  if (session?.user?.provider === '!credentials') {
+  // SOLVE ERROR OF PROVIDER NAME
+  if (session?.user?.provider !== 'credentials') {
+    console.log(session);
     return (
       <Alert>
-        You signed in using {session.user.provider}. Password changes are
+        You signed in using {session?.user.provider}. Password changes are
         managed by the provider.
       </Alert>
     );

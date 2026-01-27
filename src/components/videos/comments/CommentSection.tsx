@@ -1,9 +1,9 @@
 'use client';
 import { apiClient } from '@/src/lib/api-client';
 import type { Comment, CommentListResponse } from '@/src/lib/types/comment';
-import CommentItem from '@/src/app/videos/components/comments/CommentItem';
+import CommentItem from '@/components/videos/comments/CommentItem';
 import CreateComment from './CreateComment';
-import { usePaginatedList } from '../../../../hooks/common/usePaginatedList';
+import { usePaginatedList } from '../../../hooks/common/usePaginatedList';
 
 export default function CommentsSection({ videoId }: { videoId: string }) {
   const {

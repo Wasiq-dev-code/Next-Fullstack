@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useLike } from '../../../../hooks/common/useLike';
+import { useLike } from '../../../hooks/common/useLike';
+import { Button } from '@/components/ui/button';
 
 type LikeButtonProps<T> = {
   initialLiked: boolean;
@@ -26,8 +27,13 @@ export function LikeButton<T>({
   }, [initialLiked, initialLikes]);
 
   return (
-    <button onClick={toggle} disabled={loading}>
+    <Button
+      variant={liked ? 'default' : 'outline'}
+      size="sm"
+      onClick={toggle}
+      disabled={loading}
+    >
       {liked ? '❤️' : '🤍'} {likesCount}
-    </button>
+    </Button>
   );
 }

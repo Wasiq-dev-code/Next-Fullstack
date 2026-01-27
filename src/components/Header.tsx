@@ -16,6 +16,8 @@ export default function Header() {
   const { data: session, status } = useSession();
   const isAuth = status === 'authenticated' && !!session?.user;
 
+  // console.log(session?.user?.id);
+
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-black">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
@@ -55,9 +57,11 @@ export default function Header() {
                 className="w-48 border border-slate-700 bg-gray-100 hover:bg-slate-500"
               >
                 <DropdownMenuItem asChild>
-                  <Link href={`/profile/${session.user?.id ?? ''}`}>
-                    Profile
-                  </Link>
+                  {status === 'authenticated' && session?.user?.id && (
+                    <DropdownMenuItem asChild>
+                      <Link href={`/profile/${session.user.id}`}>Profile</Link>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>

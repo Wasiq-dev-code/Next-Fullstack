@@ -1,12 +1,7 @@
-'use client';
-import ProfileInfo from '../components/ProfileInfo';
-import ProfileVideos from '../components/ProfileVideos';
-
-export default function ProfilePage({ userId }: { userId: string }) {
-  return (
-    <div>
-      <ProfileInfo userId={userId}></ProfileInfo>
-      <ProfileVideos userId={userId}></ProfileVideos>
-    </div>
-  );
+export default function ProfileLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <div className="max-w-5xl mx-auto">{children}</div>;
 }

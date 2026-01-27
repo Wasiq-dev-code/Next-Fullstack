@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/src/lib/api-client';
-import type { Profile, ProfileResponse } from '@/src/lib/types/profile';
+import type { Profile, ProfileResponse } from '@/src/types/profile';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import PrivateProfile from '../private/page';
+import PrivateProfile from '../../app/profile/private/page';
 
 export default function ProfileInfo({ userId }: { userId: string }) {
   const [profile, setProfile] = useState<Profile | null>(null);

@@ -1,7 +1,7 @@
 'use client';
 
 import { apiClient } from '@/src/lib/api-client';
-import { usePaginatedList } from '../../../../hooks/common/usePaginatedList';
+import { usePaginatedList } from '../../../hooks/common/usePaginatedList';
 import CreateReply from './CreateReply';
 import { Comment, CommentListResponse } from '@/src/lib/types/comment';
 

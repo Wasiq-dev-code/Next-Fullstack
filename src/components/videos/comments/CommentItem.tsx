@@ -1,7 +1,7 @@
 'use client';
 import { Comment } from '@/src/lib/types/comment';
 import { useState } from 'react';
-import ReplyList from '@/src/app/videos/components/comments/ReplyList';
+import ReplyList from '@/components/videos/comments/ReplyList';
 import { LikeButton } from '../likes/LikeButton';
 import { apiClient } from '@/src/lib/api-client';
 import { LikeCommentResponse } from '@/src/lib/types/like';

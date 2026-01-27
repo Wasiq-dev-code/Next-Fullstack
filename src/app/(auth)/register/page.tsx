@@ -1,6 +1,6 @@
 'use client';
 
-import UploadExample from '@/src/app/components/fileUploads';
+import UploadExample from '@/components/fileUploads';
 import useRegisterUser from '../../../hooks/common/useRegisterUser';
 import { useDispatch } from 'react-redux';
 import {

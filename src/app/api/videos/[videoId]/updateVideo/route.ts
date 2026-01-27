@@ -13,11 +13,13 @@ export async function PATCH(
     const { videoId } = await params;
     await connectToDatabase();
 
+    // It will check authorize user and ownership of user
     const guard = await withVideoAuth(videoId);
     if (!guard.ok) return guard.error;
 
     const body = await req.json();
 
+    // Validating with zod
     const parsed = changeVideoFields.safeParse(body);
 
     if (!parsed.success) {
@@ -33,6 +35,14 @@ export async function PATCH(
     }
 
     const { title, description, thumbnail } = parsed.data;
+
+    // If no fields available then send this response
+    if (!title && !description && !thumbnail) {
+      return NextResponse.json(
+        { error: 'No fields provided to update' },
+        { status: 400 },
+      );
+    }
 
     const video = guard.data.video;
 
@@ -54,10 +64,20 @@ export async function PATCH(
       video.thumbnail = thumbnail;
     }
 
+    video.updatedAt = new Date();
     await video.save();
 
     return NextResponse.json(
-      { message: 'Video updated successfully', video },
+      {
+        message: 'Video updated successfully',
+        video: {
+          id: video._id,
+          title: video.title,
+          description: video.description,
+          thumbnail: video.thumbnail,
+          updatedAt: video.updatedAt,
+        },
+      },
       { status: 200 },
     );
   } catch (error) {

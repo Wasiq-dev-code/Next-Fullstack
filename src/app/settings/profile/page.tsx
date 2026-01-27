@@ -1,15 +1,15 @@
 'use client';
 
-import UploadExample from '@/app/components/fileUploads';
-import { useNotification } from '@/app/components/providers/notification';
-import { AvatarImage } from '@/components/ui/avatar';
+import UploadExample from '@/components/fileUploads';
+import { useNotification } from '@/components/providers/notification';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
 import { UploadedFile } from '@/types/file';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
-export function ProfileChanges() {
+export default function ProfileChanges() {
   const { data: session } = useSession();
   const { showNotification } = useNotification();
 
@@ -91,10 +91,20 @@ export function ProfileChanges() {
 
         <div className="flex items-center gap-4">
           {session?.user?.image && !profilePhoto && (
-            <AvatarImage src={session.user?.image ?? ''} />
+            <Avatar className="h-16 w-15">
+              <AvatarImage src={session.user?.image ?? ''} />
+              <AvatarFallback>{session.user.name?.[0] ?? 'U'}</AvatarFallback>
+            </Avatar>
           )}
 
-          {profilePhoto && <AvatarImage src={profilePhoto.url ?? ''} />}
+          {}
+
+          {profilePhoto && (
+            <Avatar className="h-16 w-15">
+              <AvatarImage src={session?.user?.image ?? ''} />
+              <AvatarFallback>{session?.user.name?.[0] ?? 'U'}</AvatarFallback>
+            </Avatar>
+          )}
         </div>
 
         <UploadExample

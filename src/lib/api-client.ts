@@ -171,7 +171,9 @@ class ApiClient {
   }
 
   async togglePrivateProfile(): Promise<isPrivateResponse> {
-    return await this.fetch<isPrivateResponse>('/user/profile/private');
+    return await this.fetch<isPrivateResponse>('/user/profile/private', {
+      method: 'POST',
+    });
   }
 }
 

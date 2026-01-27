@@ -58,20 +58,20 @@ export async function PATCH(req: NextRequest) {
       const userOldProfilePhoto = await User.findById(session.user.id).select(
         '+profilePhoto.fileId',
       );
-      updateData.profilePhoto = profilePhoto;
 
-      const deleted = await deleteFileFromImageKit(userOldProfilePhoto);
-
-      if (!deleted) {
-        console.warn('Profilephoto cleanup failed');
+      if (profilePhoto.fileId !== userOldProfilePhoto) {
+        await deleteFileFromImageKit(userOldProfilePhoto).catch((err) =>
+          console.warn('Profilephoto cleanup failed', err),
+        );
       }
+      updateData.profilePhoto = profilePhoto;
     }
 
     const user = await User.findByIdAndUpdate(
       session.user.id,
       { $set: updateData },
       { new: true, runValidators: true },
-    ).select('+username +email +profilePhoto');
+    ).select('+_id +username +email +profilePhoto');
 
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {

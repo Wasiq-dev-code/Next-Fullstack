@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { apiClient } from '@/src/lib/api-client';
-import { useNotification } from '@/src/app/components/providers/notification';
-import UploadExample from '@/src/app/components/fileUploads';
+import { useNotification } from '@/components/providers/notification';
+import UploadExample from '@/components/fileUploads';
 import { rollbackDelete } from '@/src/lib/rollBackDelete';
 
 type UploadedFile = {

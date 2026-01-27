@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
 
     const user = await User.findById(userId).select('isPrivate');
 
+    // console.log(user);
+
     if (!user) {
       return NextResponse.json(
         {
