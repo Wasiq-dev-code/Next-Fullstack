@@ -3,7 +3,7 @@
 import CommentsSection from '@/components/videos/comments/CommentSection';
 import VideoPlayer from '@/components/feed/videoPlayer';
 import { useEffect } from 'react';
-import useGetSingleVideo from '@/hooks/common/useGetSingleVideo';
+import useGetSingleVideo from '@/hooks/video/useGetSingleVideo';
 import { SpinnerCustom } from '@/components/ui/spinner';
 import VideoNotFound from '@/components/ui/videoNotFound';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

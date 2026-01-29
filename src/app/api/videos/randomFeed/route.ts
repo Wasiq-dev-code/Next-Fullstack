@@ -12,18 +12,23 @@ export async function POST(req: NextRequest) {
     await connectToDatabase();
     const body = await req.json();
 
+    // console.log('Body', body);
+
     const { excludeIds, cursor } = body;
 
     // Length will not grow beyond 100
     const limitedExcludeIds = excludeIds.slice(-MAX_EXCLUDE);
 
+    const match: any = {
+      _id: { $nin: limitedExcludeIds },
+    };
+
+    if (cursor !== null) {
+      match.randomScore = { $gt: cursor };
+    }
+
     const videos = await Video.aggregate([
-      {
-        $match: {
-          randomScore: { $gt: cursor },
-          _id: { $nin: limitedExcludeIds },
-        },
-      },
+      { $match: match },
       { $sort: { randomScore: 1 } },
       { $limit: LIMIT },
 

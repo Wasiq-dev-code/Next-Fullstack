@@ -1,98 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { apiClient } from '@/src/lib/api-client';
-import { useNotification } from '../providers/notification';
-import type {
-  FeedRequest,
-  FeedResponse,
-  VideoFeed as VideoFeedType,
-} from '@/src/types/video';
 import VideoInfo from './VideoInfo';
-
-const SCROLL_THRESHOLD = 300;
-const MAX_EXCLUDE = 100;
+import { useRandomVideoFeed } from '@/hooks/feed/useRandomVideoFeet';
 
 export default function VideoFeed() {
-  const [videos, setVideos] = useState<VideoFeedType[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [cursor, setCursor] = useState<number>(0);
-
-  const { showNotification } = useNotification();
-
-  // Guard against parallel calls
-  const fetchingRef = useRef(false);
-
-  const loadVideos = useCallback(async () => {
-    if (fetchingRef.current || !hasMore) return;
-
-    fetchingRef.current = true;
-    setLoading(true);
-
-    const payload: FeedRequest = {
-      cursor,
-      excludeIds: videos.slice(-MAX_EXCLUDE).map((v) => v._id),
-    };
-
-    try {
-      const data: FeedResponse = await apiClient.fetchRandomFeed(payload);
-
-      if (!data.videos || data.videos.length === 0) {
-        setHasMore(false);
-        return;
-      }
-
-      setVideos((prev) => {
-        const map = new Map(prev.map((v) => [v._id.toString(), v]));
-        [...prev, ...data.videos].forEach((v) => {
-          map.set(v._id.toString(), v);
-        });
-        return Array.from(map.values());
-      });
-
-      if (data.nextCursor !== null) {
-        setCursor(data.nextCursor);
-      } else {
-        setHasMore(false);
-      }
-    } catch (error) {
-      console.error('Feed load failed:', error);
-      showNotification('Failed to load videos', 'error');
-    } finally {
-      fetchingRef.current = false;
-      setLoading(false);
-    }
-  }, [cursor, videos, hasMore, showNotification]);
-
-  // Initial load
-  useEffect(() => {
-    loadVideos();
-  }, []);
-
-  // Throttled scroll handler
-  useEffect(() => {
-    let ticking = false;
-
-    const onScroll = () => {
-      if (ticking) return;
-
-      ticking = true;
-      requestAnimationFrame(() => {
-        const distanceFromBottom =
-          document.body.scrollHeight - window.scrollY - window.innerHeight;
-
-        if (distanceFromBottom < SCROLL_THRESHOLD) {
-          loadVideos();
-        }
-
-        ticking = false;
-      });
-    };
-
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [loadVideos]);
+  const { hasMore, items: videos, loading } = useRandomVideoFeed();
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4">
