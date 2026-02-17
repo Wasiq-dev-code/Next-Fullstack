@@ -41,7 +41,7 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
 
       {/* Create Comment Section */}
       <div className="bg-linear-to-r from-blue-50 to-purple-50 p-5 rounded-2xl border-2 border-blue-100">
-        <CreateComment videoId={videoId} onCreated={() => {}}></CreateComment>
+        <CreateComment videoId={videoId}></CreateComment>
       </div>
 
       {/* Comments List */}

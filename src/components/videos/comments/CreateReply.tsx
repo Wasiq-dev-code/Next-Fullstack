@@ -1,36 +1,37 @@
 'use client';
 
 import { useState } from 'react';
-import { apiClient } from '@/lib/Api-client/api-client';
-import type { Comment, CreateReplyResponse } from '@/types/comment';
 import { useNotification } from '@/components/providers/notification';
+import { useAppDispatch } from '@/store/store';
+import { createReply } from '@/store/thunks/comments.thunk';
 
 export default function CreateReply({
   parentCommentId,
   videoId,
-  onCreated,
 }: {
   parentCommentId: string;
   videoId: string;
-  onCreated: (reply: Comment) => void;
 }) {
   const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
   const { showNotification } = useNotification();
+  const dispatch = useAppDispatch();
 
   async function submit() {
-    if (!text.trim()) return;
+    if (!text.trim() || loading) return;
 
-    const res: CreateReplyResponse = await apiClient.createReply(
-      videoId,
-      parentCommentId,
-      {
-        content: text,
-      },
-    );
-
-    onCreated(res.reply);
-    setText('');
-    showNotification('Reply Created', 'success');
+    setLoading(true);
+    try {
+      await dispatch(
+        createReply({ videoId, commentId: parentCommentId, content: text }),
+      ).unwrap();
+      setText('');
+      showNotification('Your reply Created', 'success');
+    } catch {
+      showNotification('Failed to create reply', 'error');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -41,7 +42,9 @@ export default function CreateReply({
         placeholder="Reply..."
         className="flex-1 border px-2 py-1 rounded text-sm"
       />
-      <button onClick={submit}>Reply</button>
+      <button onClick={submit} disabled={loading}>
+        {loading ? 'Posting..' : 'Reply'}
+      </button>
     </div>
   );
 }
