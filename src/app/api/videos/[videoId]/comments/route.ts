@@ -146,7 +146,7 @@ export async function GET(
 
       { $sort: { createdAt: -1, _id: -1 } },
       { $skip: skip },
-      { $limit: limit + 1 },
+      { $limit: limit + 1 }, //This incremental operation is a hasmore trick. remember it.
 
       {
         $lookup: {
@@ -237,6 +237,7 @@ export async function GET(
       },
     ]);
 
+    // Fetch limit + 1 from db because you have to check it later that if extra one is included in fetched items, that means hasmore is true so you simply remove extra one.
     const hasMore: boolean = comments.length > limit;
 
     if (hasMore) {

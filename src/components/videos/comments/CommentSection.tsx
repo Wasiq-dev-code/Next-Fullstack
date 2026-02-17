@@ -1,21 +1,33 @@
 'use client';
-import { apiClient } from '@/lib/Api-client/api-client';
-import type { Comment, CommentListResponse } from '@/types/comment';
 import CommentItem from '@/components/videos/comments/CommentItem';
 import CreateComment from '@/components/videos/comments/CreateComment';
-import { usePaginatedList } from '@/hooks/common/usePaginatedList';
+import { useAppDispatch, useAppSelector } from '@/store/store';
+import { commentSelectors, resetComments } from '@/store/slice/comments.slice';
+import { useEffect } from 'react';
+import { fetchComments } from '@/store/thunks/comments.thunk';
 
 export default function CommentsSection({ videoId }: { videoId: string }) {
-  const {
-    items: comments,
-    hasMore,
-    loadMore,
-    loading,
-  } = usePaginatedList<Comment>((current) =>
-    apiClient
-      .fetchVideoComments(videoId, current)
-      .then((res: CommentListResponse) => res.comments),
+  const dispatch = useAppDispatch();
+  const comments = useAppSelector(commentSelectors.selectAll);
+
+  const { page, hasMore, loading } = useAppSelector(
+    (state) => state.comments.comments,
   );
+
+  useEffect(() => {
+    dispatch(resetComments());
+    dispatch(fetchComments({ videoId, page: 1 }));
+
+    return () => {
+      dispatch(resetComments());
+    };
+  }, [videoId, dispatch]); // Dispatch will never change because this is redux method, and it will never change
+
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      dispatch(fetchComments({ videoId, page }));
+    }
+  };
 
   return (
     <div className="space-y-6">

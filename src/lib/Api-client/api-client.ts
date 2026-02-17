@@ -85,7 +85,7 @@ class ApiClient {
 
   async fetchVideoComments(
     videoId: string,
-    page = 1,
+    page = 1, //If page available then page, if not? then 1
     limit = 10,
   ): Promise<CommentListResponse> {
     return await this.fetch<CommentListResponse>(

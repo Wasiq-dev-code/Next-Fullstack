@@ -4,9 +4,12 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 // Fetch Comment List
 export const fetchComments = createAsyncThunk(
   'comments/fetchComments',
-  async ({ videoId }: { videoId: string }, { rejectWithValue }) => {
+  async (
+    { videoId, page }: { videoId: string; page: number },
+    { rejectWithValue },
+  ) => {
     try {
-      const res = await apiClient.fetchVideoComments(videoId);
+      const res = await apiClient.fetchVideoComments(videoId, page);
       if (!res) {
         throw new Error('Got error');
       }

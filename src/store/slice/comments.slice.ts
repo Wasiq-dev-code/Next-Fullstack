@@ -10,6 +10,7 @@ import {
   createComment,
   createReply,
 } from '@/store/thunks/comments.thunk';
+import { RootState } from '@/store/type';
 
 // ADAPTER SETUP
 
@@ -125,8 +126,10 @@ const commentsSlice = createSlice({
   },
 });
 
-export const { resetComments } = commentsSlice.actions;
+export const { resetComments } = commentsSlice.actions; // all reducer value pass through actions
 export default commentsSlice.reducer;
 
 // Selectors for easy use in Components
-export const commentSelectors = commentsAdapter.getSelectors();
+export const commentSelectors = commentsAdapter.getSelectors<RootState>(
+  (state) => state.comments.comments,
+);
