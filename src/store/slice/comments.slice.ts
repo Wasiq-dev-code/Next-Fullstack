@@ -129,6 +129,7 @@ const commentsSlice = createSlice({
 export const { resetComments } = commentsSlice.actions; // all reducer value pass through actions
 export default commentsSlice.reducer;
 
+export { commentsAdapter };
 // Selectors for easy use in Components
 export const commentSelectors = commentsAdapter.getSelectors<RootState>(
   (state) => state.comments.comments,

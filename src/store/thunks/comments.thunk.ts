@@ -47,11 +47,15 @@ export const createComment = createAsyncThunk(
 export const fetchReplies = createAsyncThunk(
   'comments/fetchReplies',
   async (
-    { videoId, commentId }: { videoId: string; commentId: string },
+    {
+      videoId,
+      commentId,
+      page,
+    }: { videoId: string; commentId: string; page: number },
     { rejectWithValue },
   ) => {
     try {
-      const res = await apiClient.fetchReplies(videoId, commentId);
+      const res = await apiClient.fetchReplies(videoId, commentId, page);
       if (!res) {
         throw new Error('Got error while fetching replies');
       }
