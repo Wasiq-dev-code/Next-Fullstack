@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getImageKit } from '@/src/lib/imagekit.server';
+import { getImageKit } from '@/lib/videofallback/imagekit.server';
 
 // This route is for deleting files during failed registration
 // No auth required since the file was just uploaded by the same user

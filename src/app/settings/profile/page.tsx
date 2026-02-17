@@ -4,7 +4,7 @@ import UploadExample from '@/components/fileUploads';
 import { useNotification } from '@/components/providers/notification';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 import { UploadedFile } from '@/types/file';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';

@@ -1,6 +1,6 @@
 'use client';
 
-import { VideoDetails } from '@/src/lib/types/video';
+import { VideoDetails } from '@/types/video';
 import Image from 'next/image';
 import Link from 'next/link';
 

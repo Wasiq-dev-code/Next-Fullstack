@@ -1,6 +1,6 @@
-import { authOptions } from '@/src/lib/auth';
-import { connectToDatabase } from '@/src/lib/db';
-import Like from '@/src/model/Like.model';
+import { authOptions } from '@/lib/validations/auth';
+import { connectToDatabase } from '@/lib/database/db';
+import Like from '@/model/Like.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';

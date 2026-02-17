@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { apiClient } from '@/src/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 
 type FieldErrors = {
   oldPassword?: string[];

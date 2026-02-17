@@ -1,12 +1,11 @@
 'use client';
-import { Comment } from '@/src/lib/types/comment';
+import { Comment } from '@/types/comment';
 import { useState } from 'react';
 import ReplyList from '@/components/videos/comments/ReplyList';
-import { LikeButton } from '../likes/LikeButton';
-import { apiClient } from '@/src/lib/api-client';
-import { LikeCommentResponse } from '@/src/lib/types/like';
-import Image from 'next/image';
-import { UserAvatar } from './UserAvatar';
+import { LikeButton } from '@/components/videos/likes/LikeButton';
+import { apiClient } from '@/lib/Api-client/api-client';
+import { LikeCommentResponse } from '@/types/like';
+import { UserAvatar } from '@/components/videos/comments/UserAvatar';
 
 export default function CommentItem({
   comment,

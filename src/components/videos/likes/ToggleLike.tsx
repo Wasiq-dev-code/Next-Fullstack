@@ -1,5 +1,5 @@
-import { apiClient } from '@/src/lib/api-client';
-import { LikeVideoResponse } from '@/src/lib/types/like';
+import { apiClient } from '@/lib/Api-client/api-client';
+import { LikeVideoResponse } from '@/types/like';
 import { useState } from 'react';
 
 type props = {

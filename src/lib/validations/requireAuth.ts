@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/src/lib/auth';
+import { authOptions } from '@/lib/validations/auth';
 import { NextResponse } from 'next/server';
-import { Result } from '../types/result';
+import { Result } from '@/types/result';
 
 export async function requireAuth(): Promise<Result<string>> {
   const session = await getServerSession(authOptions);

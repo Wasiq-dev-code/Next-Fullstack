@@ -1,9 +1,11 @@
-import { authOptions } from '@/src/lib/auth';
+import { authOptions } from '@/lib/validations/auth';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import { connectToDatabase } from '@/src/lib/db';
-import Comment from '@/src/model/Comment.model';
+import { connectToDatabase } from '@/lib/database/db';
+import Comment from '@/model/Comment.model';
+import { Session } from 'next-auth';
+import { Comment as CommentsArray } from '@/types/comment';
 
 //  CREATE REPLY
 export async function POST(
@@ -124,7 +126,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid commentId' }, { status: 400 });
     }
 
-    await connectToDatabase();
+    await connectToDatabase().catch((err) => {
+      throw new Error('Database Connection Errror', err);
+    });
 
     const comment = await Comment.findById(commentId);
     if (!comment) {
@@ -179,18 +183,20 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid commentId' }, { status: 400 });
     }
 
-    const page = Number(req.nextUrl.searchParams.get('page')) || 1;
-    const limit = Number(req.nextUrl.searchParams.get('limit')) || 5;
-    const skip = (page - 1) * limit;
+    const page: number = Number(req.nextUrl.searchParams.get('page')) || 1;
+    const limit: number = Number(req.nextUrl.searchParams.get('limit')) || 5;
+    const skip: number = (page - 1) * limit;
 
-    await connectToDatabase();
+    await connectToDatabase().catch((err) => {
+      throw new Error('Database Connection Errror', err);
+    });
 
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.id
+    const session: Session | null = await getServerSession(authOptions);
+    const userId: mongoose.Types.ObjectId | null = session?.user?.id
       ? new mongoose.Types.ObjectId(session.user.id)
       : null;
 
-    const comments = await Comment.aggregate([
+    const comments: CommentsArray[] = await Comment.aggregate([
       {
         $match: {
           parentComment: new mongoose.Types.ObjectId(commentId),
@@ -272,9 +278,16 @@ export async function GET(
       },
     ]);
 
+    const hasMore: boolean = comments.length > limit;
+
+    if (hasMore) {
+      comments.pop();
+    }
+
     return NextResponse.json({
       page,
       limit,
+      hasMore,
       comments,
     });
   } catch (error) {

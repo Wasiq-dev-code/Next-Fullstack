@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { apiClient } from '@/src/lib/api-client';
-import type { Comment, CreateReplyResponse } from '@/src/lib/types/comment';
+import { apiClient } from '@/lib/Api-client/api-client';
+import type { Comment, CreateReplyResponse } from '@/types/comment';
 import { useNotification } from '@/components/providers/notification';
 
 export default function CreateReply({
@@ -23,7 +23,9 @@ export default function CreateReply({
     const res: CreateReplyResponse = await apiClient.createReply(
       videoId,
       parentCommentId,
-      text,
+      {
+        content: text,
+      },
     );
 
     onCreated(res.reply);

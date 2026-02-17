@@ -1,6 +1,6 @@
-import { authOptions } from '@/src/lib/auth';
-import { connectToDatabase } from '@/src/lib/db';
-import Follow from '@/src/model/Follow.model';
+import { authOptions } from '@/lib/validations/auth';
+import { connectToDatabase } from '@/lib/database/db';
+import Follow from '@/model/Follow.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 

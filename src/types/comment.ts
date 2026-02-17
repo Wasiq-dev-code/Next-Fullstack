@@ -16,6 +16,7 @@ export interface Comment {
 export interface CommentListResponse {
   page: number;
   limit: number;
+  hasMore: boolean;
   comments: Comment[];
 }
 

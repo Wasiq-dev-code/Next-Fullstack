@@ -1,4 +1,4 @@
-import { getImageKit } from '@/src/lib/imagekit.server';
+import { getImageKit } from '@/lib/videofallback/imagekit.server';
 
 export async function deleteFileFromImageKit(fileId: string): Promise<boolean> {
   try {

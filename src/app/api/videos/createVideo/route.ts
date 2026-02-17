@@ -1,12 +1,12 @@
-import { connectToDatabase } from '@/src/lib/db';
-import { requireAuth } from '@/src/lib/requireAuth';
-import Video from '@/src/model/Video.model';
+import { connectToDatabase } from '@/lib/database/db';
+import { requireAuth } from '@/lib/validations/requireAuth';
+import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import {
   RegisterVideoDTO,
   registerVideoSchema,
-} from '@/src/validators/registerVideo';
+} from '@/validators/registerVideo';
 
 // Create Video
 export async function POST(request: NextRequest) {

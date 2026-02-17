@@ -1,6 +1,6 @@
 'use client';
 
-import VideoInfo from './VideoInfo';
+import VideoInfo from '@/components/feed/VideoInfo';
 import { useRandomVideoFeed } from '@/hooks/feed/useRandomVideoFeet';
 
 export default function VideoFeed() {

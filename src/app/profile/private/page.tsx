@@ -1,7 +1,7 @@
 'use client';
 
 import { useNotification } from '@/components/providers/notification';
-import { apiClient } from '@/src/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 import { useState } from 'react';
 
 export default function PrivateProfile() {

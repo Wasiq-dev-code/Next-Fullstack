@@ -1,7 +1,7 @@
-import { apiClient } from '@/src/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { resetFields } from '../slice/userRegister.slice';
-import { RootState } from '../store';
+import { resetFields } from '@/store/slice/userRegister.slice';
+import { RootState } from '@/store/store';
 
 export const registerUserThunk = createAsyncThunk<
   void,
@@ -21,6 +21,7 @@ export const registerUserThunk = createAsyncThunk<
   } catch (err) {
     try {
       if (profilePhoto?.fileId) {
+        // When backend response failed, Delete that photo from cloud imagekit
         await fetch(`/api/auth/imageKit-del`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },

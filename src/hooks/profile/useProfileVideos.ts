@@ -1,5 +1,5 @@
 import { useInfiniteScroll } from '@/hooks/common/useInfiniteScroll';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 import { ProfileVideoResponse } from '@/types/profile';
 import { VideoFeed } from '@/types/video';
 

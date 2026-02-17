@@ -1,6 +1,6 @@
-import { requireAuth } from './requireAuth';
-import { requireVideoOwner } from './requireVideoOwner';
-import { Result, VideoAuthData } from '../types/result';
+import { requireAuth } from '@/lib/validations/requireAuth';
+import { requireVideoOwner } from '@/lib/validations/requireVideoOwner';
+import { Result, VideoAuthData } from '@/types/result';
 
 export async function withVideoAuth(
   videoId: string,

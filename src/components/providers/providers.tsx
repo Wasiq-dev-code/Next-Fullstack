@@ -2,7 +2,7 @@
 import { ImageKitProvider } from '@imagekit/next';
 import { SessionProvider } from 'next-auth/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import ReduxProvider from '@/src/store/ReduxProvider';
+import ReduxProvider from '@/store/ReduxProvider';
 
 const queryClient = new QueryClient();
 const urlEndPoint = process.env.NEXT_PUBLIC_URL_ENDPOINT;

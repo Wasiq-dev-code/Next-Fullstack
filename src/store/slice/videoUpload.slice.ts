@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { createVideoThunk } from '../thunks/videoUpload.thunk';
+import { createVideoThunk } from '@/store/thunks/videoUpload.thunk';
 import { UploadedFile } from '@/types/file';
 
 const initialState = {

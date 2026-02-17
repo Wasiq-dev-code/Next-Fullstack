@@ -1,4 +1,4 @@
-import { FetchOptions } from '../types/result';
+import { FetchOptions } from '@/types/result';
 
 import {
   CreateVideoDTO,
@@ -6,23 +6,22 @@ import {
   FeedRequest,
   FeedResponse,
   SingleVideoRes,
-} from '../types/video';
+} from '@/types/video';
 import {
   CommentListResponse,
   CreateCommentResponse,
   CreateReplyResponse,
-} from '../types/comment';
-import { LikeCommentResponse, LikeVideoResponse } from '../types/like';
+} from '@/types/comment';
+import { LikeCommentResponse, LikeVideoResponse } from '@/types/like';
 import {
   ChangeFieldsResponse,
   isPrivateResponse,
   Message,
   PayloadChangeFields,
-  ProfilePrivateResponse,
   ProfileResponse,
   ProfileVideoResponse,
-} from '../types/profile';
-import { RegisterUserDTO, RegisterUserResponse } from '../types/user';
+} from '@/types/profile';
+import { RegisterUserDTO, RegisterUserResponse } from '@/types/user';
 
 class ApiClient {
   private async fetch<T>(
@@ -97,13 +96,13 @@ class ApiClient {
   async createReply(
     videoId: string,
     commentId: string,
-    content: string,
+    payload: { content: string },
   ): Promise<CreateReplyResponse> {
     return this.fetch<CreateReplyResponse>(
       `/videos/${videoId}/comments/${commentId}`,
       {
         method: 'POST',
-        body: JSON.stringify(content),
+        body: JSON.stringify(payload),
       },
     );
   }

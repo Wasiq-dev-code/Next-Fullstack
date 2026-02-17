@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
-import videoRegisterReducer from './slice/videoUpload.slice';
-import userRegisterReducer from './slice/userRegister.slice';
+import videoRegisterReducer from '@/store/slice/videoUpload.slice';
+import userRegisterReducer from '@/store/slice/userRegister.slice';
 
 export const store = configureStore({
   reducer: {

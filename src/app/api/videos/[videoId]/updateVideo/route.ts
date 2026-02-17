@@ -1,6 +1,6 @@
-import { connectToDatabase } from '@/lib/db';
-import { deleteFileFromImageKit } from '@/lib/imageKitOps';
-import { withVideoAuth } from '@/lib/withVideoAuth';
+import { connectToDatabase } from '@/lib/database/db';
+import { deleteFileFromImageKit } from '@/lib/videofallback/imageKitOps';
+import { withVideoAuth } from '@/lib/validations/withVideoAuth';
 import { changeVideoFields } from '@/validators/changeVideoFields';
 import { NextRequest, NextResponse } from 'next/server';
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { settingsNav } from '@/lib/SettingNav';
-import SettingsSidebar from '../../components/settings/SettingSidebar';
+import { settingsNav } from '@/lib/validations/SettingNav';
+import SettingsSidebar from '@/components/settings/SettingSidebar';
 
 export default function SettingsLayout({
   children,

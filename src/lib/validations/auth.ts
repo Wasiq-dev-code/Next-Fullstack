@@ -1,10 +1,10 @@
-import User from '@/src/model/User.model';
+import User from '@/model/User.model';
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { connectToDatabase } from './db';
+import { connectToDatabase } from '@/lib/database/db';
 import bcrypt from 'bcryptjs';
 import Google from 'next-auth/providers/google';
-import { loginUserSchema } from '../validators/loginUser';
+import { loginUserSchema } from '@/validators/loginUser';
 
 export const authOptions: NextAuthOptions = {
   // Google and github providers are need to be implement

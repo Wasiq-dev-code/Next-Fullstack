@@ -1,10 +1,10 @@
 'use client';
 
-import { rollbackDelete } from '@/lib/rollBackDelete';
+import { rollbackDelete } from '@/lib/videofallback/rollBackDelete';
 import { UploadedFile } from '@/types/file';
 import { useState, useEffect } from 'react';
 import { useNotification } from '@/components/providers/notification';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 import { SingleVideoRes } from '@/types/video';
 
 type ErrorFields = {

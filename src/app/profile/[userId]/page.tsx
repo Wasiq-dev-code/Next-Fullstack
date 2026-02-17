@@ -1,5 +1,5 @@
-import ProfileInfo from '../../../components/profile/ProfileInfo';
-import ProfileVideos from '../../../components/profile/ProfileVideos';
+import ProfileInfo from '@/components/profile/ProfileInfo';
+import ProfileVideos from '@/components/profile/ProfileVideos';
 
 type PageProps = {
   params: Promise<{ userId: string }>;

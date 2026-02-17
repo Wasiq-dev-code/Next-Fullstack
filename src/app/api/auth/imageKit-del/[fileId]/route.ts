@@ -1,9 +1,9 @@
-import { connectToDatabase } from '@/src/lib/db';
+import { connectToDatabase } from '@/lib/database/db';
 import {
   deleteFileFromImageKit,
   getImageKitFileOwner,
-} from '@/src/lib/imageKitOps';
-import { requireAuth } from '@/src/lib/requireAuth';
+} from '@/lib/videofallback/imageKitOps';
+import { requireAuth } from '@/lib/validations/requireAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function DELETE(

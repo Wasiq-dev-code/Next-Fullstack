@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { IVideo } from '@/src/model/Video.model';
+import { IVideo } from '@/model/Video.model';
 
 export default function VideoComponent({ video }: { video: IVideo }) {
   return (

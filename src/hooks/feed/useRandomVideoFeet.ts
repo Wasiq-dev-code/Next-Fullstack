@@ -1,5 +1,5 @@
 import { useInfiniteScroll } from '@/hooks/common/useInfiniteScroll';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 import { FeedResponse, VideoFeed } from '@/types/video';
 
 export function useRandomVideoFeed() {

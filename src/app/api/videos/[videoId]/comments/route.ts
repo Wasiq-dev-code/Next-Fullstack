@@ -1,9 +1,10 @@
-import { authOptions } from '@/src/lib/auth';
-import { connectToDatabase } from '@/src/lib/db';
-import Comment from '@/src/model/Comment.model';
-import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/validations/auth';
+import { connectToDatabase } from '@/lib/database/db';
+import Comment from '@/model/Comment.model';
+import { getServerSession, Session } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
+import { Comment as CommentArray } from '@/types/comment';
 
 // Create Video's comment
 export async function POST(
@@ -122,18 +123,20 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid videoId' }, { status: 400 });
     }
 
-    const page = Number(req.nextUrl.searchParams.get('page')) || 1;
-    const limit = Number(req.nextUrl.searchParams.get('limit')) || 10;
-    const skip = (page - 1) * limit;
+    const page: number = Number(req.nextUrl.searchParams.get('page')) || 1;
+    const limit: number = Number(req.nextUrl.searchParams.get('limit')) || 5;
+    const skip: number = (page - 1) * limit;
 
-    await connectToDatabase();
+    await connectToDatabase().catch((err) => {
+      throw new Error('Database Connection Errror', err);
+    });
 
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.id
+    const session: Session | null = await getServerSession(authOptions);
+    const userId: mongoose.Types.ObjectId | null = session?.user?.id
       ? new mongoose.Types.ObjectId(session.user.id)
       : null;
 
-    const comments = await Comment.aggregate([
+    const comments: CommentArray[] = await Comment.aggregate([
       {
         $match: {
           commentedVideo: new mongoose.Types.ObjectId(videoId),
@@ -143,7 +146,7 @@ export async function GET(
 
       { $sort: { createdAt: -1, _id: -1 } },
       { $skip: skip },
-      { $limit: limit },
+      { $limit: limit + 1 },
 
       {
         $lookup: {
@@ -234,9 +237,16 @@ export async function GET(
       },
     ]);
 
+    const hasMore: boolean = comments.length > limit;
+
+    if (hasMore) {
+      comments.pop();
+    }
+
     return NextResponse.json({
       page,
       limit,
+      hasMore,
       comments,
     });
   } catch (error) {

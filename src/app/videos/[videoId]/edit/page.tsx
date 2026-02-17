@@ -1,4 +1,4 @@
-import ChangeVideoFields from './editPage';
+import ChangeVideoFields from '@/app/videos/[videoId]/edit/editPage';
 type PageProps = {
   params: { videoId: string };
 };

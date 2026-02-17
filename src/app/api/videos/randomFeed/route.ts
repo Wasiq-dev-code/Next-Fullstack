@@ -1,5 +1,5 @@
-import { connectToDatabase } from '@/src/lib/db';
-import Video from '@/src/model/Video.model';
+import { connectToDatabase } from '@/lib/database/db';
+import Video from '@/model/Video.model';
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -9,7 +9,11 @@ const MAX_EXCLUDE = 100 as const;
 // Random videos feed
 export async function POST(req: NextRequest) {
   try {
-    await connectToDatabase();
+    try {
+      await connectToDatabase();
+    } catch (error) {
+      console.log('Errer', error);
+    }
     const body = await req.json();
 
     // console.log('Body', body);

@@ -1,7 +1,7 @@
 'use client';
 import { useNotification } from '@/components/providers/notification';
-import { AppDispatch, RootState } from '@/src/store/store';
-import { registerUserThunk } from '@/src/store/thunks/userRegister.thunk';
+import { AppDispatch, RootState } from '@/store/store';
+import { registerUserThunk } from '@/store/thunks/userRegister.thunk';
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -17,6 +17,7 @@ export default function useRegisterUser() {
   const dispatch = useDispatch<AppDispatch>();
   const [errors, setErrors] = useState<FieldErrors>({});
 
+  // 2: IMPORTANT NOTE. We can only get all this states if the ever update or set in redux. We are getting the state and passing for ui comp.
   const { email, password, profilePhoto, submitting, username } = useSelector(
     (state: RootState) => state.userRegister,
   );
@@ -37,6 +38,7 @@ export default function useRegisterUser() {
     setErrors({});
 
     try {
+      // 3: IMPORTANT NOTE. This thunk is specially for calling and passing the data to backend if it's in state
       await dispatch(registerUserThunk()).unwrap();
       showNotification('User Register Successfully', 'success');
     } catch (err: any) {
@@ -48,6 +50,7 @@ export default function useRegisterUser() {
     }
   };
 
+  // 4: IMPORTANT NOTE. Now we gets all states and respectively called backend and passed the entire data, which was desireable for backend. Now we are passing these states to ui comp to update each.
   return {
     username,
     email,

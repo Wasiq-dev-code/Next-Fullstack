@@ -1,5 +1,5 @@
 import { getUploadAuthParams } from '@imagekit/next/server';
-import { requireAuth } from '@/src/lib/requireAuth';
+import { requireAuth } from '@/lib/validations/requireAuth';
 import { NextResponse } from 'next/server';
 
 export async function GET() {

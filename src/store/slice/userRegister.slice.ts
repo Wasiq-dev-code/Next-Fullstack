@@ -1,13 +1,21 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { registerUserThunk } from '../thunks/userRegister.thunk';
+import { registerUserThunk } from '@/store/thunks/userRegister.thunk';
 import { UploadedFile } from '@/types/file';
 
-const initialState = {
-  profilePhoto: null as UploadedFile | null,
-  username: '' as string,
-  email: '' as string,
-  password: '' as string,
-  submitting: false as boolean,
+interface UserRegister {
+  profilePhoto: UploadedFile | null;
+  username: string;
+  email: string;
+  password: string;
+  submitting: boolean;
+}
+
+const initialState: UserRegister = {
+  profilePhoto: null,
+  username: '',
+  email: '',
+  password: '',
+  submitting: false,
 };
 
 const userRegisterSlice = createSlice({
@@ -35,6 +43,7 @@ const userRegisterSlice = createSlice({
     },
   },
 
+  // After calling backend in Thunk, we have to manage submitting state constantly for frontend.
   extraReducers(builder) {
     builder
       .addCase(registerUserThunk.fulfilled, (state) => {

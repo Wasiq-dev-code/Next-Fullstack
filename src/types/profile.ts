@@ -1,4 +1,4 @@
-import { VideoFeed } from './video';
+import { VideoFeed } from '@/types/video';
 
 export type Profile = {
   _id: string;

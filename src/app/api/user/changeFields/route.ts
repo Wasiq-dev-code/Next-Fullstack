@@ -1,8 +1,8 @@
-import { authOptions } from '@/src/lib/auth';
-import { connectToDatabase } from '@/src/lib/db';
-import { deleteFileFromImageKit } from '@/src/lib/imageKitOps';
-import { changeOtherFieldsSchema } from '@/src/validators/changeOtherFields.schema';
-import User from '@/src/model/User.model';
+import { authOptions } from '@/lib/validations/auth';
+import { connectToDatabase } from '@/lib/database/db';
+import { deleteFileFromImageKit } from '@/lib/videofallback/imageKitOps';
+import { changeOtherFieldsSchema } from '@/validators/changeOtherFields.schema';
+import User from '@/model/User.model';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 

@@ -1,6 +1,6 @@
 import { LikeVideoResponse } from '@/types/like';
 import { LikeButton } from '@/components/videos/likes/LikeButton';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 
 type Props = {
   videoId: string;

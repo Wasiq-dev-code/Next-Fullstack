@@ -1,9 +1,9 @@
 'use client';
 
-import { apiClient } from '@/src/lib/api-client';
-import { usePaginatedList } from '../../../hooks/common/usePaginatedList';
-import CreateReply from './CreateReply';
-import { Comment, CommentListResponse } from '@/src/lib/types/comment';
+import { apiClient } from '@/lib/Api-client/api-client';
+import { usePaginatedList } from '@/hooks/common/usePaginatedList';
+import CreateReply from '@/components/videos/comments/CreateReply';
+import { Comment, CommentListResponse } from '@/types/comment';
 
 type Props = {
   videoId: string;

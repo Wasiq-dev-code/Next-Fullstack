@@ -1,7 +1,7 @@
-import { connectToDatabase } from '@/src/lib/db';
+import { connectToDatabase } from '@/lib/database/db';
 import { RegisterUserDTO } from '@/types/user';
 import { registerUserSchema } from '@/validators/registerUser.schema';
-import User, { IUser } from '@/src/model/User.model';
+import User, { IUser } from '@/model/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {

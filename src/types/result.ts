@@ -1,4 +1,4 @@
-import { IVideo } from '@/src/model/Video.model';
+import { IVideo } from '@/model/Video.model';
 import mongoose, { HydratedDocument } from 'mongoose';
 export interface VideoQuery {
   owner: mongoose.Types.ObjectId;

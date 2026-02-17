@@ -1,10 +1,10 @@
-import { connectToDatabase } from '@/src/lib/db';
-import Video from '@/src/model/Video.model';
+import { connectToDatabase } from '@/lib/database/db';
+import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/src/lib/auth';
-import Like from '@/src/model/Like.model';
+import { authOptions } from '@/lib/validations/auth';
+import Like from '@/model/Like.model';
 
 // GetVideoById
 export async function GET(

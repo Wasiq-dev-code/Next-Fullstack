@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useLike } from '../../../hooks/like/useLike';
+import { useLike } from '@/hooks/like/useLike';
 import { Button } from '@/components/ui/button';
 
 type LikeButtonProps<T> = {

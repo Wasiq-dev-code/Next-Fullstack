@@ -1,6 +1,6 @@
-import { connectToDatabase } from '@/src/lib/db';
-import { requireAuth } from '@/src/lib/requireAuth';
-import User from '@/src/model/User.model';
+import { connectToDatabase } from '@/lib/database/db';
+import { requireAuth } from '@/lib/validations/requireAuth';
+import User from '@/model/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {

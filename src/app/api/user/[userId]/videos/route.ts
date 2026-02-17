@@ -1,8 +1,8 @@
-import { connectToDatabase } from '@/src/lib/db';
-import { requireAuth } from '@/src/lib/requireAuth';
-import { VideoQuery } from '@/src/lib/types/result';
-import User from '@/src/model/User.model';
-import Video from '@/src/model/Video.model';
+import { connectToDatabase } from '@/lib/database/db';
+import { requireAuth } from '@/lib/validations/requireAuth';
+import { VideoQuery } from '@/types/result';
+import User from '@/model/User.model';
+import Video from '@/model/Video.model';
 import mongoose from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 

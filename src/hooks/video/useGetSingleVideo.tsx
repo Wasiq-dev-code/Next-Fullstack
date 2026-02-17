@@ -1,6 +1,6 @@
 'use client';
 
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 import { SingleVideoRes, VideoDetails } from '@/types/video';
 import { useCallback, useState } from 'react';
 type Status = 'idle' | 'loading' | 'success' | 'not-found';

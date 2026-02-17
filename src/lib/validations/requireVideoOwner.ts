@@ -1,7 +1,7 @@
 import mongoose, { HydratedDocument } from 'mongoose';
-import Video, { IVideo } from '@/src/model/Video.model';
+import Video, { IVideo } from '@/model/Video.model';
 import { NextResponse } from 'next/server';
-import { Result } from '../types/result';
+import { Result } from '@/types/result';
 
 export async function requireVideoOwner(
   videoId: string,

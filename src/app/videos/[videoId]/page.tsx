@@ -1,4 +1,4 @@
-import SingleVideoClient from './SingleVideoClient';
+import SingleVideoPage from '@/app/videos/[videoId]/SingleVideoClient';
 
 type PageProps = {
   params: { videoId: string };
@@ -6,5 +6,5 @@ type PageProps = {
 
 export default async function Page({ params }: PageProps) {
   const { videoId } = await params;
-  return <SingleVideoClient videoId={videoId} />;
+  return <SingleVideoPage videoId={videoId} />;
 }

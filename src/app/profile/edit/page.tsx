@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { apiClient } from '@/src/lib/api-client';
+import { apiClient } from '@/lib/Api-client/api-client';
 import { useNotification } from '@/components/providers/notification';
 import UploadExample from '@/components/fileUploads';
-import { rollbackDelete } from '@/src/lib/rollBackDelete';
+import { rollbackDelete } from '@/lib/videofallback/rollBackDelete';
 
 type UploadedFile = {
   url: string;
