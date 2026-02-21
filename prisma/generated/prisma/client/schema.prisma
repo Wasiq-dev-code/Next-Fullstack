@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  output          = "./generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String    @id @default(cuid())
+  username          String
+  email             String    @unique
+  password          String?
+  profilePhotoUrl   String?
+  profilePhotoId    String?
+  isPrivate         Boolean   @default(false)
+  provider          String // 'credentials' or 'google'
+  passwordChangedAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  videos    Video[]
+  likes     Like[]
+  comments  Comment[]
+  following Follow[]  @relation("follower")
+  followers Follow[]  @relation("account")
+}
+
+model Video {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  videoUrl        String
+  videoFileId     String
+  thumbnailUrl    String
+  thumbnailFileId String
+  isPrivate       Boolean  @default(false)
+  controls        Boolean  @default(true)
+  randomScore     Float?
+  createdAt       DateTime @default(now())
+
+  ownerId  String
+  owner    User      @relation(fields: [ownerId], references: [id])
+  likes    Like[]
+  comments Comment[]
+
+  @@index([ownerId, createdAt(sort: Desc)])
+}
+
+model Comment {
+  id           String   @id @default(cuid())
+  content      String
+  repliesCount Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+  videoId String
+  video   Video  @relation(fields: [videoId], references: [id])
+
+  parentCommentId String?
+  parentComment   Comment?  @relation("CommentToComment", fields: [parentCommentId], references: [id])
+  replies         Comment[] @relation("CommentToComment")
+  likes           Like[]
+}
+
+model Like {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  videoId String?
+  video   Video?  @relation(fields: [videoId], references: [id])
+
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, videoId])
+  @@unique([userId, commentId])
+}
+
+model Follow {
+  id         String @id @default(cuid())
+  followerId String
+  follower   User   @relation("follower", fields: [followerId], references: [id])
+  accountId  String
+  account    User   @relation("account", fields: [accountId], references: [id])
+
+  @@unique([followerId, accountId])
+}

@@ -8,6 +8,7 @@ import { loginUserSchema } from '@/validators/loginUser';
 
 export const authOptions: NextAuthOptions = {
   // Google and github providers are need to be implement
+
   providers: [
     CredentialsProvider({
       name: 'Credentials',
