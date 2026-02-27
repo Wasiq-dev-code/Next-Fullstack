@@ -13,7 +13,7 @@ export const registerUserThunk = createAsyncThunk<
   if (!email || !password || !profilePhoto || !username) {
     throw new Error('fields are missing');
   }
-
+ 
   try {
     await apiClient.registerUser({ email, password, profilePhoto, username });
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useNotification } from '@/components/providers/notification';
+import { useNotification } from '@/components/notification';
 import { useAppDispatch } from '@/store/store';
 import { createReply } from '@/store/thunks/comments.thunk';
 

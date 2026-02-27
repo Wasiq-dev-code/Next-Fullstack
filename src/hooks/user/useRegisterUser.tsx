@@ -1,5 +1,5 @@
 'use client';
-import { useNotification } from '@/components/providers/notification';
+import { useNotification } from '@/components/notification';
 import { AppDispatch, RootState } from '@/store/store';
 import { registerUserThunk } from '@/store/thunks/userRegister.thunk';
 import { useState } from 'react';

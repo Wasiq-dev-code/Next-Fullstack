@@ -1,6 +1,6 @@
 'use client';
 
-import { useNotification } from '@/components/providers/notification';
+import { useNotification } from '@/components/notification';
 import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';

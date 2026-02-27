@@ -3,7 +3,7 @@
 import { rollbackDelete } from '@/lib/videofallback/rollBackDelete';
 import { UploadedFile } from '@/types/file';
 import { useState, useEffect } from 'react';
-import { useNotification } from '@/components/providers/notification';
+import { useNotification } from '@/components/notification';
 import { apiClient } from '@/lib/Api-client/api-client';
 import { SingleVideoRes } from '@/types/video';
 

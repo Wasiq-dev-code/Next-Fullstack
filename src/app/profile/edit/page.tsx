@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { apiClient } from '@/lib/Api-client/api-client';
-import { useNotification } from '@/components/providers/notification';
+import { useNotification } from '@/components/notification';
 import UploadExample from '@/components/fileUploads';
 import { rollbackDelete } from '@/lib/videofallback/rollBackDelete';
 

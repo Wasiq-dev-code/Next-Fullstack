@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { apiClient } from '@/lib/Api-client/api-client';
-import { useNotification } from '@/components/providers/notification';
+import { useNotification } from '@/components/notification';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 

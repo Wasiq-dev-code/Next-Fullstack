@@ -1,7 +1,7 @@
 'use client';
 
 import UploadExample from '@/components/fileUploads';
-import { useNotification } from '@/components/providers/notification';
+import { useNotification } from '@/components/notification';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/Api-client/api-client';
