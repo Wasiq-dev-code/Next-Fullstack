@@ -2,14 +2,13 @@
 
 import UploadExample from '@/components/fileUploads';
 import useRegisterUser from '@/hooks/user/useRegisterUser';
-import { useDispatch } from 'react-redux';
 import {
   setEmail,
   setPassword,
   setProfilePhoto,
   setUsername,
 } from '@/store/slice/userRegister.slice';
-import { AppDispatch } from '@/store/store';
+import { useAppDispatch } from '@/store/store';
 import { signIn } from 'next-auth/react';
 
 export default function UserRegister() {
@@ -26,7 +25,7 @@ export default function UserRegister() {
   } = useRegisterUser();
 
   // 1: IMPORTANT NOTE. We are using dispatch for updating the current state for hook to send back here after processing in redux.
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   return (
     <>
       <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4">
