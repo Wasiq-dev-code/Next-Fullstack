@@ -19,7 +19,7 @@ function LoginComponent() {
   useEffect(() => {
     const error = searchParams.get('error');
 
-    // Notification setup for unauth user who click on auth paths
+    // Notification setup for the unauth user who clicks on auth paths
     if (error === 'unauthorized') {
       toast.error('Please login or register to access this page', {
         id: 'auth-error',

@@ -1,10 +1,10 @@
-import User from '@/model/User.model';
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '@/lib/database/db';
 import bcrypt from 'bcryptjs';
 import Google from 'next-auth/providers/google';
 import { loginUserSchema } from '@/validators/loginUser';
+import prisma from '../database/prisma';
 
 export const authOptions: NextAuthOptions = {
   // Google and github providers are need to be implement
@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
 
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         // 1. Validate input shape
         const parsed = loginUserSchema.safeParse(credentials);
 
@@ -31,12 +31,16 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
 
         // 3. Find user
-        const user = await User.findOne({ email }).select(
-          '+password +passwordChangedAt +emailChangedAt',
-        );
+        // const user = await User.findOne({ email }).select(
+        //   '+password +passwordChangedAt +emailChangedAt',
+        // );
+
+        const user = await prisma.user.findUnique({
+          where: { email },
+        });
 
         // 4. Generic auth failure (do NOT reveal which one)
-        if (!user) {
+        if (!user || !user.password) {
           throw new Error('Invalid email or password');
         }
 
@@ -49,14 +53,14 @@ export const authOptions: NextAuthOptions = {
 
         // 6. Return safe user object (NextAuth session payload)
         return {
-          id: user._id.toString(),
+          id: user.id,
           email: user.email,
           name: user.username,
-          image: user.profilePhoto?.url ?? null,
-          passwordChangedAt: user.passwordChangedAt,
-          emailChangedAt: user.emailChangedAt,
-          provider: user.provider,
-          isPrivate: user.isPrivate,
+          image: user.profilePhotoUrl ?? undefined,
+          passwordChangedAt: user.passwordChangedAt ?? undefined,
+          emailChangedAt: user.emailChangedAt ?? undefined,
+          provider: user.provider, // MUST
+          isPrivate: user.isPrivate, // MUST
         };
       },
     }),
@@ -104,9 +108,9 @@ export const authOptions: NextAuthOptions = {
 
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
-        await connectToDatabase();
-
-        let existingUser = await User.findOne({ email: user.email });
+        let existingUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+        });
 
         if (existingUser) {
           if (existingUser.provider === 'credentials') {
@@ -115,24 +119,27 @@ export const authOptions: NextAuthOptions = {
             );
           }
         } else {
-          existingUser = await User.create({
-            email: user.email,
-            username: user.name ?? 'Google User',
-            provider: 'google',
-            profilePhoto: user.image
-              ? {
-                  url: user.image,
-                  fileId: 'google-oauth',
-                }
-              : undefined,
+          if (!user.email) {
+            throw new Error('Email is required for Google OAuth');
+          }
+
+          existingUser = await prisma.user.create({
+            data: {
+              email: user.email,
+              username: user.name ?? 'Google User',
+              provider: 'google',
+              profilePhotoUrl: user.image ?? null,
+              profilePhotoId: 'google-oauth',
+              isPrivate: false,
+            },
           });
         }
         // Question..
-        user.id = existingUser._id.toString();
+        user.id = existingUser.id.toString();
         user.provider = existingUser.provider;
         user.isPrivate = existingUser.isPrivate;
-        user.passwordChangedAt = existingUser.passwordChangedAt;
-        user.emailChangedAt = existingUser.emailChangedAt;
+        user.passwordChangedAt = existingUser.passwordChangedAt ?? undefined;
+        user.emailChangedAt = existingUser.emailChangedAt ?? undefined;
       }
       return true;
     },

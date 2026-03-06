@@ -23,6 +23,7 @@ model User {
   isPrivate         Boolean   @default(false)
   provider          String    // 'credentials' or 'google'
   passwordChangedAt DateTime?
+  emailChangedAt    DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
