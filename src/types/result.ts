@@ -1,5 +1,6 @@
 import { IVideo } from '@/model/Video.model';
-import mongoose, { HydratedDocument } from 'mongoose';
+import { Video } from '@prisma/client';
+import mongoose from 'mongoose';
 export interface VideoQuery {
   owner: mongoose.Types.ObjectId;
   createdAt?: {
@@ -11,7 +12,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: Response };
 
 export type VideoAuthData = {
   userId: string;
-  video: HydratedDocument<IVideo>;
+  video: Video;
 };
 
 export type VideoFormData = Omit<IVideo, '_id'>;

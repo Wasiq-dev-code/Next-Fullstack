@@ -1,13 +1,14 @@
-import mongoose, { HydratedDocument } from 'mongoose';
-import Video, { IVideo } from '@/model/Video.model';
 import { NextResponse } from 'next/server';
 import { Result } from '@/types/result';
+import { Video } from '@prisma/client';
+import prisma from '../database/prisma';
+import { isCuid } from '@paralleldrive/cuid2';
 
 export async function requireVideoOwner(
   videoId: string,
   userId: string,
-): Promise<Result<HydratedDocument<IVideo>>> {
-  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+): Promise<Result<Video>> {
+  if (!isCuid(videoId)) {
     return {
       ok: false,
       error: NextResponse.json(
@@ -19,9 +20,11 @@ export async function requireVideoOwner(
     };
   }
 
-  const video = await Video.findOne({
-    _id: videoId,
-    owner: userId,
+  const video = await prisma.video.findFirst({
+    where: {
+      id: videoId,
+      ownerId: userId,
+    },
   });
 
   if (!video) {
