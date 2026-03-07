@@ -77,6 +77,6 @@ export const imageKitRouter = router({
         });
       }
 
-      return { success: true };
+      return { success: deleted };
     }),
 });

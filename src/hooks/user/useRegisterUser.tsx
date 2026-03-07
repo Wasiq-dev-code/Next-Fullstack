@@ -1,9 +1,10 @@
 'use client';
 import { useNotification } from '@/components/notification';
-import { AppDispatch, RootState } from '@/store/store';
-import { registerUserThunk } from '@/store/thunks/userRegister.thunk';
+import { trpc } from '@/lib/trpc';
+import { resetFields } from '@/store/slice/userRegister.slice';
+import { useAppDispatch, useAppSelector } from '@/store/store';
+import { RootState } from '@/store/type';
 import { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 
 type FieldErrors = {
   username?: string;
@@ -14,13 +15,13 @@ type FieldErrors = {
 };
 
 export default function useRegisterUser() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const [errors, setErrors] = useState<FieldErrors>({});
+  const { mutateAsync, isPending } = trpc.auth.register.useMutation();
+  const deleteTempFileMutation = trpc.imageKit.deleteTempFile.useMutation();
 
-  // 2: IMPORTANT NOTE. We can only get all this states if the ever update or set in redux. We are getting the state and passing for ui comp.
-  const { email, password, profilePhoto, submitting, username } = useSelector(
-    (state: RootState) => state.userRegister,
-  );
+  const { email, password, profilePhotoUrl, profilePhotoId, username } =
+    useAppSelector((state: RootState) => state.userRegister);
 
   const { showNotification } = useNotification();
 
@@ -28,38 +29,80 @@ export default function useRegisterUser() {
     Boolean(username.trim()) &&
     Boolean(email.trim()) &&
     Boolean(password.trim()) &&
-    Boolean(profilePhoto) &&
-    !submitting;
+    Boolean(profilePhotoUrl) &&
+    Boolean(profilePhotoId) &&
+    !isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit || submitting) return;
+    if (!canSubmit) return;
 
     setErrors({});
 
     try {
-      // 3: IMPORTANT NOTE. This thunk is specially for calling and passing the data to backend if it's in state
-      await dispatch(registerUserThunk()).unwrap();
+      if (
+        !email ||
+        !password ||
+        !profilePhotoUrl ||
+        !profilePhotoId ||
+        !username
+      ) {
+        dispatch(resetFields());
+        throw new Error('fields are missing');
+      }
+
+      const user = await mutateAsync({
+        email,
+        password,
+        profilePhotoUrl,
+        profilePhotoId,
+        username,
+      });
+
+      if (!user) {
+        throw new Error('Error on backend while registering User');
+      }
+
       showNotification('User Register Successfully', 'success');
+      dispatch(resetFields());
     } catch (err: any) {
       showNotification('User Register failed', 'error');
 
       setErrors({
         general: err?.message ?? 'Registration failed',
       });
+
+      try {
+        if (profilePhotoId) {
+          // When backend response failed, Delete that photo from cloud imagekit
+
+          await deleteTempFileMutation.mutateAsync(
+            { fileId: profilePhotoId },
+            {
+              onError: (err) => {
+                console.error('Image cleanup failed', err);
+              },
+            },
+          );
+          dispatch(resetFields());
+        }
+      } catch (delErr) {
+        console.error('Error while deleting through public path', delErr);
+      }
     }
   };
 
-  // 4: IMPORTANT NOTE. Now we gets all states and respectively called backend and passed the entire data, which was desireable for backend. Now we are passing these states to ui comp to update each.
+  // 4: IMPORTANT NOTE. Now we gets all states and respectively called backend and passed entire data, which was desireable for backend. Now we are passing these states to ui comp to update each.
   return {
     username,
     email,
     password,
-    profilePhoto,
+    profilePhotoUrl,
+    profilePhotoId,
     canSubmit,
     handleSubmit,
-    submitting,
     setErrors,
     errors,
+    submitting: isPending,
   };
 }

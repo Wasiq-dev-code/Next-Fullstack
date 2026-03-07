@@ -1,29 +1,30 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { registerUserThunk } from '@/store/thunks/userRegister.thunk';
-import { UploadedFile } from '@/types/file';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { filePhoto } from '../type';
 
 interface UserRegister {
-  profilePhoto: UploadedFile | null;
+  // profilePhoto: UploadedFile | null;
+  profilePhotoUrl: string | null;
+  profilePhotoId: string | null;
   username: string;
   email: string;
   password: string;
-  submitting: boolean;
 }
 
 const initialState: UserRegister = {
-  profilePhoto: null,
+  profilePhotoId: null,
+  profilePhotoUrl: null,
   username: '',
   email: '',
   password: '',
-  submitting: false,
 };
 
 const userRegisterSlice = createSlice({
   name: 'userRegister',
   initialState,
   reducers: {
-    setProfilePhoto(state, action) {
-      state.profilePhoto = action.payload;
+    setProfilePhoto(state, action: PayloadAction<filePhoto>) {
+      state.profilePhotoId = action.payload.profilePhotoId;
+      state.profilePhotoUrl = action.payload.profilePhotoUrl;
     },
     setUsername(state, action) {
       state.username = action.payload;
@@ -35,26 +36,9 @@ const userRegisterSlice = createSlice({
       state.password = action.payload;
     },
 
-    resetFields(state) {
-      state.profilePhoto = null;
-      state.email = '';
-      state.password = '';
-      state.username = '';
+    resetFields() {
+      return initialState;
     },
-  },
-
-  // After calling backend in Thunk, we have to manage submitting state constantly for frontend.
-  extraReducers(builder) {
-    builder
-      .addCase(registerUserThunk.fulfilled, (state) => {
-        state.submitting = false;
-      })
-      .addCase(registerUserThunk.pending, (state) => {
-        state.submitting = true;
-      })
-      .addCase(registerUserThunk.rejected, (state) => {
-        state.submitting = false;
-      });
   },
 });
 

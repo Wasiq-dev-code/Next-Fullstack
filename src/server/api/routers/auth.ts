@@ -12,11 +12,12 @@ export const authRouter = router({
   register: publicProcedure
     .input(registerUserSchema)
     .mutation(async ({ input }) => {
+      const email = input.email.toLowerCase();
+
       const existingUser = await prisma.user.findUnique({
         where: { email: input.email },
       });
 
-      // IMPLEMENT FRONT END FOR THIS !!!!!!
       if (existingUser) {
         throw new TRPCError({
           code: 'CONFLICT',
@@ -24,22 +25,22 @@ export const authRouter = router({
         });
       }
 
-      const hashedPassword = await bcrypt.hash(input.password, 12);
+      try {
+        const hashedPassword = await bcrypt.hash(input.password, 12);
+        const user = await prisma.user.create({
+          data: {
+            ...input,
+            email,
+            password: hashedPassword,
+            provider: 'credentials',
+          },
+          select: { id: true },
+        });
 
-      const createUser = await prisma.user.create({
-        data: {
-          email: input.email,
-          password: hashedPassword,
-          username: input.username,
-          profilePhotoUrl: input.profilePhotoUrl,
-          profilePhotoId: input.profilePhotoId,
-          provider: 'credentials',
-        },
-      });
-
-      return {
-        message: 'User Registered Successfully',
-        userId: createUser.id,
-      };
+        return { status: 'success', userId: user.id };
+      } catch (error) {
+        console.error('Registration Error:', error);
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      }
     }),
 });

@@ -18,7 +18,7 @@ export default function UserRegister() {
     errors,
     handleSubmit,
     password,
-    profilePhoto,
+    profilePhotoUrl,
     setErrors,
     submitting,
     username,
@@ -90,11 +90,16 @@ export default function UserRegister() {
             FileType="image"
             visibility="public"
             onSuccess={(res) => {
-              dispatch(setProfilePhoto(res));
+              dispatch(
+                setProfilePhoto({
+                  profilePhotoId: res.fileId,
+                  profilePhotoUrl: res.url,
+                }),
+              );
               setErrors((p) => ({ ...p, profilePhoto: undefined }));
             }}
           />
-          {profilePhoto && (
+          {profilePhotoUrl && (
             <p className="text-green-600 text-sm">Photo uploaded ✔</p>
           )}
           {errors.profilePhoto && (
@@ -104,7 +109,7 @@ export default function UserRegister() {
 
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={!canSubmit || submitting}
           className="w-full bg-black text-white py-2 rounded disabled:opacity-50"
         >
           {submitting ? 'Registering...' : 'Register'}
