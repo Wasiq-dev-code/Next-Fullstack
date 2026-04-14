@@ -1,31 +1,47 @@
 'use client';
 import CommentItem from '@/components/videos/comments/CommentItem';
 import CreateComment from '@/components/videos/comments/CreateComment';
-import { useAppDispatch, useAppSelector } from '@/store/store';
-import { commentSelectors, resetComments } from '@/store/slice/comments.slice';
-import { useEffect } from 'react';
-import { fetchComments } from '@/store/thunks/comments.thunk';
+import { trpc } from '@/lib/trpc';
 
 export default function CommentsSection({ videoId }: { videoId: string }) {
-  const dispatch = useAppDispatch();
-  const comments = useAppSelector(commentSelectors.selectAll);
+  // const dispatch = useAppDispatch();
+  // const comments = useAppSelector(commentSelectors.selectAll);
 
-  const { page, hasMore, loading } = useAppSelector(
-    (state) => state.comments.comments,
-  );
+  // const { page, hasMore, loading } = useAppSelector(
+  //   (state) => state.comments.comments,
+  // );
 
-  useEffect(() => {
-    dispatch(resetComments());
-    dispatch(fetchComments({ videoId, page: 1 }));
+  // useEffect(() => {
+  //   dispatch(resetComments());
+  //   dispatch(fetchComments({ videoId, page: 1 }));
 
-    return () => {
-      dispatch(resetComments());
-    };
-  }, [videoId, dispatch]); // Dispatch will never change because this is redux method, and it will never change
+  //   return () => {
+  //     dispatch(resetComments());
+  //   };
+  // }, [videoId, dispatch]); // Dispatch will never change because this is redux method, and it will never change
+
+  // const loadMore = () => {
+  //   if (!loading && hasMore) {
+  //     dispatch(fetchComments({ videoId, page }));
+  //   }
+  // };
+
+  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
+    trpc.comment.fetchVideoComments.useInfiniteQuery(
+      {
+        videoId,
+        limit: 10,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
+
+  const comments = data?.pages.flatMap((pages) => pages.comments) ?? [];
 
   const loadMore = () => {
-    if (!loading && hasMore) {
-      dispatch(fetchComments({ videoId, page }));
+    if (hasNextPage && !isFetching) {
+      fetchNextPage();
     }
   };
 
@@ -46,7 +62,7 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
 
       {/* Comments List */}
       <div className="space-y-4">
-        {comments.length === 0 && !loading && (
+        {comments.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-linear-to-br from-slate-100 to-slate-200 rounded-full mx-auto mb-4 flex items-center justify-center">
               <svg
@@ -74,7 +90,7 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
 
         {comments.map((comment) => (
           <div
-            key={comment._id}
+            key={comment.id}
             className="bg-white p-4 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all duration-200"
           >
             <CommentItem videoId={videoId} comment={comment} />
@@ -83,7 +99,7 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
       </div>
 
       {/* Loading State */}
-      {loading && (
+      {isLoading && (
         <div className="py-8 flex flex-col items-center justify-center">
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
           <p className="text-slate-600 font-medium">Loading comments…</p>
@@ -91,7 +107,7 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
       )}
 
       {/* End Message */}
-      {!hasMore && comments.length > 0 && !loading && (
+      {!hasNextPage && comments.length > 0 && !isLoading && (
         <div className="py-6 text-center">
           <div className="inline-flex items-center gap-2 text-slate-500">
             <svg
@@ -113,7 +129,7 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
       )}
 
       {/* Load More Button */}
-      {hasMore && !loading && (
+      {hasNextPage && !isLoading && (
         <div className="flex justify-center pt-4">
           <button
             onClick={loadMore}

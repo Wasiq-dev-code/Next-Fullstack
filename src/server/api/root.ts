@@ -1,4 +1,5 @@
 import { authRouter } from './routers/auth';
+import { commentRouter } from './routers/comment';
 import { imageKitRouter } from './routers/imageKit';
 import { userRouter } from './routers/user';
 import { videoRouter } from './routers/video';
@@ -9,6 +10,7 @@ export const appRouter = router({
   user: userRouter,
   imageKit: imageKitRouter,
   video: videoRouter,
+  comment: commentRouter,
 });
 
 export type AppRouter = typeof appRouter;

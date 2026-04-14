@@ -1,24 +1,23 @@
-import { initTRPC } from '@trpc/server';
-import { getAuthSession } from './routers/auth';
+import { initTRPC, TRPCError } from '@trpc/server';
+import type { Context } from './context';
 
-export const createTRPCContext = async () => {
-  const session = await getAuthSession();
-
-  return {
-    session,
-  };
-};
-
-const t = initTRPC.context<typeof createTRPCContext>().create();
+const t = initTRPC.context<Context>().create();
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
 // This is a middleware for authentication, it is a simple practice what i have been doing across projects
-export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.session?.user) {
-    throw new Error('Unauthorized');
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+    });
   }
 
-  return next();
+  return next({
+    ctx: {
+      session: ctx.session,
+      prisma: ctx.prisma,
+    },
+  });
 });
