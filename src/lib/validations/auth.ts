@@ -4,7 +4,7 @@ import { connectToDatabase } from '@/lib/database/db';
 import bcrypt from 'bcryptjs';
 import Google from 'next-auth/providers/google';
 import { loginUserSchema } from '@/validators/loginUser';
-import prisma from '../database/prisma';
+import User from '@/model/User.model';
 
 export const authOptions: NextAuthOptions = {
   // Google and github providers are need to be implement
@@ -30,14 +30,10 @@ export const authOptions: NextAuthOptions = {
         // 2. Ensure DB connection
         await connectToDatabase();
 
-        // 3. Find user
-        // const user = await User.findOne({ email }).select(
-        //   '+password +passwordChangedAt +emailChangedAt',
-        // );
-
-        const user = await prisma.user.findUnique({
-          where: { email },
-        });
+        // 3. Find user (IMPORTANT: include hidden fields)
+        const user = await User.findOne({ email }).select(
+          '+password +passwordChangedAt +emailChangedAt',
+        );
 
         // 4. Generic auth failure (do NOT reveal which one)
         if (!user || !user.password) {
@@ -53,7 +49,7 @@ export const authOptions: NextAuthOptions = {
 
         // 6. Return safe user object (NextAuth session payload)
         return {
-          id: user.id,
+          id: user._id.toString(), // mongoose uses _id
           email: user.email,
           name: user.username,
           image: user.profilePhotoUrl ?? undefined,
@@ -108,39 +104,42 @@ export const authOptions: NextAuthOptions = {
 
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
-        let existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-        });
+        await connectToDatabase();
+
+        // 1. Find existing user
+        let existingUser = await User.findOne({ email: user.email });
 
         if (existingUser) {
+          // 2. Conflict: credentials vs google
           if (existingUser.provider === 'credentials') {
             throw new Error(
               'Account already exists with email and password. Please login using credentials.',
             );
           }
         } else {
+          // 3. Create new user (Google OAuth)
           if (!user.email) {
             throw new Error('Email is required for Google OAuth');
           }
 
-          existingUser = await prisma.user.create({
-            data: {
-              email: user.email,
-              username: user.name ?? 'Google User',
-              provider: 'google',
-              profilePhotoUrl: user.image ?? null,
-              profilePhotoId: 'google-oauth',
-              isPrivate: false,
-            },
+          existingUser = await User.create({
+            email: user.email,
+            username: user.name ?? 'Google User',
+            provider: 'google',
+            profilePhotoUrl: user.image ?? null,
+            profilePhotoId: 'google-oauth',
+            isPrivate: false,
           });
         }
-        // Question..
-        user.id = existingUser.id.toString();
+
+        // 4. Attach required fields to NextAuth user object
+        user.id = existingUser._id.toString();
         user.provider = existingUser.provider;
         user.isPrivate = existingUser.isPrivate;
         user.passwordChangedAt = existingUser.passwordChangedAt ?? undefined;
         user.emailChangedAt = existingUser.emailChangedAt ?? undefined;
       }
+
       return true;
     },
   },

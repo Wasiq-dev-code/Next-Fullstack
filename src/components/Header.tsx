@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { signIn, signOut, useSession } from 'next-auth/react';
-
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,17 +15,14 @@ export default function Header() {
   const { data: session, status } = useSession();
   const isAuth = status === 'authenticated' && !!session?.user;
 
-  // console.log(session?.user?.id);
-
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-black">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e0f11]">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-slate-200 text-sm font-semibold text-black">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-violet-600 text-sm font-semibold text-white">
             N
           </div>
-          <span className="text-base font-semibold text-slate-200">Home</span>
+          <span className="text-base font-semibold text-white">Home</span>
         </Link>
 
         <div className="flex-1" />
@@ -37,7 +33,12 @@ export default function Header() {
               href="/videos/registerVideo"
               className="hidden sm:inline-flex"
             >
-              <Button size="sm">Video Upload</Button>
+              <Button
+                size="sm"
+                className="bg-violet-600 hover:bg-violet-500 text-white"
+              >
+                Video Upload
+              </Button>
             </Link>
 
             <DropdownMenu>
@@ -45,7 +46,7 @@ export default function Header() {
                 <button className="rounded-full focus:outline-none">
                   <Avatar className="h-9 w-9">
                     <AvatarImage src={session.user?.image ?? ''} />
-                    <AvatarFallback className="bg-slate-700 text-slate-200">
+                    <AvatarFallback className="bg-violet-600 text-white">
                       {(session.user?.name || 'U')[0]}
                     </AvatarFallback>
                   </Avatar>
@@ -54,23 +55,31 @@ export default function Header() {
 
               <DropdownMenuContent
                 align="end"
-                className="w-48 border border-slate-700 bg-gray-100 hover:bg-slate-500"
+                className="w-48 border border-white/10 bg-[#16171a]"
               >
-                <DropdownMenuItem asChild>
-                  {status === 'authenticated' && session?.user?.id && (
-                    <DropdownMenuItem asChild>
-                      <Link href={`/profile/${session.user.id}`}>Profile</Link>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuItem>
+                {status === 'authenticated' && session?.user?.id && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`/profile/${session.user.id}`}
+                      className="text-gray-300 focus:bg-white/5 focus:text-white"
+                    >
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                )}
 
                 <DropdownMenuItem asChild>
-                  <Link href="/profile/edit">Edit Profile</Link>
+                  <Link
+                    href="/profile/edit"
+                    className="text-gray-300 focus:bg-white/5 focus:text-white"
+                  >
+                    Edit Profile
+                  </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
                   onClick={() => signOut()}
-                  className="text-slate-700 focus:bg-slate-50"
+                  className="text-red-400 focus:bg-white/5 focus:text-red-300"
                 >
                   Sign out
                 </DropdownMenuItem>
@@ -79,12 +88,21 @@ export default function Header() {
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => signIn()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => signIn()}
+              className="text-gray-300 hover:text-white hover:bg-white/10"
+            >
               Log in
             </Button>
-
             <Link href="/register">
-              <Button size="sm">Sign up</Button>
+              <Button
+                size="sm"
+                className="bg-violet-600 hover:bg-violet-500 text-white"
+              >
+                Sign up
+              </Button>
             </Link>
           </div>
         )}

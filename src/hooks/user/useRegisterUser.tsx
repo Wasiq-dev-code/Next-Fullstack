@@ -1,9 +1,8 @@
 'use client';
+
 import { useNotification } from '@/components/notification';
-import { trpc } from '@/lib/trpc';
-import { resetFields } from '@/store/slice/userRegister.slice';
-import { useAppDispatch, useAppSelector } from '@/store/store';
-import { RootState } from '@/store/type';
+import { apiClient } from '@/lib/Api-client/api-client';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 type FieldErrors = {
@@ -15,94 +14,100 @@ type FieldErrors = {
 };
 
 export default function useRegisterUser() {
-  const dispatch = useAppDispatch();
   const [errors, setErrors] = useState<FieldErrors>({});
-  const { mutateAsync, isPending } = trpc.auth.register.useMutation();
-  const deleteTempFileMutation = trpc.imageKit.deleteTempFile.useMutation();
+  const [submitting, setSubmitting] = useState(false);
 
-  const { email, password, profilePhotoUrl, profilePhotoId, username } =
-    useAppSelector((state: RootState) => state.userRegister);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [profilePhotoId, setProfilePhotoId] = useState<string | null>(null);
 
   const { showNotification } = useNotification();
+  const router = useRouter();
 
   const canSubmit =
-    Boolean(username.trim()) &&
-    Boolean(email.trim()) &&
-    Boolean(password.trim()) &&
-    Boolean(profilePhotoUrl) &&
-    Boolean(profilePhotoId) &&
-    !isPending;
+    username.trim() &&
+    email.trim() &&
+    password.trim() &&
+    profilePhotoUrl &&
+    profilePhotoId &&
+    !submitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
 
     setErrors({});
+    setSubmitting(true);
 
     try {
-      if (
-        !email ||
-        !password ||
-        !profilePhotoUrl ||
-        !profilePhotoId ||
-        !username
-      ) {
-        dispatch(resetFields());
-        throw new Error('fields are missing');
-      }
-
-      const user = await mutateAsync({
+      const user = await apiClient.registerUser({
+        username,
         email,
         password,
-        profilePhotoUrl,
-        profilePhotoId,
-        username,
+        profilePhoto: {
+          url: profilePhotoUrl!,
+          fileId: profilePhotoId!,
+        },
       });
 
       if (!user) {
-        throw new Error('Error on backend while registering User');
+        throw new Error('Backend error');
       }
 
-      showNotification('User Register Successfully', 'success');
-      dispatch(resetFields());
+      showNotification('User Registered Successfully', 'success');
+      console.log('redirecting to:', `/verify/${username}`);
+      router.push(`/verify/${username}`);
+      // reset fields
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setProfilePhotoUrl(null);
+      setProfilePhotoId(null);
     } catch (err: any) {
       showNotification('User Register failed', 'error');
 
-      setErrors({
-        general: err?.message ?? 'Registration failed',
-      });
-
       try {
-        if (profilePhotoId) {
-          // When backend response failed, Delete that photo from cloud imagekit
-
-          await deleteTempFileMutation.mutateAsync(
-            { fileId: profilePhotoId },
-            {
-              onError: (err) => {
-                console.error('Image cleanup failed', err);
-              },
-            },
-          );
-          dispatch(resetFields());
-        }
-      } catch (delErr) {
-        console.error('Error while deleting through public path', delErr);
+        const parsed = JSON.parse(err?.message);
+        const firstError = Object.values(parsed?.issues ?? {})[0] as string[];
+        setErrors({ general: firstError?.[0] ?? 'Registration failed' });
+      } catch {
+        setErrors({ general: err?.message ?? 'Registration failed' });
       }
+
+      // optional: cleanup API call (REST version)
+      if (profilePhotoId) {
+        try {
+          await fetch('/api/imagekit/delete-temp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileId: profilePhotoId }),
+          });
+        } catch (e) {
+          console.error('cleanup failed', e);
+        }
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // 4: IMPORTANT NOTE. Now we gets all states and respectively called backend and passed entire data, which was desireable for backend. Now we are passing these states to ui comp to update each.
   return {
     username,
+    setUsername,
     email,
+    setEmail,
     password,
+    setPassword,
     profilePhotoUrl,
+    setProfilePhotoUrl,
     profilePhotoId,
+    setProfilePhotoId,
     canSubmit,
     handleSubmit,
-    setErrors,
     errors,
-    submitting: isPending,
+    setErrors,
+    submitting,
   };
 }

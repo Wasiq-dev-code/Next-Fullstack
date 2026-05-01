@@ -21,7 +21,7 @@ import {
   ProfileResponse,
   ProfileVideoResponse,
 } from '@/types/profile';
-import { RegisterUserDTO, RegisterUserResponse } from '@/types/user';
+import { emailVeri, RegisterUserDTO, RegisterUserResponse } from '@/types/user';
 
 class ApiClient {
   private async fetch<T>(
@@ -172,6 +172,13 @@ class ApiClient {
   async togglePrivateProfile(): Promise<isPrivateResponse> {
     return await this.fetch<isPrivateResponse>('/user/profile/private', {
       method: 'POST',
+    });
+  }
+
+  async emailVerification(payload: emailVeri): Promise<RegisterUserResponse> {
+    return await this.fetch<RegisterUserResponse>(`/user/verify`, {
+      method: 'POST',
+      body: payload,
     });
   }
 }

@@ -2,7 +2,7 @@
 @import 'tw-animate-css';
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply bg-[#0e0f11] text-white;
 }
 
 @custom-variant dark (&:is(.dark *));

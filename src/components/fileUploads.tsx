@@ -1,6 +1,5 @@
 'use client'; // This component must be a client component
 
-import { trpc } from '@/lib/trpc';
 import { upload } from '@imagekit/next';
 import { useState } from 'react';
 
@@ -55,27 +54,27 @@ const UploadExample = ({
     setError(null);
 
     try {
-      // const validPath =
-      //   visibility === 'public'
-      //     ? '/api/auth/imageKit/public'
-      //     : '/api/auth/imageKit/private';
+      const validPath =
+        visibility === 'public'
+          ? '/api/auth/imageKit/public'
+          : '/api/auth/imageKit/private';
 
-      const utils = trpc.useUtils();
+      // const utils = trpc.useUtils();
 
-      let auth;
+      // let auth;
 
-      if (visibility === 'public') {
-        auth = await utils.imageKit.getPublicAuth.fetch();
-      } else if (visibility === 'private') {
-        auth = await utils.imageKit.getPrivateAuth.fetch();
-      }
+      // if (visibility === 'public') {
+      //   auth = await utils.imageKit.getPublicAuth.fetch();
+      // } else if (visibility === 'private') {
+      //   auth = await utils.imageKit.getPrivateAuth.fetch();
+      // }
 
-      if (!auth) {
-        throw new Error('Failed to retrieve authentication');
-      }
+      // if (!auth) {
+      //   throw new Error('Failed to retrieve authentication');
+      // }
 
-      // const authRes = await fetch(validPath);
-      // const auth = await authRes.json();
+      const authRes = await fetch(validPath);
+      const auth = await authRes.json();
 
       type UploadWithMetaData = Parameters<typeof upload>[0] & {
         customMetadata?: Record<string, string>;
@@ -98,10 +97,11 @@ const UploadExample = ({
         //   owner: String(auth.userId),
         // },
         onProgress: (event) => {
-          if (event.lengthComputable && onProgress) {
-            const percent = (event.loaded / event.total) * 100;
+          console.log('loaded:', event.loaded, 'total:', event.total);
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
             setProgress(percent);
-            onProgress(Math.round(percent));
+            if (onProgress) onProgress(percent);
           }
         },
       } as UploadWithMetaData);
@@ -119,7 +119,17 @@ const UploadExample = ({
         accept={FileType === 'video' ? 'video/*' : 'image/*'}
         onChange={handleFileChange}
       />
-      {uploading && <span>Loading...</span>}
+      {uploading && (
+        <div className="space-y-1 mt-2">
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div
+              className="bg-green-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <span className="text-green-400 text-xs">{progress}%</span>
+        </div>
+      )}{' '}
     </>
   );
 };

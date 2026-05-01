@@ -12,3 +12,8 @@ export type RegisterUserResponse = {
   message: string;
   userId: string;
 };
+
+export type emailVeri = {
+  username: string;
+  code: string;
+};

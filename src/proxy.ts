@@ -16,13 +16,17 @@ export async function proxy(req: NextRequest) {
 
   // Public pages routes including client pages and there apis
   const isPublicPage =
-    pathname === '/' || pathname === '/login' || pathname === '/register';
-
+    pathname === '/' ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/verify');
   // Public APIs
   const isPublicAPI =
     pathname === '/api/user/register' ||
     pathname === '/api/videos/randomFeed' ||
-    pathname.startsWith('/api/auth');
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/user/verify');
 
   // validating for all public route
   if (isPublicPage || isPublicAPI) {

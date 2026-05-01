@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-// import './globals.css';
+import './globals.css';
 import Providers from '@/app/providers/providers';
 import { NotificationProvider } from '@/components/notification';
 import Header from '@/components/Header';
@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0e0f11] overflow-x-hidden`}
       >
         <Providers>
           <NotificationProvider>

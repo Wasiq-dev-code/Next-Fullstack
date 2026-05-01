@@ -9,6 +9,9 @@ export interface IUser {
     url: string;
     fileId: string;
   };
+  isVerified: boolean;
+  verifyCode: string;
+  verifyCodeExpiry: Date;
   isPrivate?: boolean;
   passwordChangedAt?: Date;
   emailChangedAt?: Date;
@@ -53,6 +56,16 @@ const userSchema = new Schema<IUser>(
     isPrivate: {
       type: Boolean,
       default: false,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verifyCode: {
+      type: String,
+    },
+    verifyCodeExpiry: {
+      type: Date,
     },
     provider: {
       type: String,
