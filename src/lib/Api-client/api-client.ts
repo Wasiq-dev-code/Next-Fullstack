@@ -1,4 +1,4 @@
-import { FetchOptions } from '@/types/result';
+import { EditProfileFields, FetchOptions } from '@/types/result';
 
 import {
   CreateVideoDTO,
@@ -51,7 +51,7 @@ class ApiClient {
   async createVideo(videoData: CreateVideoDTO): Promise<CreateVideoResponse> {
     return await this.fetch<CreateVideoResponse>('/videos/createVideo', {
       method: 'POST',
-      body: JSON.stringify(videoData),
+      body: videoData,
     });
   }
 
@@ -160,8 +160,21 @@ class ApiClient {
     });
   }
 
-  async changeFields(
+  async changeVideoFields(
+    videoId: string,
     payload: PayloadChangeFields,
+  ): Promise<ChangeFieldsResponse> {
+    return await this.fetch<ChangeFieldsResponse>(
+      `/videos/${videoId}/updateVideo`,
+      {
+        method: 'PATCH',
+        body: payload,
+      },
+    );
+  }
+
+  async changeProfileFields(
+    payload: EditProfileFields,
   ): Promise<ChangeFieldsResponse> {
     return await this.fetch<ChangeFieldsResponse>('/user/changeFields', {
       method: 'PATCH',

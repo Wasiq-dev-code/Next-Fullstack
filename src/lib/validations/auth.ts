@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
           id: user._id.toString(), // mongoose uses _id
           email: user.email,
           name: user.username,
-          image: user.profilePhotoUrl ?? undefined,
+          image: user.profilePhoto.url ?? undefined,
           passwordChangedAt: user.passwordChangedAt ?? undefined,
           emailChangedAt: user.emailChangedAt ?? undefined,
           provider: user.provider, // MUST
@@ -126,8 +126,12 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             username: user.name ?? 'Google User',
             provider: 'google',
-            profilePhotoUrl: user.image ?? null,
-            profilePhotoId: 'google-oauth',
+            profilePhoto: user.image
+              ? {
+                  url: user.image,
+                  fileId: 'google-oauth',
+                }
+              : undefined,
             isPrivate: false,
           });
         }

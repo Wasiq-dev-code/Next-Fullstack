@@ -87,7 +87,7 @@ export default function UserRegister() {
 
           <div className="space-y-1">
             <label className="text-xs text-gray-400">Profile photo</label>
-            <div className="border border-dashed border-white/10 rounded-xl p-3 text-center hover:border-purple-500/50 transition-colors">
+            <div className="border hover:cursor-pointer border-dashed border-white/10 rounded-xl p-3 text-center hover:border-purple-500/50 cursor-pointer transition-colors">
               <UploadExample
                 FileType="image"
                 visibility="public"
@@ -109,7 +109,7 @@ export default function UserRegister() {
           <button
             type="submit"
             disabled={!canSubmit || submitting}
-            className="w-full bg-violet-600 hover:bg-violet-500 text-white py-2 rounded-xl font-medium transition-colors disabled:opacity-40 text-sm"
+            className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 cursor-pointer text-white font-medium transition disabled:opacity-50"
           >
             {submitting ? 'Registering...' : 'Create Account'}
           </button>
@@ -124,14 +124,17 @@ export default function UserRegister() {
         <button
           type="button"
           onClick={() => signIn('google', { callbackUrl: '/' })}
-          className="w-full bg-[#1e1f24] border border-white/10 text-gray-300 py-2 rounded-xl text-sm hover:bg-[#25262b] transition-colors"
+          className="w-full bg-[#1e1f24] border border-white/10 text-gray-300 py-2 rounded-xl text-sm hover:bg-[#25262b] cursor-pointer transition-colors"
         >
           Continue with Google
         </button>
 
         <p className="text-center text-xs text-gray-500">
           Already have an account?{' '}
-          <a href="/login" className="text-violet-400 hover:text-violet-300">
+          <a
+            href="/login"
+            className="text-purple-500 hover:underline cursor-pointer"
+          >
             Log in
           </a>
         </p>

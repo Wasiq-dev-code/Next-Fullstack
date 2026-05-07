@@ -1,10 +1,8 @@
 import { connectToDatabase } from '@/lib/database/db';
-import {
-  deleteFileFromImageKit,
-  getImageKitFileOwner,
-} from '@/lib/videofallback/imageKitOps';
+import { getImageKitFileOwner } from '@/lib/videofallback/imageKitOps';
 import { requireAuth } from '@/lib/validations/requireAuth';
 import { NextRequest, NextResponse } from 'next/server';
+import Video from '@/model/Video.model';
 
 export async function DELETE(
   req: NextRequest,
@@ -37,13 +35,12 @@ export async function DELETE(
         { status: 403 },
       );
     }
-    const deleted = await deleteFileFromImageKit(fileId);
+    const video = await Video.findOne({
+      $or: [{ 'thumbnail.fileId': fileId }, { 'video.fileId': fileId }],
+    }).select('+thumbnail.fileId +video.fileId');
 
-    if (!deleted) {
-      return NextResponse.json(
-        { error: 'Failed to delete file from ImageKit' },
-        { status: 500 },
-      );
+    if (!video || video.owner.toString() !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     return NextResponse.json(

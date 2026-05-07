@@ -1,75 +1,82 @@
+'use client';
+
 import { useState } from 'react';
 import { useNotification } from '@/components/notification';
-import { AppDispatch, RootState } from '@/src/store/store';
-import { useDispatch, useSelector } from 'react-redux';
-import { createVideoThunk } from '@/src/store/thunks/videoUpload.thunk';
+import { apiClient } from '@/lib/Api-client/api-client';
+import { rollbackDelete } from '@/lib/videofallback/rollBackDelete';
+import { UploadedFile } from '@/types/file';
+import { CreateVideoDTO } from '@/types/video';
 
-type Errors = {
-  title?: string;
-  description?: string;
-  video?: string;
-  thumbnail?: string;
+type FormState = {
+  title: string;
+  description: string;
+  thumbnail: UploadedFile | null;
+  video: UploadedFile | null;
 };
 
-export function useRegisterVideo() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [errors, setErrors] = useState<Errors>({});
+type Errors = Partial<Record<keyof FormState, string>>;
 
+export function useRegisterVideo() {
+  const [form, setForm] = useState<CreateVideoDTO>({
+    title: '',
+    description: '',
+    thumbnail: { url: '', fileId: '' },
+    video: { url: '', fileId: '' },
+  });
+  const [errors, setErrors] = useState<Errors>({});
+  const [submitting, setSubmitting] = useState(false);
   const { showNotification } = useNotification();
 
-  const dispatch: AppDispatch = useDispatch();
-  const { submitting, thumbnail, video } = useSelector(
-    (state: RootState) => state.registerVideo,
-  );
+  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined })); // clear on change
+  };
 
-  const canSubmit =
-    Boolean(title.trim()) &&
-    Boolean(description.trim()) &&
-    Boolean(video) &&
-    Boolean(thumbnail) &&
-    !submitting;
-
-  const validate = () => {
+  const validate = (): Errors => {
     const e: Errors = {};
-    if (!title.trim()) e.title = 'Title is required';
-    if (!description.trim()) e.description = 'Description is required';
-    if (!thumbnail) e.thumbnail = 'Thumbnail is required';
-    if (!video) e.video = 'Video is required';
+    if (!form.title.trim()) e.title = 'Title is required';
+    if (!form.description.trim()) e.description = 'Description is required';
+    if (!form.thumbnail.url) e.thumbnail = 'Thumbnail is required';
+    if (!form.video.url) e.video = 'Video is required';
     return e;
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!thumbnail || !video || !title || !description) {
-      setErrors(validate());
+  const canSubmit =
+    Boolean(form.title.trim()) &&
+    Boolean(form.description.trim()) &&
+    Boolean(form.thumbnail) &&
+    Boolean(form.video) &&
+    !submitting;
+
+  const submit = async () => {
+    const e = validate();
+    if (Object.keys(e).length) {
+      setErrors(e);
       return;
     }
-    setErrors({});
 
+    setSubmitting(true);
     try {
-      await dispatch(createVideoThunk({ title, description })).unwrap();
-      showNotification('Video uploaded Successfully', 'success');
-
-      setTitle('');
-      setDescription('');
+      await apiClient.createVideo(form);
+      showNotification('Video uploaded successfully', 'success');
+      setForm({
+        title: '',
+        description: '',
+        thumbnail: { url: '', fileId: '' },
+        video: { url: '', fileId: '' },
+      });
     } catch (err) {
+      // Rollback uploaded files
+      await Promise.allSettled([
+        form.thumbnail && rollbackDelete(form.thumbnail.fileId),
+        form.video && rollbackDelete(form.video.fileId),
+      ]);
       showNotification('Video upload failed', 'error');
       console.error(err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  return {
-    title,
-    description,
-    video,
-    thumbnail,
-    errors,
-    setErrors,
-    submitting,
-    canSubmit,
-    setTitle,
-    setDescription,
-    submit,
-  };
+  return { form, errors, submitting, canSubmit, setField, submit };
 }

@@ -1,6 +1,7 @@
 import { IVideo } from '@/model/Video.model';
-import { Video } from '@prisma/client';
 import mongoose from 'mongoose';
+import { HydratedDocument } from 'mongoose';
+
 export interface VideoQuery {
   owner: mongoose.Types.ObjectId;
   createdAt?: {
@@ -12,7 +13,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: Response };
 
 export type VideoAuthData = {
   userId: string;
-  video: Video;
+  video: HydratedDocument<IVideo>;
 };
 
 export type VideoFormData = Omit<IVideo, '_id'>;
@@ -21,4 +22,14 @@ export type FetchOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   body?: any;
   headers?: Record<string, string>;
+};
+
+export type EditProfileFields = {
+  username: string;
+  email: string;
+  profilePhoto: {
+    url: string;
+    fileId: string;
+  };
+  emailChangedAt: Date;
 };

@@ -1,9 +1,6 @@
 'use client';
 import UploadExample from '@/components/fileUploads';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import useEditVideo from '@/hooks/video/editVideo';
 import Image from 'next/image';
 
@@ -22,58 +19,59 @@ export default function ChangeVideoFields({ videoId }: { videoId: string }) {
   } = useEditVideo({ videoId });
 
   return (
-    <div className="max-w-xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Video</CardTitle>
-        </CardHeader>
+    <div className="min-h-[calc(100vh-57px)] bg-[#0e0f11] flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-[#16171a] border border-white/10 rounded-2xl p-5 space-y-4">
+        <h1 className="text-xl font-bold text-white">Edit Video</h1>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={loading}
-                placeholder="Enter video title"
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {errors._form && (
+            <p className="text-red-400 text-sm">{errors._form}</p>
+          )}
+
+          {/* Title */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-400">Title</label>
+            <Input
+              placeholder="Enter video title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={loading}
+              className="bg-[#1e1f24] border-white/10 text-white placeholder:text-gray-600 w-full h-9 text-sm"
+            />
+            {errors.title && (
+              <p className="text-red-400 text-xs">{errors.title}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-400">Description</label>
+            <textarea
+              placeholder="Enter description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={loading}
+              rows={3}
+              className="w-full bg-[#1e1f24] border border-white/10 rounded-md text-white placeholder:text-gray-600 text-sm px-3 py-2 resize-none focus:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
+            />
+            {errors.description && (
+              <p className="text-red-400 text-xs">{errors.description}</p>
+            )}
+          </div>
+
+          {/* Thumbnail */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-400">Thumbnail</label>
+            {thumbnail?.url && (
+              <Image
+                src={thumbnail.url}
+                alt="Thumbnail"
+                width={128}
+                height={128}
+                className="rounded-md object-cover border border-white/10"
               />
-              {errors.title && (
-                <p className="text-sm text-destructive">{errors.title}</p>
-              )}
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={loading}
-                placeholder="Enter description"
-              />
-              {errors.description && (
-                <p className="text-sm text-destructive">{errors.description}</p>
-              )}
-            </div>
-
-            {/* Thumbnail */}
-            <div className="space-y-2">
-              <Label>Thumbnail</Label>
-
-              {thumbnail?.url && (
-                <Image
-                  src={thumbnail.url}
-                  alt="Thumbnail"
-                  width={128}
-                  height={128}
-                  className="rounded-md object-cover border"
-                />
-              )}
-
+            )}
+            <div className="border border-dashed border-white/10 rounded-xl p-3 text-center hover:border-purple-500/50 cursor-pointer transition-colors">
               <UploadExample
                 FileType="image"
                 visibility="public"
@@ -82,24 +80,24 @@ export default function ChangeVideoFields({ videoId }: { videoId: string }) {
                   setErrors((p) => ({ ...p, thumbnail: undefined }));
                 }}
               />
-
-              {errors.thumbnail && (
-                <p className="text-sm text-destructive">{errors.thumbnail}</p>
-              )}
             </div>
-
-            {/* Form error */}
-            {errors._form && (
-              <p className="text-sm text-destructive">{errors._form}</p>
+            {thumbnail?.url && (
+              <p className="text-green-400 text-xs">Thumbnail uploaded ✔</p>
             )}
+            {errors.thumbnail && (
+              <p className="text-red-400 text-xs">{errors.thumbnail}</p>
+            )}
+          </div>
 
-            {/* Submit */}
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? 'Updating…' : 'Update Video'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 cursor-pointer text-white font-medium transition disabled:opacity-50"
+          >
+            {loading ? 'Updating…' : 'Update Video'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

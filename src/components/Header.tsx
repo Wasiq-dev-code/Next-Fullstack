@@ -16,10 +16,10 @@ export default function Header() {
   const isAuth = status === 'authenticated' && !!session?.user;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e0f11]">
+    <header className="sticky h-12 top-0 z-40 border-b border-white/10 bg-[#0e0f11]">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-violet-600 text-sm font-semibold text-white">
+          <div className="flex h-7 w-9 items-center justify-center rounded-md bg-violet-600 text-sm font-semibold text-white">
             N
           </div>
           <span className="text-base font-semibold text-white">Home</span>
@@ -35,7 +35,7 @@ export default function Header() {
             >
               <Button
                 size="sm"
-                className="bg-violet-600 hover:bg-violet-500 text-white"
+                className="bg-violet-600 hover:bg-violet-500 cursor-pointer text-white"
               >
                 Video Upload
               </Button>
@@ -43,8 +43,8 @@ export default function Header() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="rounded-full focus:outline-none">
-                  <Avatar className="h-9 w-9">
+                <button className="rounded-full focus:outline-none ">
+                  <Avatar className="h-9 w-9 hover:cursor-pointer border-violet-500">
                     <AvatarImage src={session.user?.image ?? ''} />
                     <AvatarFallback className="bg-violet-600 text-white">
                       {(session.user?.name || 'U')[0]}
@@ -92,14 +92,14 @@ export default function Header() {
               variant="ghost"
               size="sm"
               onClick={() => signIn()}
-              className="text-gray-300 hover:text-white hover:bg-white/10"
+              className="text-gray-300 hover:text-white cursor-pointer hover:bg-white/10"
             >
               Log in
             </Button>
             <Link href="/register">
               <Button
                 size="sm"
-                className="bg-violet-600 hover:bg-violet-500 text-white"
+                className="bg-violet-600 hover:bg-violet-500 cursor-pointer text-white"
               >
                 Sign up
               </Button>

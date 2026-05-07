@@ -64,7 +64,7 @@ export default function useEditVideo({ videoId }: { videoId: string }) {
         return;
       }
 
-      const res = await apiClient.changeFields(payload);
+      const res = await apiClient.changeVideoFields(videoId, payload);
 
       showNotification(res.message, 'success');
 

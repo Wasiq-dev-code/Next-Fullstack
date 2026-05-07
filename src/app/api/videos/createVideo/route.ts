@@ -3,10 +3,7 @@ import { requireAuth } from '@/lib/validations/requireAuth';
 import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import {
-  RegisterVideoDTO,
-  registerVideoSchema,
-} from '@/validators/registerVideo';
+import { registerVideoSchema } from '@/validators/registerVideo';
 
 // Create Video
 export async function POST(request: NextRequest) {
@@ -17,10 +14,7 @@ export async function POST(request: NextRequest) {
     if (!auth.ok) return auth.error;
 
     const body = await request.json();
-
-    const finalBody: RegisterVideoDTO = JSON.parse(body);
-
-    const parsed = registerVideoSchema.safeParse(finalBody);
+    const parsed = registerVideoSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
