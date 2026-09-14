@@ -30,7 +30,11 @@ export default function ProfileChanges() {
     try {
       setUsernameLoading(true);
 
-      const res = await apiClient.changeFields({ username });
+      const res = await (
+        apiClient as typeof apiClient & {
+          changeFields: (fields: { username: string }) => Promise<{ message: string }>;
+        }
+      ).changeFields({ username });
       showNotification(res.message, 'success');
     } catch (err: any) {
       showNotification(
@@ -48,14 +52,20 @@ export default function ProfileChanges() {
     try {
       setPhotoLoading(true);
 
-      const res = await apiClient.changeFields({
+      const res = await (
+        apiClient as typeof apiClient & {
+          changeProfileFields: (fields: {
+            profilePhoto: { url: string; fileId: string };
+          }) => Promise<{ message: string }>;
+        }
+      ).changeProfileFields({
         profilePhoto: {
           url: profilePhoto.url,
           fileId: profilePhoto.fileId,
         },
       });
 
-      showNotification(res.message, 'success');
+      showNotification("Profile photo updated successfully", 'success');
       setProfilePhoto(null);
     } catch (err: any) {
       showNotification(
@@ -78,6 +88,7 @@ export default function ProfileChanges() {
           onChange={(e) => setUsername(e.target.value)}
         />
         <Button
+        className="bg-violet-600 hover: cursor-pointer bg-violet-700 text-white font-semibold rounded-lg px-4 py-2 transition-colors duration-300"
           onClick={updateUsername}
           disabled={usernameLoading || !username.trim()}
         >
@@ -87,7 +98,7 @@ export default function ProfileChanges() {
 
       {/* Profile Photo */}
       <section className="space-y-3">
-        <h2 className="font-medium">Profile Photo</h2>
+        <h2 className="font-medium bg-radius-lg 2-px ">Profile Photo</h2>
 
         <div className="flex items-center gap-4">
           {session?.user?.image && !profilePhoto && (
@@ -114,6 +125,7 @@ export default function ProfileChanges() {
         />
 
         <Button
+        className="mt-2 bg-violet-600 hover: cursor-pointerbg-violet-700 text-white font-semibold rounded-lg px-4 py-2 transition-colors duration-300"
           onClick={updateProfilePhoto}
           disabled={photoLoading || !profilePhoto}
         >

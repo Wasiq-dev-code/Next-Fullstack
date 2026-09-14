@@ -16,8 +16,8 @@ export default function Header() {
   const isAuth = status === 'authenticated' && !!session?.user;
 
   return (
-    <header className="sticky h-12 top-0 z-40 border-b border-white/10 bg-[#0e0f11]">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#171922]">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-7 w-9 items-center justify-center rounded-md bg-violet-600 text-sm font-semibold text-white">
             N
@@ -43,8 +43,8 @@ export default function Header() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="rounded-full focus:outline-none ">
-                  <Avatar className="h-9 w-9 hover:cursor-pointer border-violet-500">
+                <button className="rounded-full focus:outline-none">
+                  <Avatar className="h-9 w-9 hover:cursor-pointer border border-violet-500">
                     <AvatarImage src={session.user?.image ?? ''} />
                     <AvatarFallback className="bg-violet-600 text-white">
                       {(session.user?.name || 'U')[0]}
@@ -55,9 +55,9 @@ export default function Header() {
 
               <DropdownMenuContent
                 align="end"
-                className="w-48 border border-white/10 bg-[#16171a]"
+                className="w-48 border border-white/10 bg-[#20222b]"
               >
-                {status === 'authenticated' && session?.user?.id && (
+                {session?.user?.id && (
                   <DropdownMenuItem asChild>
                     <Link
                       href={`/profile/${session.user.id}`}
@@ -74,6 +74,15 @@ export default function Header() {
                     className="text-gray-300 focus:bg-white/5 focus:text-white"
                   >
                     Edit Profile
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/settings"
+                    className="text-gray-300 focus:bg-white/5 focus:text-white"
+                  >
+                    Dashboard
                   </Link>
                 </DropdownMenuItem>
 

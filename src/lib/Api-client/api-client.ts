@@ -58,7 +58,7 @@ class ApiClient {
   async registerUser(data: RegisterUserDTO): Promise<RegisterUserResponse> {
     return await this.fetch<RegisterUserResponse>('/user/register', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data,
     });
   }
 
@@ -102,7 +102,7 @@ class ApiClient {
       `/videos/${videoId}/comments/${commentId}`,
       {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: payload,
       },
     );
   }
@@ -115,6 +115,16 @@ class ApiClient {
   ): Promise<CommentListResponse> {
     return this.fetch<CommentListResponse>(
       `/videos/${videoId}/comments/${commentId}?page=${page}&limit=${limit}`,
+    );
+  }
+
+  async deleteComment(
+    videoId: string,
+    commentId: string,
+  ): Promise<{ isDeleted: boolean; message: string }> {
+    return this.fetch<{ isDeleted: boolean; message: string }>(
+      `/videos/${videoId}/comments/${commentId}`,
+      { method: 'DELETE' },
     );
   }
 
@@ -188,10 +198,49 @@ class ApiClient {
     });
   }
 
+  async toggleFollow(userId: string): Promise<{
+    followed: boolean;
+    message: string;
+  }> {
+    return await this.fetch<{ followed: boolean; message: string }>(
+      `/follow/${userId}`,
+      {
+        method: 'POST',
+      },
+    );
+  }
+
   async emailVerification(payload: emailVeri): Promise<RegisterUserResponse> {
     return await this.fetch<RegisterUserResponse>(`/user/verify`, {
       method: 'POST',
       body: payload,
+    });
+  }
+
+  async requestSecondaryEmailCode(email: string): Promise<{ message: string }> {
+    return this.fetch<{ message: string }>('/user/Email', {
+      method: 'POST',
+      body: { action: 'request', email },
+    });
+  }
+
+  async getSecondaryEmail(): Promise<{
+    secondaryEmail: string | null;
+    secondaryEmailVerified: boolean;
+  }> {
+    return this.fetch<{
+      secondaryEmail: string | null;
+      secondaryEmailVerified: boolean;
+    }>('/user/Email');
+  }
+
+  async verifySecondaryEmail(
+    email: string,
+    code: string,
+  ): Promise<{ message: string }> {
+    return this.fetch<{ message: string }>('/user/Email', {
+      method: 'POST',
+      body: { action: 'verify', email, code },
     });
   }
 }

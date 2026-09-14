@@ -3,7 +3,13 @@ import { VideoFeed } from '@/types/video';
 export type Profile = {
   _id: string;
   username: string;
-  profilePhoto: string;
+  profilePhoto?:
+    | string
+    | {
+        url?: string;
+        fileId?: string;
+      }
+    | null;
   followersCount: number;
   followToCount: number;
   postsCount: number;

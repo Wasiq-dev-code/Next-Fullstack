@@ -8,8 +8,8 @@ export async function GET() {
     if (!auth.ok) return auth.error;
 
     const { token, expire, signature } = getUploadAuthParams({
-      privateKey: process.env.IMAGE_PRIVATE_KEY as string,
-      publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_KEY as string,
+      privateKey: process.env.IMAGE_PRIVATE_KEY!,
+      publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_KEY!,
     });
 
     return NextResponse.json({
@@ -17,12 +17,13 @@ export async function GET() {
       expire,
       signature,
       userId: auth.data,
+      publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_KEY,
     });
   } catch (error) {
-    console.error(error);
+    console.error('ImageKit private auth error:', error);
     return NextResponse.json(
       { error: 'Authentication for ImageKit failed' },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

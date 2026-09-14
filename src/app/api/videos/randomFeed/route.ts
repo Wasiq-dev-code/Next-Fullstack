@@ -18,12 +18,12 @@ export async function POST(req: NextRequest) {
 
     // console.log('Body', body);
 
-    const { excludeIds, cursor } = body;
+    const { excludeIds = [], cursor } = body;
 
     // Length will not grow beyond 100
     const limitedExcludeIds = excludeIds.slice(-MAX_EXCLUDE);
 
-    const match: any = {
+    const match: Record<string, unknown> = {
       _id: { $nin: limitedExcludeIds },
     };
 
@@ -70,7 +70,9 @@ export async function POST(req: NextRequest) {
           description: 1,
           'thumbnail.url': 1,
           createdAt: 1,
+          randomScore: 1,
           likesCount: 1,
+          viewsCount: 1,
           owner: {
             _id: '$owner._id',
             username: '$owner.username',

@@ -13,6 +13,7 @@ export async function sendVerificationEmail(
   username: string,
   verifyCode: string,
 ) {
+  console.log('Sending verification email to:', email)
   const result = await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: email,
@@ -24,5 +25,5 @@ export async function sendVerificationEmail(
     <p>This code will expire in 10 minutes.</p>
   `,
   });
-  // console.log('Resend result:', result);
+  console.log('Resend result:', result);
 }

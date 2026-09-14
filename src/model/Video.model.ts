@@ -19,6 +19,7 @@ export interface IVideo {
   };
   isPrivate?: boolean;
   controls?: boolean;
+  viewsCount: number;
   owner: mongoose.Types.ObjectId;
   transformation?: {
     height: number;
@@ -44,6 +45,7 @@ const videoSchema = new Schema<IVideo>(
     },
     isPrivate: { type: Boolean, default: false },
     controls: { type: Boolean, default: true },
+    viewsCount: { type: Number, default: 0, min: 0 },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

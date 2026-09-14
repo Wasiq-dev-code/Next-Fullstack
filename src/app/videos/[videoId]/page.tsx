@@ -1,7 +1,7 @@
 import SingleVideoPage from '@/app/videos/[videoId]/SingleVideoClient';
 
 type PageProps = {
-  params: { videoId: string };
+  params: Promise<{ videoId: string }>;
 };
 
 export default async function Page({ params }: PageProps) {

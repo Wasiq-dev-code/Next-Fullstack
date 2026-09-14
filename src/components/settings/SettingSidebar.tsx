@@ -18,10 +18,10 @@ export default function SettingsSidebar({
     <Link
       href={href}
       className={clsx(
-        'block rounded px-3 py-2 text-sm transition',
+        'block rounded-lg px-3 py-2 text-sm transition-colors duration-150',
         isActive
-          ? 'bg-muted font-medium'
-          : 'text-muted-foreground hover:bg-muted',
+          ? 'bg-purple-600 text-white font-medium shadow-sm'
+          : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
       )}
     >
       {title}

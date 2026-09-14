@@ -51,7 +51,7 @@ export default function RegisterVideo() {
             <div className="border border-dashed border-white/10 rounded-xl p-3 text-center hover:border-purple-500/50 cursor-pointer transition-colors">
               <UploadExample
                 FileType="image"
-                visibility="private"
+                visibility="public"
                 onSuccess={(res) =>
                   setField('thumbnail', { url: res.url, fileId: res.fileId })
                 }

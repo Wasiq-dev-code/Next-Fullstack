@@ -92,6 +92,7 @@ export async function GET(
           'thumbnail.url': 1,
           createdAt: 1,
           likesCount: 1,
+          viewsCount: 1,
           owner: {
             _id: '$owner._id',
             username: '$owner.username',

@@ -89,6 +89,7 @@ export default function SecuritySettingsPage() {
             <Label htmlFor="oldPassword">Current password</Label>
             <Input
               id="oldPassword"
+              className="bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-purple-500"
               type="password"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
@@ -99,6 +100,7 @@ export default function SecuritySettingsPage() {
             <Label htmlFor="newPassword">New password</Label>
             <Input
               id="newPassword"
+              className="bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-purple-500"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -109,6 +111,7 @@ export default function SecuritySettingsPage() {
             <Label htmlFor="confirmPassword">Confirm new password</Label>
             <Input
               id="confirmPassword"
+              className="bg-slate-950 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-purple-500"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -120,6 +123,7 @@ export default function SecuritySettingsPage() {
           )}
 
           <Button
+          className="bg-violet-600 hover: cursor-pointer bg-violet-700 text-white transition-colors"
             onClick={changePassword}
             disabled={
               loading ||

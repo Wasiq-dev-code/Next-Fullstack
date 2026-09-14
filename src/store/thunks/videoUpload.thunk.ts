@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/Api-client/api-client';
 import { rollbackDelete } from '@/lib/videofallback/rollBackDelete';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { RootState } from '@/store/store';
+import type { RootState } from '@/store/type';
 import { resetUpload } from '@/store/slice/videoUpload.slice';
 
 export const createVideoThunk = createAsyncThunk<

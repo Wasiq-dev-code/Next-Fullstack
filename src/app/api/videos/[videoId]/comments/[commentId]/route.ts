@@ -4,13 +4,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/database/db';
 import Comment from '@/model/Comment.model';
+import Like from '@/model/Like.model';
 import { Session } from 'next-auth';
 import { Comment as CommentsArray } from '@/types/comment';
 
 //  CREATE REPLY
 export async function POST(
   req: NextRequest,
-  { params }: { params: { videoId: string; commentId: string } },
+  { params }: { params: Promise<{ videoId: string; commentId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +19,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { commentId } = params;
+    const { commentId } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       return NextResponse.json({ error: 'Invalid commentId' }, { status: 400 });
@@ -82,10 +83,13 @@ export async function POST(
 
       {
         $project: {
-          commentedBy: 0,
-          commentedVideo: 0,
-          parentComment: 0,
-          __v: 0,
+          commentedBy: 1,
+          content: 1,
+          createdAt: 1,
+          owner: 1,
+          likesCount: 1,
+          isLiked: 1,
+          repliesCount: 1,
         },
       },
     ]);
@@ -108,7 +112,7 @@ export async function POST(
 //  DELETE COMMENT / REPLY
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { videoId: string; commentId: string } },
+  { params }: { params: Promise<{ videoId: string; commentId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -120,7 +124,7 @@ export async function DELETE(
       );
     }
 
-    const { commentId } = params;
+    const { commentId } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       return NextResponse.json({ error: 'Invalid commentId' }, { status: 400 });
@@ -130,16 +134,12 @@ export async function DELETE(
       throw new Error('Database Connection Errror', err);
     });
 
-    const comment = await Comment.findById(commentId);
+    const comment = await Comment.findOne({
+      _id: commentId,
+      commentedBy: session.user.id,
+    });
     if (!comment) {
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
-    }
-
-    if (comment.commentedBy.toString() !== session.user.id) {
-      return NextResponse.json(
-        { error: 'You do not own this comment' },
-        { status: 403 },
-      );
     }
 
     // Reply delete > decrement parent
@@ -149,12 +149,20 @@ export async function DELETE(
       });
     }
 
-    // Parent delete > delete all replies
-    if (!comment.parentComment) {
-      await Comment.deleteMany({ parentComment: comment._id });
-    }
+    if (comment.parentComment) {
+      // Remove likes belonging to a deleted reply as well.
+      await Like.deleteMany({ comment: comment._id });
+      await Comment.findByIdAndDelete(commentId);
+    } else {
+      // A parent deletion removes its replies and every like on that tree.
+      const replies = await Comment.find({ parentComment: comment._id })
+        .select('_id')
+        .lean();
+      const commentIds = [comment._id, ...replies.map((reply) => reply._id)];
 
-    await Comment.findByIdAndDelete(commentId);
+      await Like.deleteMany({ comment: { $in: commentIds } });
+      await Comment.deleteMany({ _id: { $in: commentIds } });
+    }
 
     return NextResponse.json(
       {
@@ -174,10 +182,10 @@ export async function DELETE(
 //  GET REPLIES
 export async function GET(
   req: NextRequest,
-  { params }: { params: { videoId: string; commentId: string } },
+  { params }: { params: Promise<{ videoId: string; commentId: string }> },
 ) {
   try {
-    const { commentId } = params;
+    const { commentId } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       return NextResponse.json({ error: 'Invalid commentId' }, { status: 400 });

@@ -7,14 +7,18 @@ import { useProfileVideos } from '@/hooks/profile/useProfileVideos';
 export default function ProfileVideoFeed({ userId }: { userId: string }) {
   const { hasMore, items: videos, loading } = useProfileVideos(userId);
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <section className="bg-[#171922] px-4 pb-8 sm:px-6">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+          <h2 className="text-lg font-semibold text-white">Videos</h2>
+          <span className="text-xs text-gray-500 sm:text-sm">Latest uploads</span>
+        </div>
         {/* Videos Grid */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {videos.map((video) => (
             <div
               key={video._id}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden"
+              className="overflow-hidden rounded-xl border border-white/10 bg-[#20222b] shadow-lg shadow-black/20 transition-shadow duration-300 hover:border-violet-500/30"
             >
               <VideoInfo videoObj={video} />
             </div>
@@ -23,16 +27,16 @@ export default function ProfileVideoFeed({ userId }: { userId: string }) {
 
         {/* Loading State */}
         {loading && (
-          <div className="py-12 flex flex-col items-center justify-center">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-slate-600 font-medium">Loading videos…</p>
+          <div className="flex flex-col items-center justify-center py-10">
+            <div className="mb-3 h-9 w-9 animate-spin rounded-full border-4 border-violet-500 border-t-transparent"></div>
+            <p className="font-medium text-gray-400">Loading videos...</p>
           </div>
         )}
 
         {/* No More Videos */}
         {!hasMore && !loading && videos.length > 0 && (
-          <div className="py-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-slate-200 to-slate-300 rounded-full mb-4">
+          <div className="py-10 text-center">
+            <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-violet-500/15">
               <svg
                 className="w-8 h-8 text-slate-500"
                 fill="none"
@@ -47,10 +51,10 @@ export default function ProfileVideoFeed({ userId }: { userId: string }) {
                 />
               </svg>
             </div>
-            <p className="text-slate-500 font-medium text-lg">
-              Youve reached the end
+            <p className="text-base font-medium text-gray-400">
+              You&apos;ve reached the end
             </p>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="mt-1 text-sm text-gray-500">
               No more videos to load
             </p>
           </div>
@@ -58,9 +62,9 @@ export default function ProfileVideoFeed({ userId }: { userId: string }) {
 
         {/* Empty State */}
         {!loading && videos.length === 0 && !hasMore && (
-          <div className="py-20 text-center">
-            <div className="bg-white rounded-3xl shadow-xl p-12 max-w-md mx-auto">
-              <div className="w-24 h-24 bg-linear-to-br from-blue-100 to-purple-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+          <div className="py-14 text-center">
+            <div className="mx-auto max-w-md rounded-2xl border border-white/10 bg-[#20222b] p-7 shadow-xl sm:p-9">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-violet-500/15">
                 <svg
                   className="w-12 h-12 text-slate-400"
                   fill="none"
@@ -75,16 +79,16 @@ export default function ProfileVideoFeed({ userId }: { userId: string }) {
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">
+              <h3 className="mb-2 text-xl font-bold text-white">
                 No videos yet
               </h3>
-              <p className="text-slate-500">
-                This profile hasnt posted any videos.
+              <p className="text-gray-400">
+                This profile hasn&apos;t posted any videos.
               </p>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }

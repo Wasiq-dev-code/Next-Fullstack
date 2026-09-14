@@ -17,48 +17,49 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
 
-      async authorize(credentials, req) {
-        // 1. Validate input shape
-        const parsed = loginUserSchema.safeParse(credentials);
+     async authorize(credentials) {
+  // 1. Validate input shape
+  const parsed = loginUserSchema.safeParse(credentials);
+  if (!parsed.success) {
+    return null; // Return null instead of throwing an Error
+  }
 
-        if (!parsed.success) {
-          throw new Error('Invalid email or password');
-        }
+  const { email, password } = parsed.data;
 
-        const { email, password } = parsed.data;
+  // 2. Ensure DB connection
+  await connectToDatabase();
 
-        // 2. Ensure DB connection
-        await connectToDatabase();
+  // 3. Find user
+  const user = await User.findOne({
+    $or: [
+      { email },
+      { secondaryEmail: email, secondaryEmailVerified: true },
+    ],
+  }).select('+password +passwordChangedAt +emailChangedAt');
 
-        // 3. Find user (IMPORTANT: include hidden fields)
-        const user = await User.findOne({ email }).select(
-          '+password +passwordChangedAt +emailChangedAt',
-        );
+  // 4. Return null if user does not exist or password missing
+  if (!user || !user.password) {
+    return null;
+  }
 
-        // 4. Generic auth failure (do NOT reveal which one)
-        if (!user || !user.password) {
-          throw new Error('Invalid email or password');
-        }
+  // 5. Verify password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return null;
+  }
 
-        // 5. Verify password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordValid) {
-          throw new Error('Invalid email or password');
-        }
-
-        // 6. Return safe user object (NextAuth session payload)
-        return {
-          id: user._id.toString(), // mongoose uses _id
-          email: user.email,
-          name: user.username,
-          image: user.profilePhoto.url ?? undefined,
-          passwordChangedAt: user.passwordChangedAt ?? undefined,
-          emailChangedAt: user.emailChangedAt ?? undefined,
-          provider: user.provider, // MUST
-          isPrivate: user.isPrivate, // MUST
-        };
-      },
+  // 6. Return user object
+  return {
+    id: user._id.toString(),
+    email: user.email,
+    name: user.username,
+    image: user.profilePhoto?.url ?? null,
+    passwordChangedAt: user.passwordChangedAt ?? null,
+    emailChangedAt: user.emailChangedAt ?? null,
+    provider: user.provider,
+    isPrivate: user.isPrivate,
+  };
+}
     }),
 
     Google({

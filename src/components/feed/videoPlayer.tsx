@@ -8,26 +8,26 @@ export default function VideoPlayer({ video }: { video: VideoDetails }) {
   return (
     <div className="w-full">
       {/* Video Player Container */}
-      <div className="relative aspect-video bg-black rounded-t-3xl overflow-hidden">
+      <div className="relative aspect-video overflow-hidden rounded-t-3xl bg-black">
         <video
           src={video.video.url}
           controls
-          className="w-full h-full"
+          className="h-full w-full"
           poster={video.thumbnail?.url}
         />
       </div>
 
       {/* Video Info Section */}
-      <div className="bg-linear-to-b from-white to-slate-50 p-6 space-y-6">
+      <div className="space-y-6 bg-[#20222b] p-6 text-white sm:p-8">
         {/* Title */}
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+        <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl">
           {video.title}
         </h1>
 
         {/* Meta Stats */}
-        <div className="flex items-center gap-6 text-slate-600">
+        <div className="flex flex-wrap items-center gap-5 text-gray-400">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-linear-to-br from-red-100 to-pink-100 rounded-full flex items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/15">
               <svg
                 className="w-5 h-5 text-red-500"
                 fill="currentColor"
@@ -37,17 +37,17 @@ export default function VideoPlayer({ video }: { video: VideoDetails }) {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900">
-                {video.likesCount}
+              <p className="text-sm font-semibold text-white">
+                {video.likesCount ?? 0}
               </p>
-              <p className="text-xs text-slate-500">Likes</p>
+              <p className="text-xs text-gray-500">Likes</p>
             </div>
           </div>
 
-          <div className="h-12 w-px bg-slate-300"></div>
+          <div className="h-12 w-px bg-white/10"></div>
 
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-linear-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/15">
               <svg
                 className="w-5 h-5 text-blue-600"
                 fill="none"
@@ -63,17 +63,17 @@ export default function VideoPlayer({ video }: { video: VideoDetails }) {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900">
-                {video.uploadedAt}
+              <p className="text-sm font-semibold text-white">
+                {(video.viewsCount ?? 0).toLocaleString()}
               </p>
-              <p className="text-xs text-slate-500">Uploaded</p>
+              <p className="text-xs text-gray-500">Views</p>
             </div>
           </div>
         </div>
 
         {/* Owner Card */}
         <Link href={`/profile/${video.owner._id}`}>
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 cursor-pointer group border-2 border-slate-100 hover:border-blue-200 shadow-sm hover:shadow-md">
+          <div className="group flex cursor-pointer items-center gap-4 rounded-xl border border-white/10 bg-[#2a2d38] p-4 shadow-sm transition-all duration-300 hover:border-violet-500/50 hover:bg-[#353846] hover:shadow-md">
             <div className="relative">
               <div className="w-16 h-16 rounded-full overflow-hidden ring-4 ring-white shadow-lg">
                 <Image
@@ -88,10 +88,10 @@ export default function VideoPlayer({ video }: { video: VideoDetails }) {
             </div>
 
             <div className="flex-1">
-              <p className="font-bold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">
+                <p className="text-lg font-bold text-white transition-colors group-hover:text-violet-300">
                 {video.owner.username}
               </p>
-              <p className="text-sm text-slate-500 flex items-center gap-1">
+              <p className="flex items-center gap-1 text-sm text-gray-400">
                 <svg
                   className="w-4 h-4"
                   fill="none"
@@ -109,7 +109,7 @@ export default function VideoPlayer({ video }: { video: VideoDetails }) {
               </p>
             </div>
 
-            <div className="text-blue-600 group-hover:translate-x-1 transition-transform">
+            <div className="text-violet-400 transition-transform group-hover:translate-x-1">
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -129,7 +129,7 @@ export default function VideoPlayer({ video }: { video: VideoDetails }) {
 
         {/* Description */}
         {video.description && (
-          <div className="p-5 bg-white rounded-2xl border-2 border-slate-100 shadow-sm">
+          <div className="rounded-xl border border-white/10 bg-[#2a2d38] p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 bg-linear-to-br from-purple-100 to-pink-100 rounded-lg flex items-center justify-center">
                 <svg
@@ -146,9 +146,9 @@ export default function VideoPlayer({ video }: { video: VideoDetails }) {
                   />
                 </svg>
               </div>
-              <h3 className="font-semibold text-slate-900">Description</h3>
+              <h3 className="font-semibold text-white">Description</h3>
             </div>
-            <p className="text-slate-700 leading-relaxed">
+            <p className="leading-relaxed text-gray-300">
               {video.description}
             </p>
           </div>

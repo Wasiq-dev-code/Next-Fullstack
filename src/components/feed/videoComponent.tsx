@@ -12,7 +12,7 @@ export default function VideoComponent({ video }: { video: IVideo }) {
             style={{ aspectRatio: '9/16' }}
           >
             <video
-              src={`${process.env.NEXT_PUBLIC_URL_ENDPOINT}/${video.videoUrl}`}
+              src={video.video?.url || ''}
               className="w-full h-full object-cover"
               controls={video.controls}
             />

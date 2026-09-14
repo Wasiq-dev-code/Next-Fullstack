@@ -87,10 +87,13 @@ export async function POST(
 
       {
         $project: {
-          likes: 0,
-          commentedBy: 0,
-          commentedVideo: 0,
-          __v: 0,
+          commentedBy: 1,
+          content: 1,
+          createdAt: 1,
+          owner: 1,
+          likesCount: 1,
+          isLiked: 1,
+          repliesCount: 1,
         },
       },
     ]);
@@ -205,7 +208,6 @@ export async function GET(
                 as: 'userLike',
               },
             },
-            { $limit: 1 },
           ]
         : []),
 
@@ -224,6 +226,7 @@ export async function GET(
       {
         $project: {
           content: 1,
+          commentedBy: 1,
           repliesCount: 1,
           createdAt: 1,
           likesCount: 1,

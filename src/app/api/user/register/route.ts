@@ -6,13 +6,17 @@ import { sendVerificationEmail } from '@/lib/Email';
 
 export async function POST(request: NextRequest) {
   try {
-    // Destructure request json for accessing email and password from client
+    // 1. Parse incoming JSON body once
     const body = await request.json();
 
-    // const bodyData: RegisterUserDTO = JSON.parse(body);
-    const bodyData = JSON.parse(body);
+    console.log('Received registration request:', {
+      username: body?.username,
+      email: body?.email,
+      hasProfilePhoto: Boolean(body?.profilePhoto),
+    });
 
-    const parsed = registerUserSchema.safeParse(bodyData);
+    // 2. Validate input schema directly on the parsed object
+    const parsed = registerUserSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -20,33 +24,57 @@ export async function POST(request: NextRequest) {
           error: 'Validation failed',
           issues: parsed.error.flatten().fieldErrors,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const data = parsed.data;
 
-    // Connecting to database before it's operations.
+    // 3. Connect to database
     await connectToDatabase();
 
+    // 4. Check for existing user
     const existingUser = await User.findOne({ email: data.email }).setOptions({
       bypassMiddleware: true,
     });
 
-    // User should not be in DB
     if (existingUser) {
-      console.log(existingUser);
+      if (!existingUser.isVerified && existingUser.provider === 'credentials') {
+        const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const verifyCodeExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+        existingUser.username = data.username;
+        existingUser.password = data.password;
+        existingUser.profilePhoto = data.profilePhoto;
+        existingUser.verifyCode = verifyCode;
+        existingUser.verifyCodeExpiry = verifyCodeExpiry;
+        await existingUser.save();
+
+        await sendVerificationEmail(data.email, data.username, verifyCode);
+
+        return NextResponse.json(
+          {
+            message: 'Verification email resent successfully',
+            userId: existingUser._id?.toString(),
+          },
+          { status: 201 },
+        );
+      }
+
       return NextResponse.json(
-        { error: 'User is already in DB' },
+        {
+          error: 'An account with this email already exists. Please log in instead.',
+          code: 'EMAIL_ALREADY_REGISTERED',
+        },
         { status: 409 },
       );
     }
 
+    // 5. Generate verification code & expiry
     const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-
     const verifyCodeExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Creating User
+    // 6. Create User document
     const newUser = await User.create({
       email: data.email,
       password: data.password,
@@ -61,11 +89,15 @@ export async function POST(request: NextRequest) {
       verifyCodeExpiry,
     });
 
+    // 7. Send verification email with cleanup fallback
     try {
       await sendVerificationEmail(data.email, data.username, verifyCode);
     } catch (err: any) {
       await User.deleteOne({ _id: newUser._id });
-      throw new Error(`Email Verification issue: ${err?.message}`);
+      return NextResponse.json(
+        { error: `Email verification failed: ${err?.message}` },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(
@@ -73,72 +105,13 @@ export async function POST(request: NextRequest) {
         message: 'User registered successfully',
         userId: newUser._id?.toString(),
       },
-      { status: 201 },
+      { status: 201 }
     );
-  } catch (error) {
-    console.error('User registration failed', error);
+  } catch (error: any) {
+    console.error('User registration failed:', error);
     return NextResponse.json(
-      { error: 'Failed to registered user' },
-      { status: 500 },
+      { error: error?.message || 'Failed to register user' },
+      { status: 500 }
     );
   }
 }
-
-// import bcrypt from 'bcryptjs';
-// import prisma from '@/lib/database/prisma';
-
-// export async function POST(request: NextRequest) {
-//   try {
-//     const body = await request.json();
-
-//     const { email, password, username } = body;
-
-//     // Basic validation
-//     if (!email || !password || !username) {
-//       return NextResponse.json(
-//         { error: 'Missing required fields' },
-//         { status: 400 },
-//       );
-//     }
-
-//     // Check if user exists
-//     const existingUser = await prisma.user.findUnique({
-//       where: { email },
-//     });
-
-//     if (existingUser) {
-//       return NextResponse.json(
-//         { error: 'User already exists' },
-//         { status: 409 },
-//       );
-//     }
-
-//     // Hash password
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     // Create user
-//     const newUser = await prisma.user.create({
-//       data: {
-//         email,
-//         username,
-//         password: hashedPassword,
-//         provider: 'credentials',
-//         isPrivate: false,
-//       },
-//     });
-
-//     return NextResponse.json(
-//       {
-//         message: 'User created successfully',
-//         user: newUser,
-//       },
-//       { status: 201 },
-//     );
-//   } catch (error) {
-//     console.error(error);
-//     return NextResponse.json(
-//       { error: 'Internal Server Error' },
-//       { status: 500 },
-//     );
-//   }
-// }

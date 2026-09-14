@@ -15,6 +15,7 @@ export const fetchComments = createAsyncThunk(
       }
 
       return {
+        page: res.page,
         comments: res.comments,
         hasMore: res.hasMore,
       };

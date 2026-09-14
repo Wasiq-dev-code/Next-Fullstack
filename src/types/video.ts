@@ -5,6 +5,7 @@ export type BaseFeed = {
     url: string;
   };
   likesCount: number;
+  viewsCount: number;
   owner: {
     _id: string;
     username: string;

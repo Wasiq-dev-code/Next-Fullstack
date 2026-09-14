@@ -1,68 +1,70 @@
 'use client';
 import CommentItem from '@/components/videos/comments/CommentItem';
 import CreateComment from '@/components/videos/comments/CreateComment';
-import { trpc } from '@/lib/trpc';
+import { commentSelectors, resetComments } from '@/store/slice/comments.slice';
+import { useAppDispatch, useAppSelector } from '@/store/store';
+import { fetchComments } from '@/store/thunks/comments.thunk';
+import { useEffect } from 'react';
 
 export default function CommentsSection({ videoId }: { videoId: string }) {
-  // const dispatch = useAppDispatch();
-  // const comments = useAppSelector(commentSelectors.selectAll);
+  const dispatch = useAppDispatch();
+  const comments = useAppSelector(commentSelectors.selectAll);
 
-  // const { page, hasMore, loading } = useAppSelector(
-  //   (state) => state.comments.comments,
-  // );
+  const { page, hasMore, loading } = useAppSelector(
+    (state) => state.comments.comments,
+  );
 
-  // useEffect(() => {
-  //   dispatch(resetComments());
-  //   dispatch(fetchComments({ videoId, page: 1 }));
+  useEffect(() => {
+    dispatch(resetComments());
+    dispatch(fetchComments({ videoId, page: 1 }));
 
-  //   return () => {
-  //     dispatch(resetComments());
-  //   };
-  // }, [videoId, dispatch]); // Dispatch will never change because this is redux method, and it will never change
-
-  // const loadMore = () => {
-  //   if (!loading && hasMore) {
-  //     dispatch(fetchComments({ videoId, page }));
-  //   }
-  // };
-
-  const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
-    trpc.comment.fetchVideoComments.useInfiniteQuery(
-      {
-        videoId,
-        limit: 10,
-      },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-      },
-    );
-
-  const comments = data?.pages.flatMap((pages) => pages.comments) ?? [];
+    return () => {
+      dispatch(resetComments());
+    };
+  }, [videoId, dispatch]); // Dispatch will never change because this is redux method, and it will never change
 
   const loadMore = () => {
-    if (hasNextPage && !isFetching) {
-      fetchNextPage();
+    if (!loading && hasMore) {
+      dispatch(fetchComments({ videoId, page }));
     }
   };
 
+  // const { data, fetchNextPage, hasNextPage, isFetching, isLoading } =
+  //   trpc.comment.fetchVideoComments.useInfiniteQuery(
+  //     {
+  //       videoId,
+  //       limit: 10,
+  //     },
+  //     {
+  //       getNextPageParam: (lastPage) => lastPage.nextCursor,
+  //     },
+  //   );
+
+  // const comments = data?.pages.flatMap((pages) => pages.comments) ?? [];
+
+  // const loadMore = () => {
+  //   if (hasNextPage && !isFetching) {
+  //     fetchNextPage();
+  //   }
+  // };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Comments Header */}
-      <div className="flex items-center justify-between pb-4 border-b-2 border-slate-200">
-        <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-          <span>{comments.length}</span>
-          <span className="text-slate-600">Comments</span>
+      <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <h3 className="text-sm font-medium text-gray-400">
+          {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
         </h3>
       </div>
 
       {/* Create Comment Section */}
-      <div className="bg-linear-to-r from-blue-50 to-purple-50 p-5 rounded-2xl border-2 border-blue-100">
-        <CreateComment videoId={videoId}></CreateComment>
+      <div className="rounded-xl border border-violet-500/20 bg-[#2a2d38] p-4">
+        <CreateComment videoId={videoId} />
       </div>
 
       {/* Comments List */}
       <div className="space-y-4">
-        {comments.length === 0 && !isLoading && (
+        {comments.length === 0 && !loading && (
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-linear-to-br from-slate-100 to-slate-200 rounded-full mx-auto mb-4 flex items-center justify-center">
               <svg
@@ -79,10 +81,10 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
                 />
               </svg>
             </div>
-            <h4 className="text-lg font-semibold text-slate-700 mb-1">
+            <h4 className="mb-1 text-lg font-semibold text-white">
               No comments yet
             </h4>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-gray-400">
               Be the first to comment on this video!
             </p>
           </div>
@@ -90,8 +92,8 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
 
         {comments.map((comment) => (
           <div
-            key={comment.id}
-            className="bg-white p-4 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all duration-200"
+            key={comment._id}
+            className="rounded-xl border border-white/10 bg-[#2a2d38] p-4 transition-colors hover:border-violet-500/40"
           >
             <CommentItem videoId={videoId} comment={comment} />
           </div>
@@ -99,17 +101,17 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
       </div>
 
       {/* Loading State */}
-      {isLoading && (
+      {loading && (
         <div className="py-8 flex flex-col items-center justify-center">
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-          <p className="text-slate-600 font-medium">Loading comments…</p>
+          <p className="font-medium text-gray-400">Loading comments...</p>
         </div>
       )}
 
       {/* End Message */}
-      {!hasNextPage && comments.length > 0 && !isLoading && (
+      {!hasMore && comments.length > 0 && !loading && (
         <div className="py-6 text-center">
-          <div className="inline-flex items-center gap-2 text-slate-500">
+          <div className="inline-flex items-center gap-2 text-gray-500">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -129,11 +131,11 @@ export default function CommentsSection({ videoId }: { videoId: string }) {
       )}
 
       {/* Load More Button */}
-      {hasNextPage && !isLoading && (
+      {hasMore && !loading && (
         <div className="flex justify-center pt-4">
           <button
             onClick={loadMore}
-            className="group flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            className="group flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-2.5 font-semibold text-white shadow-lg shadow-violet-950/30 transition-all duration-200 hover:bg-violet-500"
           >
             <svg
               className="w-5 h-5 group-hover:rotate-180 transition-transform duration-300"

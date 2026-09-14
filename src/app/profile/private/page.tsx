@@ -15,7 +15,7 @@ export default function PrivateProfile() {
     setLoading(true);
 
     try {
-      const res = await apiClient.isPrivate();
+      const res = await apiClient.togglePrivateProfile();
 
       setIsPrivate(res.isPrivate);
 

@@ -27,13 +27,19 @@ export async function GET(
 
     await connectToDatabase();
 
+    const updatedVideo = await Video.findByIdAndUpdate(
+      videoId,
+      { $inc: { viewsCount: 1 } },
+      { new: true, projection: { viewsCount: 1 } },
+    ).lean();
+
     // Get current user session
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id
       ? new mongoose.Types.ObjectId(session.user.id)
       : null;
 
-    const video = await Video.aggregate([
+    const video = await Video.aggregate<any>([
       {
         $match: {
           _id: new mongoose.Types.ObjectId(videoId),
@@ -72,6 +78,7 @@ export async function GET(
           description: 1,
           thumbnail: { url: 1 },
           video: { url: 1 },
+          viewsCount: 1,
           'owner.profilePhoto.url': 1,
           'owner.username': 1,
           'owner._id': 1,
@@ -99,11 +106,20 @@ export async function GET(
       ? Boolean(await Like.exists({ video: videoId, userLiked: userId }))
       : false;
 
+    const videoEntry = (video?.[0] ?? {}) as Record<string, any>;
+    const updatedViews = Number(
+      (updatedVideo as Record<string, any> | null)?.viewsCount ??
+        videoEntry.viewsCount ??
+        0,
+    );
+    videoEntry.likesCount = likeCount;
+    videoEntry.viewsCount = updatedViews;
+
     return NextResponse.json(
       {
         message: 'Successfully fetched',
         data: {
-          singleVideo: video[0],
+          singleVideo: videoEntry,
           likeCount: likeCount,
           isLiked: userLiked,
         },

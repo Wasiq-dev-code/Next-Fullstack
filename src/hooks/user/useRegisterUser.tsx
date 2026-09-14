@@ -71,23 +71,26 @@ export default function useRegisterUser() {
       try {
         const parsed = JSON.parse(err?.message);
         const firstError = Object.values(parsed?.issues ?? {})[0] as string[];
-        setErrors({ general: firstError?.[0] ?? 'Registration failed' });
+        setErrors({
+          general:
+            parsed?.error ?? firstError?.[0] ?? 'Registration failed',
+        });
       } catch {
         setErrors({ general: err?.message ?? 'Registration failed' });
       }
 
-      // optional: cleanup API call (REST version)
       if (profilePhotoId) {
         try {
-          await fetch('/api/imagekit/delete-temp', {
-            method: 'POST',
+          await fetch('/api/auth/imageKit-del', {
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fileId: profilePhotoId }),
           });
-        } catch (e) {
-          console.error('cleanup failed', e);
+        } catch (cleanupError) {
+          console.error('Profile photo cleanup failed', cleanupError);
         }
       }
+
     } finally {
       setSubmitting(false);
     }

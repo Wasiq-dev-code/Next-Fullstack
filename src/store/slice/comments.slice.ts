@@ -57,6 +57,18 @@ const commentsSlice = createSlice({
   reducers: {
     // Action to clear everything when moving to a new video
     resetComments: () => initialState,
+    removeComment: (state, action: { payload: string }) => {
+      commentsAdapter.removeOne(state.comments, action.payload);
+    },
+    removeReply: (
+      state,
+      action: { payload: { parentCommentId: string; replyId: string } },
+    ) => {
+      const replyState = state.replies[action.payload.parentCommentId];
+      if (replyState) {
+        commentsAdapter.removeOne(replyState, action.payload.replyId);
+      }
+    },
   },
   extraReducers: (builder) => {
     // FETCH COMMENTS (PAGINATED)
@@ -68,7 +80,7 @@ const commentsSlice = createSlice({
         state.comments.loading = false;
         // upsertMany automatically merges data and prevents duplicates by ID
         commentsAdapter.upsertMany(state.comments, action.payload.comments);
-        state.comments.page += 1;
+        state.comments.page = action.payload.page + 1;
         state.comments.hasMore = action.payload.hasMore;
       })
       .addCase(fetchComments.rejected, (state) => {
@@ -126,7 +138,8 @@ const commentsSlice = createSlice({
   },
 });
 
-export const { resetComments } = commentsSlice.actions; // all reducer value pass through actions
+export const { resetComments, removeComment, removeReply } =
+  commentsSlice.actions; // all reducer value pass through actions
 export default commentsSlice.reducer;
 
 export { commentsAdapter };

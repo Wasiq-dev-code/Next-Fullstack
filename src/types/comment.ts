@@ -1,10 +1,11 @@
 export interface CommentOwner {
   username: string;
-  profilePhoto: string;
+  profilePhoto: string | { url?: string };
 }
 
 export interface Comment {
   _id: string;
+  commentedBy?: string;
   content: string;
   owner: CommentOwner;
   likesCount: number;

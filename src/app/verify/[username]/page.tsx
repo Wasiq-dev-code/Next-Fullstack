@@ -40,7 +40,7 @@ export default function VerifyPage() {
   return (
     <div>
       <h1>Verify your email</h1>
-      <p>Code bhejo jo email pe aaya</p>
+      <p>Please enter the 6-digit code sent to your email.</p>
       <input
         value={code}
         onChange={(e) => setCode(e.target.value)}

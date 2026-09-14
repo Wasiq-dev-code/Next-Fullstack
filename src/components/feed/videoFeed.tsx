@@ -7,12 +7,17 @@ export default function VideoFeed() {
   const { hasMore, items: videos, loading } = useRandomVideoFeed();
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen bg-[#171922] px-4 py-8 text-white sm:px-6 lg:py-10">
+      <div className="mx-auto max-w-5xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Video Feed</h1>
-          <p className="text-slate-600">
+        <div className="mb-8 border-b border-white/10 pb-6">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">
+            Explore
+          </p>
+          <h1 className="mb-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Video Feed
+          </h1>
+          <p className="max-w-xl text-sm leading-6 text-gray-400 sm:text-base">
             Discover amazing content from creators around the world
           </p>
         </div>
@@ -22,7 +27,7 @@ export default function VideoFeed() {
           {videos.map((video) => (
             <div
               key={video._id.toString()}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden"
+              className="overflow-hidden rounded-2xl border border-white/10 bg-[#20222b] shadow-xl shadow-black/20 transition-shadow duration-300 hover:border-violet-500/30 hover:shadow-violet-950/20"
             >
               <VideoInfo videoObj={video} />
             </div>
@@ -31,16 +36,16 @@ export default function VideoFeed() {
 
         {/* Loading State */}
         {loading && (
-          <div className="py-12 flex flex-col items-center justify-center">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-slate-600 font-medium">Loading more videos…</p>
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent"></div>
+            <p className="font-medium text-gray-400">Loading more videos...</p>
           </div>
         )}
 
         {/* End of Feed */}
         {!hasMore && !loading && videos.length > 0 && (
           <div className="py-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-slate-200 to-slate-300 rounded-full mb-4">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-violet-500/15">
               <svg
                 className="w-8 h-8 text-slate-500"
                 fill="none"
@@ -55,10 +60,10 @@ export default function VideoFeed() {
                 />
               </svg>
             </div>
-            <p className="text-slate-500 font-medium text-lg">
-              Youve reached the end
+            <p className="text-lg font-medium text-gray-300">
+              You&apos;ve reached the end
             </p>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="mt-1 text-sm text-gray-500">
               Check back later for more videos
             </p>
           </div>
@@ -67,8 +72,8 @@ export default function VideoFeed() {
         {/* Empty State - Initial Load */}
         {!loading && videos.length === 0 && !hasMore && (
           <div className="py-20 text-center">
-            <div className="bg-white rounded-3xl shadow-xl p-12 max-w-md mx-auto">
-              <div className="w-24 h-24 bg-linear-to-br from-blue-100 to-purple-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <div className="mx-auto max-w-md rounded-2xl border border-white/10 bg-[#20222b] p-8 shadow-xl sm:p-12">
+              <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-violet-500/15">
                 <svg
                   className="w-12 h-12 text-slate-400"
                   fill="none"
@@ -83,16 +88,16 @@ export default function VideoFeed() {
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">
+              <h3 className="mb-2 text-2xl font-bold text-white">
                 No videos available
               </h3>
-              <p className="text-slate-500">
+              <p className="text-gray-400">
                 There are no videos to display at the moment.
               </p>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

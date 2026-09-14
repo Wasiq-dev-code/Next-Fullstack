@@ -32,6 +32,11 @@ export function LikeButton<T>({
       size="sm"
       onClick={toggle}
       disabled={loading}
+      className={
+        liked
+          ? 'bg-violet-600 text-white hover:bg-violet-500'
+          : 'border-white/10 bg-white/5 text-gray-300 hover:bg-violet-500/15 hover:text-violet-200'
+      }
     >
       {liked ? '❤️' : '🤍'} {likesCount}
     </Button>

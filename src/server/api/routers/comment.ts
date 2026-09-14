@@ -4,36 +4,32 @@ import { TRPCError } from '@trpc/server';
 import { ParentCommentListSchema } from '@/validators/parentCommentList';
 import { ReplyCommentCreate } from '@/validators/ReplyCommentCreate';
 import { ReplyCommentList } from '@/validators/ReplyCommentList';
+import mongoose from 'mongoose';
 
 export const commentRouter = router({
   createComment: protectedProcedure
     .input(CommentSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        const comment = await ctx.prisma.comment.create({
-          data: {
-            content: input.content,
-            videoId: input.videoId,
-            userId: ctx.session.user.id,
-          },
-          include: {
-            user: {
-              select: { username: true, profilePhotoUrl: true },
-            },
-            _count: {
-              select: { likes: true },
-            },
-          },
+        const comment = await ctx.models.Comment.create({
+          commentedBy: new mongoose.Types.ObjectId(ctx.session.user.id),
+          commentedVideo: new mongoose.Types.ObjectId(input.videoId),
+          content: input.content,
+          parentComment: null,
         });
 
-        return {
-          id: comment?.id,
-          content: comment?.content,
-          createdAt: comment?.createdAt,
+        await comment.populate('commentedBy', 'username profilePhoto');
 
-          owner: comment?.user,
-          likesCount: comment?._count.likes ?? 0,
-          repliesCount: comment?.repliesCount ?? 0,
+        return {
+          id: comment._id?.toString(),
+          content: comment.content,
+          createdAt: comment.createdAt,
+          owner: {
+            username: (comment.commentedBy as any)?.username,
+            profilePhotoUrl: (comment.commentedBy as any)?.profilePhoto?.url,
+          },
+          likesCount: 0,
+          repliesCount: comment.repliesCount ?? 0,
         };
       } catch (error) {
         throw new TRPCError({
@@ -50,52 +46,63 @@ export const commentRouter = router({
       const { videoId, limit, cursor } = input;
       const userId = ctx.session?.user?.id;
 
-      const comments = await ctx.prisma.comment.findMany({
-        take: limit + 1,
-        cursor: cursor ? { id: cursor } : undefined,
-        where: {
-          videoId: videoId,
-          parentComment: null,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          user: {
-            select: { id: true, username: true, profilePhotoUrl: true },
-          },
-          _count: {
-            select: {
-              likes: true,
-              replies: true,
-            },
-          },
-          likes: userId
-            ? {
-                where: {
-                  userId: userId,
-                },
-                select: { id: true },
-              }
-            : false,
-        },
-      });
-      // HasMore NextCursor logic
-      let nextCursor: typeof cursor = undefined;
+      const query: any = {
+        commentedVideo: new mongoose.Types.ObjectId(videoId),
+        parentComment: null,
+      };
+
+      if (cursor) {
+        query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+      }
+
+      const comments = await ctx.models.Comment.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit + 1)
+        .populate('commentedBy', 'username profilePhoto')
+        .lean();
+
+      let nextCursor: string | undefined = undefined;
       if (comments.length > limit) {
         const nextItem = comments.pop();
-        nextCursor = nextItem!.id;
+        nextCursor = (nextItem as any)?._id?.toString();
+      }
+
+      // Get likes count and user liked status for comments
+      const likeMap = new Map();
+      const userLikedSet = new Set<string>();
+
+      for (const comment of comments) {
+        const commentId = (comment as any)._id?.toString();
+        const likeCount = await ctx.models.Like.countDocuments({
+          comment: (comment as any)._id,
+        });
+        likeMap.set(commentId, likeCount);
+      }
+
+      // Get user's likes if logged in
+      if (userId) {
+        const userLikes = await ctx.models.Like.find({
+          comment: { $in: comments.map((c: any) => c._id) },
+          userLiked: new mongoose.Types.ObjectId(userId),
+        }).select('comment');
+        userLikes.forEach((like: any) => {
+          userLikedSet.add(like.comment?.toString() || '');
+        });
       }
 
       return {
-        comments: comments.map((c) => ({
-          id: c.id,
+        comments: comments.map((c: any) => ({
+          id: c._id?.toString(),
           content: c.content,
           createdAt: c.createdAt,
-          owner: c.user,
-          likesCount: c._count.likes,
-          repliesCount: c._count.replies,
-          isLiked: userId ? c.likes.length > 0 : false,
+          owner: {
+            id: c.commentedBy?._id?.toString(),
+            username: c.commentedBy?.username,
+            profilePhotoUrl: c.commentedBy?.profilePhoto?.url,
+          },
+          likesCount: likeMap.get(c._id?.toString()) ?? 0,
+          repliesCount: c.repliesCount ?? 0,
+          isLiked: userLikedSet.has(c._id?.toString() || ''),
         })),
         nextCursor,
       };
@@ -107,10 +114,10 @@ export const commentRouter = router({
       const { commentId, videoId, content } = input;
       const userId = ctx.session.user.id;
 
-      const reply = await ctx.prisma.$transaction(async (tx) => {
-        const parent = await tx.comment.findUnique({
-          where: { id: commentId },
-        });
+      try {
+        const parent = await ctx.models.Comment.findById(
+          new mongoose.Types.ObjectId(commentId),
+        );
 
         if (!parent) {
           throw new TRPCError({
@@ -119,41 +126,40 @@ export const commentRouter = router({
           });
         }
 
-        const createdReply = await tx.comment.create({
-          data: {
-            content: content.trim(),
-            userId: userId,
-            videoId: videoId,
-            parentCommentId: commentId,
-          },
-          include: {
-            user: {
-              select: {
-                username: true,
-                profilePhotoUrl: true,
-              },
-            },
-          },
+        const reply = await ctx.models.Comment.create({
+          commentedBy: new mongoose.Types.ObjectId(userId),
+          commentedVideo: new mongoose.Types.ObjectId(videoId),
+          content: content.trim(),
+          parentComment: new mongoose.Types.ObjectId(commentId),
         });
 
-        await tx.comment.update({
-          where: { id: commentId },
-          data: {
-            repliesCount: { increment: 1 },
+        // Update parent comment reply count
+        await ctx.models.Comment.findByIdAndUpdate(
+          new mongoose.Types.ObjectId(commentId),
+          { $inc: { repliesCount: 1 } },
+        );
+
+        await reply.populate('commentedBy', 'username profilePhoto');
+
+        return {
+          id: reply._id?.toString(),
+          content: reply.content,
+          createdAt: reply.createdAt,
+          owner: {
+            username: (reply.commentedBy as any)?.username,
+            profilePhotoUrl: (reply.commentedBy as any)?.profilePhoto?.url,
           },
+          likesCount: 0,
+          repliesCount: 0,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Error while creating reply',
+          cause: error,
         });
-
-        return createdReply;
-      });
-
-      return {
-        id: reply.id,
-        content: reply.content,
-        createdAt: reply.createdAt,
-        owner: reply.user,
-        likesCount: 0,
-        repliesCount: 0,
-      };
+      }
     }),
 
   getReplies: publicProcedure
@@ -162,46 +168,61 @@ export const commentRouter = router({
       const { commentId, cursor, limit } = input;
       const userId = ctx.session?.user?.id;
 
-      const replies = await ctx.prisma.comment.findMany({
-        take: limit + 1, // HasMore trick
-        cursor: cursor ? { id: cursor } : undefined,
-        where: {
-          parentCommentId: commentId,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              profilePhotoUrl: true,
-            },
-          },
-          _count: {
-            select: { likes: true },
-          },
-          likes: userId
-            ? { where: { userId: userId }, select: { id: true } }
-            : false,
-        },
-      });
+      const query: any = {
+        parentComment: new mongoose.Types.ObjectId(commentId),
+      };
 
-      let nextCursor: typeof cursor = undefined;
+      if (cursor) {
+        query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+      }
+
+      const replies = await ctx.models.Comment.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit + 1)
+        .populate('commentedBy', 'username profilePhoto')
+        .lean();
+
+      let nextCursor: string | undefined = undefined;
       if (replies.length > limit) {
         const nextItem = replies.pop();
-        nextCursor = nextItem!.id;
+        nextCursor = (nextItem as any)?._id?.toString();
+      }
+
+      // Get likes count and user liked status for replies
+      const likeMap = new Map();
+      const userLikedSet = new Set<string>();
+
+      for (const reply of replies) {
+        const replyId = (reply as any)._id?.toString();
+        const likeCount = await ctx.models.Like.countDocuments({
+          comment: (reply as any)._id,
+        });
+        likeMap.set(replyId, likeCount);
+      }
+
+      // Get user's likes if logged in
+      if (userId) {
+        const userLikes = await ctx.models.Like.find({
+          comment: { $in: replies.map((r: any) => r._id) },
+          userLiked: new mongoose.Types.ObjectId(userId),
+        }).select('comment');
+        userLikes.forEach((like: any) => {
+          userLikedSet.add(like.comment?.toString() || '');
+        });
       }
 
       return {
-        comments: replies.map((r) => ({
-          id: r.id,
+        comments: replies.map((r: any) => ({
+          id: r._id?.toString(),
           content: r.content,
           createdAt: r.createdAt,
-          owner: r.user,
-          likesCount: r._count.likes,
-          isLiked: userId ? r.likes.length > 0 : false,
+          owner: {
+            id: r.commentedBy?._id?.toString(),
+            username: r.commentedBy?.username,
+            profilePhotoUrl: r.commentedBy?.profilePhoto?.url,
+          },
+          likesCount: likeMap.get(r._id?.toString()) ?? 0,
+          isLiked: userLikedSet.has(r._id?.toString() || ''),
         })),
         nextCursor,
       };

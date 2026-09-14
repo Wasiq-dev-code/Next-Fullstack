@@ -7,12 +7,13 @@ import { NextRequest, NextResponse } from 'next/server';
 // Delete video
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { videoId: string } },
+  { params }: { params: Promise<{ videoId: string }> },
 ) {
   try {
+    const { videoId } = await params;
     await connectToDatabase();
 
-    const guard = await withVideoAuth(params.videoId);
+    const guard = await withVideoAuth(videoId);
     if (!guard.ok) return guard.error;
 
     const video = guard.data.video;
