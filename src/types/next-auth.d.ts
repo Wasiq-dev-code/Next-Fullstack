@@ -4,33 +4,65 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
+
       passwordChangedAt?: string;
       emailChangedAt?: string;
+
       name?: string;
       image?: string;
+
       provider: string;
       isPrivate: boolean;
+
+      // CASL role
+      role:
+        | 'USER'
+        | 'CREATOR'
+        | 'MODERATOR'
+        | 'ADMIN'
+        | 'SUPERADMIN';
     } & DefaultSession['user'];
   }
 
   interface User {
     passwordChangedAt?: Date;
     emailChangedAt?: Date;
+
     name?: string;
     image?: string;
+
     provider: string;
     isPrivate: boolean;
+
+    // CASL role
+    role:
+      | 'USER'
+      | 'CREATOR'
+      | 'MODERATOR'
+      | 'ADMIN'
+      | 'SUPERADMIN';
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
     id?: string;
+
     passwordChangedAt?: string;
     emailChangedAt?: string;
+
     name?: string;
     image?: string;
+
     provider: string;
     isPrivate: boolean;
+
+    // CASL role
+    role:
+      | 'USER'
+      | 'CREATOR'
+      | 'MODERATOR'
+      | 'ADMIN'
+      | 'SUPERADMIN';
   }
 }

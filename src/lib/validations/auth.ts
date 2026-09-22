@@ -17,49 +17,52 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
 
-     async authorize(credentials) {
-  // 1. Validate input shape
-  const parsed = loginUserSchema.safeParse(credentials);
-  if (!parsed.success) {
-    return null; // Return null instead of throwing an Error
-  }
+      async authorize(credentials) {
+        // 1. Validate input shape
+        const parsed = loginUserSchema.safeParse(credentials);
 
-  const { email, password } = parsed.data;
+        if (!parsed.success) {
+          return null;
+        }
 
-  // 2. Ensure DB connection
-  await connectToDatabase();
+        const { email, password } = parsed.data;
 
-  // 3. Find user
-  const user = await User.findOne({
-    $or: [
-      { email },
-      { secondaryEmail: email, secondaryEmailVerified: true },
-    ],
-  }).select('+password +passwordChangedAt +emailChangedAt');
+        // 2. Ensure DB connection
+        await connectToDatabase();
 
-  // 4. Return null if user does not exist or password missing
-  if (!user || !user.password) {
-    return null;
-  }
+        // 3. Find user
+        const user = await User.findOne({
+          $or: [
+            { email },
+            { secondaryEmail: email, secondaryEmailVerified: true },
+          ],
+        }).select('+password +passwordChangedAt +emailChangedAt');
 
-  // 5. Verify password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    return null;
-  }
+        // 4. Return null if user does not exist or password missing
+        if (!user || !user.password) {
+          return null;
+        }
 
-  // 6. Return user object
-  return {
-    id: user._id.toString(),
-    email: user.email,
-    name: user.username,
-    image: user.profilePhoto?.url ?? null,
-    passwordChangedAt: user.passwordChangedAt ?? null,
-    emailChangedAt: user.emailChangedAt ?? null,
-    provider: user.provider,
-    isPrivate: user.isPrivate,
-  };
-}
+        // 5. Verify password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        // 6. Return user object
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.username,
+          image: user.profilePhoto?.url ?? null,
+          passwordChangedAt: user.passwordChangedAt ?? null,
+          emailChangedAt: user.emailChangedAt ?? null,
+          provider: user.provider,
+          isPrivate: user.isPrivate,
+          role: user.role, // ADDED
+        };
+      },
     }),
 
     Google({
@@ -67,7 +70,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  // Extra work needed on callback
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -82,7 +85,11 @@ export const authOptions: NextAuthOptions = {
           : undefined;
         token.provider = user.provider;
         token.isPrivate = user.isPrivate;
+
+        // ADDED
+        token.role = user.role;
       }
+
       return token;
     },
 
@@ -99,7 +106,16 @@ export const authOptions: NextAuthOptions = {
           : undefined;
         session.user.provider = token.provider as string;
         session.user.isPrivate = token.isPrivate as boolean;
+
+        // ADDED
+        session.user.role = token.role as
+          | 'USER'
+          | 'CREATOR'
+          | 'MODERATOR'
+          | 'ADMIN'
+          | 'SUPERADMIN';
       }
+
       return session;
     },
 
@@ -141,8 +157,12 @@ export const authOptions: NextAuthOptions = {
         user.id = existingUser._id.toString();
         user.provider = existingUser.provider;
         user.isPrivate = existingUser.isPrivate;
-        user.passwordChangedAt = existingUser.passwordChangedAt ?? undefined;
+        user.passwordChangedAt =
+          existingUser.passwordChangedAt ?? undefined;
         user.emailChangedAt = existingUser.emailChangedAt ?? undefined;
+
+        // ADDED
+        user.role = existingUser.role;
       }
 
       return true;

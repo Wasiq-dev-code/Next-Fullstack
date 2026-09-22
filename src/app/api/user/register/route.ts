@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
         fileId: data.profilePhoto.fileId,
       },
       username: data.username,
+      role: 'USER',
       provider: 'credentials',
       isVerified: false,
       verifyCode,
