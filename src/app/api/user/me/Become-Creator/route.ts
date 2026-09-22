@@ -20,9 +20,8 @@ export async function PATCH() {
     // 2. Connect to database
     await connectToDatabase();
 
-    // 3. Atomically upgrade only if the user is verified and currently a plain USER.
-    // This avoids race conditions from separate findById + save calls, and
-    // avoids re-validating the whole document via .save().
+    // 3. Atomically upgrade only if verified and currently a plain USER.
+    // Avoids the race condition of separate findById + save calls.
     const upgradedUser = await User.findOneAndUpdate(
       {
         _id: session.user.id,
@@ -34,7 +33,6 @@ export async function PATCH() {
     );
 
     if (upgradedUser) {
-      // Lightweight audit trail — replace with a real audit log/collection if you have one
       console.log(
         `[role-upgrade] user=${upgradedUser._id} role=USER->CREATOR at=${new Date().toISOString()}`,
       );
@@ -48,7 +46,7 @@ export async function PATCH() {
       );
     }
 
-    // 4. The atomic update didn't match — figure out why, to return the right error
+    // 4. Update didn't match — figure out why, to return the right error
     const existingUser = await User.findById(session.user.id);
 
     if (!existingUser) {
@@ -77,7 +75,6 @@ export async function PATCH() {
       );
     }
 
-    // Any other role (e.g. ADMIN) can't self-upgrade via this route
     return NextResponse.json(
       {
         error: 'Your current role cannot be changed to CREATOR using this route',
@@ -86,7 +83,6 @@ export async function PATCH() {
       { status: 403 },
     );
   } catch (error: any) {
-    // Log full details server-side, but don't leak internals to the client
     console.error('Failed to become creator:', error);
 
     return NextResponse.json(
