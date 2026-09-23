@@ -32,30 +32,38 @@ export function defineAbilityFor(user: UserSession) {
   };
 
   // 1. ANONYMOUS permissions (Everyone gets this)
-  can('read', 'Content');
+  can('read', 'Video');
+  can('read', 'Comment');
 
   // 2. USER permissions
   if (hasRole('USER')) {
     can('create', 'Comment');
-    can('manage', 'Comment', { authorId: user.id });
+    can('manage', 'Comment', { commentedBy: user.id }); // Fixed: authorId -> commentedBy
+
+    // Likes & Follows management for standard users
+    can('create', 'Like');
+    can('manage', 'Like', { userLiked: user.id });
+    
+    can('create', 'Follow');
+    can('manage', 'Follow', { follower: user.id });
   }
 
   // 3. CREATOR permissions
   if (hasRole('CREATOR')) {
-    can('create', 'Content');
-    can('manage', 'Content', { authorId: user.id });
+    can('create', 'Video');
+    can('manage', 'Video', { owner: user.id }); 
   }
 
   // 4. MODERATOR permissions
   if (hasRole('MODERATOR')) {
     can('read', 'Reports');
     can('delete', 'Comment');
-    can('update', 'Content', { status: 'flagged' });
+    can('update', 'Video', { status: 'flagged' }); 
   }
 
   // 5. ADMIN permissions
   if (hasRole('ADMIN')) {
-    can('manage', 'Content');
+    can('manage', 'Video');
     can('manage', 'User');
     cannot('manage', 'Billing'); // Explicitly block Admin from billing
   }

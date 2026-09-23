@@ -72,7 +72,8 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // 1. Initial login / credential sign-in
       if (user) {
         token.id = user.id;
         token.name = user.name;
@@ -85,9 +86,12 @@ export const authOptions: NextAuthOptions = {
           : undefined;
         token.provider = user.provider;
         token.isPrivate = user.isPrivate;
-
-        // ADDED
         token.role = user.role;
+      }
+
+      // 2. Handle manual session updates (e.g., after upgrading to CREATOR)
+      if (trigger === 'update' && session?.role) {
+        token.role = session.role;
       }
 
       return token;
