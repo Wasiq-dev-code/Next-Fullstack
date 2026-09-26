@@ -5,6 +5,8 @@ import {
   CreateVideoResponse,
   FeedRequest,
   FeedResponse,
+  SearchRequest,
+  SearchResponse,
   SingleVideoRes,
 } from '@/types/video';
 import {
@@ -64,6 +66,13 @@ class ApiClient {
 
   async fetchRandomFeed(data: FeedRequest): Promise<FeedResponse> {
     return await this.fetch<FeedResponse>('/videos/randomFeed', {
+      method: 'POST',
+      body: data,
+    });
+  }
+
+  async searchVideos(data: SearchRequest): Promise<SearchResponse> {
+    return await this.fetch<SearchResponse>('/videos/searchVideos', {
       method: 'POST',
       body: data,
     });

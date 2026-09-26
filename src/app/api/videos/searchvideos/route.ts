@@ -4,7 +4,7 @@ import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 
 const LIMIT = 10 as const;
-const MAX_EXCLUDE = 100 as const;
+// const MAX_EXCLUDE = 100 as const;
 
 // Random videos feed
 export async function POST(req: NextRequest) {
@@ -18,12 +18,13 @@ export async function POST(req: NextRequest) {
 
     // console.log('Body', body);
 
-    const { excludeIds = [], query } = body;
+    // const { excludeIds = [], query } = body;
 
 
 
-    // Length will not grow beyond 100
-    const limitedExcludeIds = excludeIds.slice(-MAX_EXCLUDE);
+    // // Length will not grow beyond 100
+    // const limitedExcludeIds = excludeIds.slice(-MAX_EXCLUDE);
+    const { query, cursor } = body;
 
     if (typeof query !== 'string') {
       return NextResponse.json(
@@ -42,13 +43,37 @@ export async function POST(req: NextRequest) {
     }
 
      const escapeQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');// Escape special characters for regex
-    const match = {
-        $or:[
-            {title: { $regex: escapeQuery, $options: 'i' }},
-            {description: { $regex: escapeQuery, $options: 'i' }},
-        ],
-        _id: { $nin: limitedExcludeIds }
-    }
+    const match: Record<string, unknown> = {
+  $or: [
+    {
+      title: {
+        $regex: escapeQuery,
+        $options: 'i',
+      },
+    },
+    {
+      description: {
+        $regex: escapeQuery,
+        $options: 'i',
+      },
+    },
+  ],
+};
+
+if (cursor) {
+  const cursorDate = new Date(cursor);
+
+  if (Number.isNaN(cursorDate.getTime())) {
+    return NextResponse.json(
+      { error: 'Invalid cursor' },
+      { status: 400 },
+    );
+  }
+
+  match.createdAt = {
+    $lt: cursorDate,
+  };
+}
 
     const videos = await Video.aggregate([
       { $match: match },
@@ -84,33 +109,41 @@ export async function POST(req: NextRequest) {
       // final shape
       {
         $project: {
-          _id: 1,
-          title: 1,
-          description: 1,
-          'thumbnail.url': 1,
-          createdAt: 1,
-          randomScore: 1,
-          likesCount: 1,
-          viewsCount: 1,
-          owner: {
-            _id: '$owner._id',
-            username: '$owner.username',
-            profilePhoto: '$owner.profilePhoto',
-          },
-        },
+  _id: 1,
+  title: 1,
+  description: 1,
+  'thumbnail.url': 1,
+  createdAt: 1,
+  likesCount: 1,
+  viewsCount: 1,
+
+  owner: {
+    _id: '$owner._id',
+    username: '$owner.username',
+    profilePhoto: '$owner.profilePhoto',
+  },
+},
       },
     ]);
 
     if (videos.length === 0) {
   return NextResponse.json({
     videos: [],
+    query: searchQuery,
     nextCursor: null,
   });
 }
 
-    return NextResponse.json({
-      videos,
-    });
+const nextCursor =
+  videos.length === LIMIT
+    ? videos[videos.length - 1].createdAt.toISOString()
+    : null;
+
+return NextResponse.json({
+  videos,
+  query: searchQuery,
+  nextCursor,
+});
   } catch (error) {
     console.error(':', error);
     return NextResponse.json(

@@ -47,6 +47,17 @@ export type FeedResponse = {
   nextCursor: number | null;
 };
 
+export type SearchResponse = {
+  videos: VideoFeed[];
+  query: string | null;
+  nextCursor: string | null;
+};
+
+export type SearchRequest = {
+  query: string;
+  cursor: string | null;
+};
+
 export type FeedRequest = {
   cursor: number | null;
   excludeIds: string[];

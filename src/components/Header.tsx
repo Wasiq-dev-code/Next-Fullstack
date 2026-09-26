@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SearchBar } from './feed/SearchBar';
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -24,6 +25,12 @@ export default function Header() {
           </div>
           <span className="text-base font-semibold text-white">Home</span>
         </Link>
+
+        <SearchBar
+    onSearch={(query) => {
+      console.log('Searching:', query);
+    }}
+  />
 
         <div className="flex-1" />
 
