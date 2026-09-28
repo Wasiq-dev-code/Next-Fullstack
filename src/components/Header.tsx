@@ -11,10 +11,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SearchBar } from './feed/SearchBar';
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
   const { data: session, status } = useSession();
   const isAuth = status === 'authenticated' && !!session?.user;
+
+  const router = useRouter();
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#171922]">
@@ -26,9 +29,11 @@ export default function Header() {
           <span className="text-base font-semibold text-white">Home</span>
         </Link>
 
-        <SearchBar
+         <SearchBar
     onSearch={(query) => {
-      console.log('Searching:', query);
+      const q = query.trim();
+      if (!q) return;
+      router.push(`/search?q=${encodeURIComponent(q)}`);
     }}
   />
 

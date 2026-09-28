@@ -1,7 +1,5 @@
 'use client';
 
-import { useSearchVideoFeed } from "@/hooks/searchBar/SearchBar";
-
 export const SearchBar = ({ onSearch }: { onSearch: (query: string) => void }) => {
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
