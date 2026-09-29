@@ -6,6 +6,8 @@ import { useSearchVideos } from '@/hooks/searchBar/useSearchVideos';
 export default function SearchResults({ query }: { query: string }) {
   const { items: videos, loading, hasMore } = useSearchVideos(query);
 
+  // console.log('SearchResults query:', query, 'videos:', videos, 'loading:', loading, 'hasMore:', hasMore)
+
   return (
     <main className="min-h-screen bg-[#171922] px-4 py-8 text-white sm:px-6">
       <div className="mx-auto max-w-5xl">

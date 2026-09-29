@@ -25,6 +25,7 @@ export async function proxy(req: NextRequest) {
   const isPublicAPI =
     pathname === '/api/user/register' ||
     pathname === '/api/videos/randomFeed' ||
+    pathname === '/api/videos/searchVideos' ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/user/verify');
 

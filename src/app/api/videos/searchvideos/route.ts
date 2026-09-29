@@ -26,6 +26,8 @@ export async function POST(req: NextRequest) {
     // const limitedExcludeIds = excludeIds.slice(-MAX_EXCLUDE);
     const { query, cursor } = body;
 
+    console.log('Query:', query, 'Cursor:', cursor)
+
     if (typeof query !== 'string') {
       return NextResponse.json(
       { error: 'Query must be a string' },
