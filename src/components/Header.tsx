@@ -29,13 +29,14 @@ export default function Header() {
           <span className="text-base font-semibold text-white">Home</span>
         </Link>
 
-         <SearchBar
-    onSearch={(query) => {
-      const q = query.trim();
-      if (!q) return;
-      router.push(`/search?q=${encodeURIComponent(q)}`);
-    }}
-  />
+         {/* Center */}
+    <SearchBar
+      onSearch={(query) => {
+        const q = query.trim();
+        if (!q) return;
+        router.push(`/search?q=${encodeURIComponent(q)}`);
+      }}
+    />
 
         <div className="flex-1" />
 
