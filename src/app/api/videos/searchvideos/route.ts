@@ -1,84 +1,100 @@
 import { connectToDatabase } from '@/lib/database/db';
 import Video from '@/model/Video.model';
-
 import { NextRequest, NextResponse } from 'next/server';
+import type { PipelineStage } from 'mongoose';
 
 const LIMIT = 10 as const;
-// const MAX_EXCLUDE = 100 as const;
+const SEARCH_SCORE_THRESHOLD = 1.0; // tune based on real score values from your data
 
-// Random videos feed
+// Scales fuzzy tolerance to query length so short/garbage queries
+// don't loosely match unrelated words. Atlas Search only accepts
+// maxEdits of 1 or 2 (0 is invalid), so short terms skip fuzzy
+// entirely and rely on exact/substring-style text matching instead.
+function getFuzzyOptions(
+  term: string,
+): { maxEdits: 1 | 2; prefixLength: number } | undefined {
+  if (term.length <= 3) return undefined; // no fuzziness for very short terms
+  if (term.length <= 5) return { maxEdits: 1, prefixLength: 2 };
+  return { maxEdits: 2, prefixLength: 2 };
+}
+
 export async function POST(req: NextRequest) {
   try {
-    try {
-      await connectToDatabase();
-    } catch (error) {
-      console.log('Error', error);
-    }
+    await connectToDatabase();
+
     const body = await req.json();
-
-    // console.log('Body', body);
-
-    // const { excludeIds = [], query } = body;
-
-
-
-    // // Length will not grow beyond 100
-    // const limitedExcludeIds = excludeIds.slice(-MAX_EXCLUDE);
     const { query, cursor } = body;
-
-    console.log('Query:', query, 'Cursor:', cursor)
 
     if (typeof query !== 'string') {
       return NextResponse.json(
-      { error: 'Query must be a string' },
-      { status: 400 },
-        );
-      }
-
-      const searchQuery = query.trim();
-
-    if (!searchQuery) {
-       return NextResponse.json(
-        { error: 'Search query cannot be empty' },
+        { error: 'Query must be a string' },
         { status: 400 },
-        );
+      );
     }
 
-     const escapeQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');// Escape special characters for regex
-    const match: Record<string, unknown> = {
-  $or: [
-    {
-      title: {
-        $regex: escapeQuery,
-        $options: 'i',
-      },
-    },
-    {
-      description: {
-        $regex: escapeQuery,
-        $options: 'i',
-      },
-    },
-  ],
-};
+    const searchQuery = query.trim();
 
-if (cursor) {
-  const cursorDate = new Date(cursor);
+    if (!searchQuery) {
+      return NextResponse.json(
+        { error: 'Search query cannot be empty' },
+        { status: 400 },
+      );
+    }
 
-  if (Number.isNaN(cursorDate.getTime())) {
-    return NextResponse.json(
-      { error: 'Invalid cursor' },
-      { status: 400 },
+    let cursorDate: Date | undefined;
+    if (cursor) {
+      cursorDate = new Date(cursor);
+      if (Number.isNaN(cursorDate.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid cursor' },
+          { status: 400 },
+        );
+      }
+    }
+
+    const fuzzy = getFuzzyOptions(searchQuery);
+
+    const searchStage = {
+      $search: {
+        index: 'Video-Platform', // must match the index name in Atlas exactly
+        compound: {
+          should: [
+            {
+              text: {
+                query: searchQuery,
+                path: 'title',
+                ...(fuzzy && { fuzzy }),
+                score: { boost: { value: 3 } },
+              },
+            },
+            {
+              text: {
+                query: searchQuery,
+                path: 'description',
+                ...(fuzzy && { fuzzy }),
+              },
+            },
+          ],
+          minimumShouldMatch: 1,
+        },
+      },
+    } as PipelineStage;
+
+    const pipeline: PipelineStage[] = [searchStage];
+
+    // Attach the Atlas Search relevance score, then drop anything too weak
+    // to be a real match. This is what filters out nonsense queries that
+    // technically clear minimumShouldMatch but aren't meaningful hits.
+    pipeline.push(
+      { $addFields: { searchScore: { $meta: 'searchScore' } } },
+      { $match: { searchScore: { $gte: SEARCH_SCORE_THRESHOLD } } },
     );
-  }
 
-  match.createdAt = {
-    $lt: cursorDate,
-  };
-}
+    if (cursorDate) {
+      pipeline.push({ $match: { createdAt: { $lt: cursorDate } } });
+    }
 
-    const videos = await Video.aggregate([
-      { $match: match },
+    pipeline.push(
       { $sort: { createdAt: -1 } },
       { $limit: LIMIT },
 
@@ -102,54 +118,54 @@ if (cursor) {
           as: 'likes',
         },
       },
-      {
-        $addFields: {
-          likesCount: { $size: '$likes' },
-        },
-      },
+      { $addFields: { likesCount: { $size: '$likes' } } },
 
       // final shape
       {
         $project: {
-  _id: 1,
-  title: 1,
-  description: 1,
-  'thumbnail.url': 1,
-  createdAt: 1,
-  likesCount: 1,
-  viewsCount: 1,
-
-  owner: {
-    _id: '$owner._id',
-    username: '$owner.username',
-    profilePhoto: '$owner.profilePhoto',
-  },
-},
+          _id: 1,
+          title: 1,
+          description: 1,
+          'thumbnail.url': 1,
+          createdAt: 1,
+          likesCount: 1,
+          viewsCount: 1,
+          owner: {
+            _id: '$owner._id',
+            username: '$owner.username',
+            profilePhoto: '$owner.profilePhoto',
+          },
+          // searchScore intentionally left out of the response;
+          // remove this comment and add `searchScore: 1` above if you
+          // want to inspect real values while tuning the threshold
+        },
       },
-    ]);
+    );
+
+    const videos = await Video.aggregate(pipeline);
 
     if (videos.length === 0) {
-  return NextResponse.json({
-    videos: [],
-    query: searchQuery,
-    nextCursor: null,
-  });
-}
+      return NextResponse.json({
+        videos: [],
+        query: searchQuery,
+        nextCursor: null,
+      });
+    }
 
-const nextCursor =
-  videos.length === LIMIT
-    ? videos[videos.length - 1].createdAt.toISOString()
-    : null;
+    const nextCursor =
+      videos.length === LIMIT
+        ? videos[videos.length - 1].createdAt.toISOString()
+        : null;
 
-return NextResponse.json({
-  videos,
-  query: searchQuery,
-  nextCursor,
-});
+    return NextResponse.json({
+      videos,
+      query: searchQuery,
+      nextCursor,
+    });
   } catch (error) {
-    console.error(':', error);
+    console.error('Search videos error:', error);
     return NextResponse.json(
-     { error: 'Failed to fetch search videos' },
+      { error: 'Failed to fetch search videos' },
       { status: 500 },
     );
   }

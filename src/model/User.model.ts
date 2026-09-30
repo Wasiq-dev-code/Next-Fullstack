@@ -45,6 +45,17 @@ export interface IUser {
 
   secondaryAccess?: ISecondaryAccess[];
 
+  location:{
+    country:  String, 
+    region:   String, 
+    city:     String, 
+  };
+
+  preferences:{
+    language: String, 
+    timezone: String
+  } 
+
   _id?: mongoose.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -152,6 +163,46 @@ const userSchema = new Schema<IUser>(
       type: Date,
     },
 
+     location: {
+    country: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true, // Automatically converts "pk" to "PK"
+      minLength: 2,
+      maxLength: 2     // Restricts to 2-letter ISO codes
+    },
+    region: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    city: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  },
+
+  // Grouping localization preferences together
+  preferences: {
+    language: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      default: 'en',
+      minLength: 2,
+      maxLength: 5     // Accommodates formats like "en" or "en-US"
+    },
+    timezone: {
+      type: String,
+      required: true,
+      trim: true,
+      default: 'UTC'   // Valid standard string like "Asia/Karachi"
+    }
+  },
+
     provider: {
       type: String,
       enum: ['credentials', 'google'],
@@ -172,6 +223,9 @@ userSchema.pre('save', async function (next) {
 
   next();
 });
+
+userSchema.index({ 'location.country': 1, 'location.region': 1, 'location.city': 1 });
+userSchema.index({ 'preferences.language': 1 });
 
 userSchema.methods.isPasswordCorrect = async function (password: string) {
   return await bcrypt.compare(password, this.password);
