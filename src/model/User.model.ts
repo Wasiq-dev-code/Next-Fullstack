@@ -11,7 +11,7 @@ export type UserRole =
 // Secondary access
 export interface ISecondaryAccess {
   userId: mongoose.Types.ObjectId;
-  role: 'editor' | 'viewer' | 'admin';
+  role: UserRole;
   grantedAt: Date;
 }
 
@@ -70,8 +70,8 @@ const secondaryAccessSchema = new Schema<ISecondaryAccess>({
 
   role: {
     type: String,
-    enum: ['editor', 'viewer', 'admin'],
-    default: 'viewer',
+    enum: ['USER', 'CREATOR', 'MODERATOR', 'ADMIN', 'SUPERADMIN'],
+    default: 'USER',
     required: true,
   },
 
@@ -164,7 +164,7 @@ const userSchema = new Schema<IUser>(
     },
 
      location: {
-    country: {
+     country: {
       type: String,
       required: true,
       trim: true,
