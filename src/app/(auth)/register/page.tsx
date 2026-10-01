@@ -2,143 +2,316 @@
 
 import UploadExample from '@/components/fileUploads';
 import { Input } from '@/components/ui/input';
-import useRegisterUser from '@/hooks/user/useRegisterUser';
+import useRegisterUser, { LANGUAGES } from '@/hooks/user/useRegisterUser';
 import { signIn } from 'next-auth/react';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+
+const inputCls =
+  'bg-[#1e1f24] border-white/10 text-white placeholder:text-gray-600 w-full h-9 text-sm ' +
+  'focus-visible:ring-2 focus-visible:ring-purple-500/60 aria-[invalid=true]:border-red-400/70';
+const selectCls =
+  'bg-[#1e1f24] border border-white/10 text-white w-full h-9 text-sm rounded-md px-2 ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 ' +
+  'aria-[invalid=true]:border-red-400/70';
+
+function FieldShell({
+  id, label, error, hint, children,
+}: {
+  id: string;
+  label: string;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1">
+      <label htmlFor={id} className="text-xs text-gray-400">
+        {label}
+      </label>
+      {children}
+      {hint && !error && (
+        <p id={`${id}-hint`} className="text-gray-500 text-xs">{hint}</p>
+      )}
+      {error && (
+        <p id={`${id}-error`} role="alert" className="text-red-400 text-xs">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function passwordStrength(pw: string) {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+  return score; // 0-4
+}
+const STRENGTH = [
+  { label: 'Too short', color: 'bg-red-500' },
+  { label: 'Weak', color: 'bg-red-500' },
+  { label: 'Fair', color: 'bg-yellow-500' },
+  { label: 'Good', color: 'bg-green-500' },
+  { label: 'Strong', color: 'bg-green-400' },
+];
 
 export default function UserRegister() {
   const {
-    username,
-    setUsername,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    profilePhotoUrl,
-    setProfilePhotoUrl,
-    setProfilePhotoId,
-    canSubmit,
-    handleSubmit,
-    errors,
-    setErrors,
-    submitting,
+    values, setters, profilePhotoUrl, setPhoto, timezones,
+    errors, touch, clearServerError, handleSubmit, submitting,
   } = useRegisterUser();
 
-  return (
-    <div className="min-h-[calc(100vh-57px)] bg-[#0e0f11] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#16171a] border border-white/10 rounded-2xl p-5 space-y-4">
-        <h1 className="text-xl font-bold text-white">Create Account</h1>
+  const [showPassword, setShowPassword] = useState(false);
+  const strength = useMemo(() => passwordStrength(values.password), [values.password]);
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+  // Props shared by every control: id, a11y wiring, blur tracking.
+  const a11y = (id: string, hint = false) => ({
+    id,
+    name: id,
+    disabled: submitting,
+    'aria-invalid': Boolean(errors[id]),
+    'aria-describedby':
+      errors[id] ? `${id}-error` : hint ? `${id}-hint` : undefined,
+    onBlur: () => touch(id),
+  });
+
+  const change =
+    (id: string, set: (v: string) => void) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      set(e.target.value);
+      clearServerError(id);
+    };
+
+  return (
+    <main className="min-h-[calc(100vh-57px)] bg-[#0e0f11] flex items-center justify-center p-4 py-8">
+      <div className="w-full max-w-md bg-[#16171a] border border-white/10 rounded-2xl p-6 space-y-5">
+        <header className="space-y-1">
+          <h1 className="text-xl font-bold text-white">Create account</h1>
+          <p className="text-sm text-gray-500">
+            We&apos;ll email you a 6-digit code to confirm your address.
+          </p>
+        </header>
+
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
           {errors.general && (
-            <p className="text-red-400 text-sm">{errors.general}</p>
+            <p role="alert" className="text-red-400 text-sm border border-red-400/30 bg-red-400/5 rounded-lg px-3 py-2">
+              {errors.general}
+            </p>
           )}
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Username</label>
-            <Input
-              placeholder="e.g. cooluser99"
-              value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                setErrors((p) => ({ ...p, username: undefined }));
-              }}
-              disabled={submitting}
-              className="bg-[#1e1f24] border-white/10 text-white placeholder:text-gray-600 w-full h-9 text-sm"
-            />
-            {errors.username && (
-              <p className="text-red-400 text-xs">{errors.username}</p>
-            )}
-          </div>
+          <fieldset className="space-y-3" disabled={submitting}>
+            <legend className="text-sm font-medium text-white mb-2">Account</legend>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Email address</label>
-            <Input
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setErrors((p) => ({ ...p, email: undefined }));
-              }}
-              disabled={submitting}
-              className="bg-[#1e1f24] border-white/10 text-white placeholder:text-gray-600 w-full h-9 text-sm"
-            />
-            {errors.email && (
-              <p className="text-red-400 text-xs">{errors.email}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Password</label>
-            <Input
-              type="password"
-              placeholder="Min. 8 characters"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setErrors((p) => ({ ...p, password: undefined }));
-              }}
-              disabled={submitting}
-              className="bg-[#1e1f24] border-white/10 text-white placeholder:text-gray-600 w-full h-9 text-sm"
-            />
-            {errors.password && (
-              <p className="text-red-400 text-xs">{errors.password}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Profile photo</label>
-            <div className="border hover:cursor-pointer border-dashed border-white/10 rounded-xl p-3 text-center hover:border-purple-500/50 cursor-pointer transition-colors">
-              <UploadExample
-                FileType="image"
-                visibility="public"
-                onSuccess={(res) => {
-                  setProfilePhotoUrl(res.url);
-                  setProfilePhotoId(res.fileId);
-                  setErrors((p) => ({ ...p, profilePhoto: undefined }));
-                }}
+            <FieldShell id="username" label="Username" error={errors.username}>
+              <Input
+                {...a11y('username')}
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="e.g. cooluser99"
+                value={values.username}
+                onChange={change('username', setters.setUsername)}
+                className={inputCls}
               />
+            </FieldShell>
+
+            <FieldShell id="email" label="Email address" error={errors.email}>
+              <Input
+                {...a11y('email')}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={values.email}
+                onChange={change('email', setters.setEmail)}
+                className={inputCls}
+              />
+            </FieldShell>
+
+            <FieldShell
+              id="password"
+              label="Password"
+              error={errors.password}
+              hint="At least 8 characters."
+            >
+              <div className="relative">
+                <Input
+                  {...a11y('password', true)}
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Min. 8 characters"
+                  value={values.password}
+                  onChange={change('password', setters.setPassword)}
+                  className={`${inputCls} pr-14`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-2 text-xs text-gray-400 hover:text-white cursor-pointer focus-visible:outline-none focus-visible:text-purple-400"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              {values.password && (
+                <div className="flex items-center gap-2 pt-1" aria-live="polite">
+                  <div className="flex gap-1 flex-1">
+                    {[1, 2, 3, 4].map((i) => (
+                      <span
+                        key={i}
+                        className={`h-1 flex-1 rounded-full ${
+                          i <= strength ? STRENGTH[strength].color : 'bg-white/10'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-400">{STRENGTH[strength].label}</span>
+                </div>
+              )}
+            </FieldShell>
+
+            <div id="profilePhoto" tabIndex={-1} className="space-y-1 focus:outline-none">
+              <span className="text-xs text-gray-400">Profile photo</span>
+              {profilePhotoUrl ? (
+                <div className="flex items-center gap-3 border border-white/10 rounded-xl p-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={profilePhotoUrl}
+                    alt="Your uploaded profile photo"
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                  <span className="text-green-400 text-xs flex-1">Photo uploaded</span>
+                  <button
+                    type="button"
+                    onClick={() => setPhoto(null)}
+                    className="text-xs text-gray-400 hover:text-white cursor-pointer focus-visible:outline-none focus-visible:text-purple-400"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="border border-dashed border-white/10 rounded-xl p-3 text-center hover:border-purple-500/50 cursor-pointer transition-colors">
+                  <UploadExample
+                    FileType="image"
+                    visibility="public"
+                    onSuccess={(res) => {
+                      setPhoto({ url: res.url, fileId: res.fileId });
+                      touch('profilePhoto');
+                    }}
+                  />
+                </div>
+              )}
+              {errors.profilePhoto && (
+                <p role="alert" className="text-red-400 text-xs">{errors.profilePhoto}</p>
+              )}
             </div>
-            {profilePhotoUrl && (
-              <p className="text-green-400 text-xs">Photo uploaded ✔</p>
-            )}
-            {errors.profilePhoto && (
-              <p className="text-red-400 text-xs">{errors.profilePhoto}</p>
-            )}
-          </div>
+          </fieldset>
+
+          <fieldset className="space-y-3" disabled={submitting}>
+            <legend className="text-sm font-medium text-white mb-2">Location</legend>
+
+            <FieldShell id="location.country" label="Country" error={errors['location.country']}>
+              <Input
+                {...a11y('location.country')}
+                autoComplete="country-name"
+                placeholder="e.g. Pakistan"
+                value={values.country}
+                onChange={change('location.country', setters.setCountry)}
+                className={inputCls}
+              />
+            </FieldShell>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FieldShell id="location.region" label="State / Province" error={errors['location.region']}>
+                <Input
+                  {...a11y('location.region')}
+                  autoComplete="address-level1"
+                  placeholder="e.g. Sindh"
+                  value={values.region}
+                  onChange={change('location.region', setters.setRegion)}
+                  className={inputCls}
+                />
+              </FieldShell>
+              <FieldShell id="location.city" label="City" error={errors['location.city']}>
+                <Input
+                  {...a11y('location.city')}
+                  autoComplete="address-level2"
+                  placeholder="e.g. Karachi"
+                  value={values.city}
+                  onChange={change('location.city', setters.setCity)}
+                  className={inputCls}
+                />
+              </FieldShell>
+            </div>
+          </fieldset>
+
+          <fieldset className="space-y-3" disabled={submitting}>
+            <legend className="text-sm font-medium text-white mb-2">Preferences</legend>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FieldShell id="preferences.language" label="Language" error={errors['preferences.language']}>
+                <select
+                  {...a11y('preferences.language')}
+                  value={values.language}
+                  onChange={change('preferences.language', setters.setLanguage)}
+                  className={selectCls}
+                >
+                  {LANGUAGES.map((l) => (
+                    <option key={l.value} value={l.value}>{l.label}</option>
+                  ))}
+                </select>
+              </FieldShell>
+
+              <FieldShell id="preferences.timezone" label="Time zone" error={errors['preferences.timezone']}>
+                <select
+                  {...a11y('preferences.timezone')}
+                  value={values.timezone}
+                  onChange={change('preferences.timezone', setters.setTimezone)}
+                  className={selectCls}
+                >
+                  {timezones.map((tz) => (
+                    <option key={tz} value={tz}>{tz.replace(/_/g, ' ')}</option>
+                  ))}
+                </select>
+              </FieldShell>
+            </div>
+          </fieldset>
 
           <button
             type="submit"
-            disabled={!canSubmit || submitting}
-            className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 cursor-pointer text-white font-medium transition disabled:opacity-50"
+            disabled={submitting}
+            aria-busy={submitting}
+            className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 cursor-pointer text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171a]"
           >
-            {submitting ? 'Registering...' : 'Create Account'}
+            {submitting ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-white/10"></div>
+        <div className="flex items-center gap-3" aria-hidden="true">
+          <div className="flex-1 h-px bg-white/10" />
           <span className="text-xs text-gray-500">or</span>
-          <div className="flex-1 h-px bg-white/10"></div>
+          <div className="flex-1 h-px bg-white/10" />
         </div>
 
         <button
           type="button"
+          disabled={submitting}
           onClick={() => signIn('google', { callbackUrl: '/' })}
-          className="w-full bg-[#1e1f24] border border-white/10 text-gray-300 py-2 rounded-xl text-sm hover:bg-[#25262b] cursor-pointer transition-colors"
+          className="w-full bg-[#1e1f24] border border-white/10 text-gray-300 py-2 rounded-xl text-sm hover:bg-[#25262b] cursor-pointer transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60"
         >
           Continue with Google
         </button>
 
         <p className="text-center text-xs text-gray-500">
           Already have an account?{' '}
-          <a
-            href="/login"
-            className="text-purple-500 hover:underline cursor-pointer"
-          >
+          <Link href="/login" className="text-purple-400 hover:underline focus-visible:underline">
             Log in
-          </a>
+          </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

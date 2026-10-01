@@ -6,6 +6,18 @@ export interface RegisterUserDTO {
     url: string;
     fileId: string;
   };
+
+  location:{
+    country:  String, 
+    region:   String, 
+    city:     String, 
+  };
+
+  preferences:{
+    language: String, 
+    timezone: String
+  } 
+
 }
 
 export type RegisterUserResponse = {
