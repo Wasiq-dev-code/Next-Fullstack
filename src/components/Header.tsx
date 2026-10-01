@@ -11,13 +11,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SearchBar } from './feed/SearchBar';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Header() {
   const { data: session, status } = useSession();
   const isAuth = status === 'authenticated' && !!session?.user;
-
+  const pathname = usePathname();
   const router = useRouter();
+
+  if (
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname.startsWith('/verify/')
+  ) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#171922]">

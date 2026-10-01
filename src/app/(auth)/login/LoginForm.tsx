@@ -5,11 +5,19 @@ import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
+import AuthShell from '@/components/auth/AuthShell';
+import TurnstileCaptcha from '@/components/auth/TurnstileCaptcha';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
+import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   const { showNotification } = useNotification();
   const router = useRouter();
@@ -34,6 +42,11 @@ export default function LoginForm() {
       return;
     }
 
+    if (!captchaToken) {
+      showNotification('Complete the security check before continuing', 'error');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -41,6 +54,7 @@ export default function LoginForm() {
         redirect: false,
         email,
         password,
+        captchaToken,
       });
 
       if (result?.error) {
@@ -53,79 +67,88 @@ export default function LoginForm() {
     } catch {
       showNotification('Something went wrong', 'error');
     } finally {
+      setCaptchaToken(null);
+      setCaptchaKey((key) => key + 1);
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-57px)] bg-[#0e0f11] flex items-center justify-center p-4">
+    <AuthShell>
       <Toaster />
+      <div className="space-y-7">
+        <header className="space-y-2">
+          <p className="text-xs font-semibold uppercase text-violet-300">Welcome back</p>
+          <h1 className="text-2xl font-semibold text-white">Sign in to Echo</h1>
+          <p className="text-sm text-zinc-400">Pick up where your community left off.</p>
+        </header>
 
-      <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-2xl shadow-lg p-8 space-y-6">
-        {/* Heading */}
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-white">Welcome back</h2>
-          <p className="text-sm text-neutral-400 mt-1">Login to your account</p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email */}
-          <div className="space-y-1">
-            <label className="text-sm text-neutral-300">Email</label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="login-email" className="text-sm font-medium text-zinc-300">Email address</label>
             <input
+              id="login-email"
+              autoComplete="email"
               type="email"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
-              className="w-full px-4 py-2.5 rounded-lg bg-neutral-800 border border-neutral-700 text-white placeholder:text-neutral-500 
-              focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              className="h-11 w-full rounded-lg border border-white/10 bg-[#17171d] px-3.5 text-sm text-white placeholder:text-zinc-600 outline-none transition focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/20"
             />
           </div>
-
-          {/* Password */}
-          <div className="space-y-1">
-            <label className="text-sm text-neutral-300">Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
+          <div className="space-y-1.5">
+            <label htmlFor="login-password" className="text-sm font-medium text-zinc-300">Password</label>
+            <div className="relative">
+              <input
+              id="login-password"
+              autoComplete="current-password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
-              className="w-full px-4 py-2.5 rounded-lg bg-neutral-800 border border-neutral-700 text-white placeholder:text-neutral-500 
-              focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-            />
+              className="h-11 w-full rounded-lg border border-white/10 bg-[#17171d] px-3.5 pr-12 text-sm text-white placeholder:text-zinc-600 outline-none transition focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/20"
+              />
+              <button type="button" onClick={() => setShowPassword((shown) => !shown)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute inset-y-0 right-3 grid place-items-center text-zinc-500 transition hover:text-white focus-visible:outline-none focus-visible:text-violet-300">
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </div>
           </div>
 
-          {/* Button */}
+          <div className="space-y-2 pt-1">
+            <p className="text-xs font-medium text-zinc-400">Security check</p>
+            <TurnstileCaptcha key={captchaKey} action="login" onTokenChange={setCaptchaToken} />
+          </div>
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 cursor-pointer text-white font-medium transition disabled:opacity-50"
+            disabled={loading || !captchaToken}
+            className="w-full rounded-lg bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-950/30 transition hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101014] disabled:cursor-not-allowed disabled:opacity-45"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-neutral-800" />
-          <span className="text-xs text-neutral-500">OR</span>
-          <div className="h-px flex-1 bg-neutral-800" />
+        <div className="flex items-center gap-3" aria-hidden="true">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-xs text-zinc-500">OR</span>
+          <div className="h-px flex-1 bg-white/10" />
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-sm text-neutral-400">
-          Don't have an account?{' '}
-          <span
-            onClick={() => router.push('/register')}
-            className="text-purple-500 hover:underline cursor-pointer"
-          >
-            Sign up
-          </span>
+        <GoogleSignInButton
+          token={captchaToken}
+          action="login"
+          disabled={loading}
+          onChallengeConsumed={() => {
+            setCaptchaToken(null);
+            setCaptchaKey((key) => key + 1);
+          }}
+        />
+        <p className="text-center text-sm text-zinc-500">
+          New to Echo?{' '}
+          <Link href="/register" className="font-medium text-violet-300 hover:text-violet-200 hover:underline">Create an account</Link>
         </p>
       </div>
-    </div>
+    </AuthShell>
   );
 }

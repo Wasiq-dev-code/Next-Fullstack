@@ -83,8 +83,7 @@ export default function useRegisterUser() {
   }, []);
 
   const timezones = useMemo(() => {
-    const list: string[] =
-      (Intl as any).supportedValuesOf?.('timeZone') ?? [];
+    const list: string[] = Intl.supportedValuesOf?.('timeZone') ?? [];
     return list.includes(timezone) ? list : [timezone, ...list];
   }, [timezone]);
 
@@ -181,7 +180,7 @@ export default function useRegisterUser() {
     if (first) document.getElementById(first)?.focus();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, captchaToken: string) => {
     e.preventDefault();
     if (submitting) return;
 
@@ -190,7 +189,12 @@ export default function useRegisterUser() {
 
     if (Object.keys(clientErrors).length > 0) {
       focusFirstInvalid(clientErrors);
-      return;
+      return false;
+    }
+
+    if (!captchaToken) {
+      setServerErrors({ general: 'Complete the security check before continuing.' });
+      return false;
     }
 
     setSubmitting(true);
@@ -199,6 +203,7 @@ export default function useRegisterUser() {
         username: username.trim(),
         email: email.trim().toLowerCase(),
         password,
+        captchaToken,
         profilePhoto: { url: profilePhotoUrl!, fileId: profilePhotoId! },
         location: {
           country: country.trim(),
@@ -213,10 +218,11 @@ export default function useRegisterUser() {
       registeredRef.current = true; // keep the uploaded photo
       showNotification('Account created. Check your email for the code.', 'success');
       router.push(`/verify/${encodeURIComponent(username.trim())}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       let next: FieldErrors = {};
+      const message = err instanceof Error ? err.message : 'Registration failed. Please try again.';
       try {
-        const parsed = JSON.parse(err?.message);
+        const parsed = JSON.parse(message);
         if (parsed?.code === 'EMAIL_ALREADY_REGISTERED') {
           next.email = parsed.error;
         } else if (parsed?.issues) {
@@ -229,7 +235,7 @@ export default function useRegisterUser() {
           next.general = parsed?.error ?? 'Registration failed. Please try again.';
         }
       } catch {
-        next = { general: err?.message ?? 'Registration failed. Please try again.' };
+        next = { general: message };
       }
       setServerErrors(next);
       showNotification('Could not create your account', 'error');
@@ -238,6 +244,7 @@ export default function useRegisterUser() {
     } finally {
       setSubmitting(false);
     }
+    return true;
   };
 
   return {

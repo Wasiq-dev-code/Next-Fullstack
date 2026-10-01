@@ -2,20 +2,21 @@ export interface RegisterUserDTO {
   username: string;
   email: string;
   password: string;
+  captchaToken: string;
   profilePhoto: {
     url: string;
     fileId: string;
   };
 
   location:{
-    country:  String, 
-    region:   String, 
-    city:     String, 
+    country: string;
+    region: string;
+    city: string;
   };
 
   preferences:{
-    language: String, 
-    timezone: String
+    language: string;
+    timezone: string;
   } 
 
 }
@@ -28,4 +29,5 @@ export type RegisterUserResponse = {
 export type emailVeri = {
   username: string;
   code: string;
+  captchaToken: string;
 };

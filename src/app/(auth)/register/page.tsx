@@ -1,9 +1,11 @@
 'use client';
 
 import UploadExample from '@/components/fileUploads';
+import AuthShell from '@/components/auth/AuthShell';
+import TurnstileCaptcha from '@/components/auth/TurnstileCaptcha';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { Input } from '@/components/ui/input';
 import useRegisterUser, { LANGUAGES } from '@/hooks/user/useRegisterUser';
-import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
@@ -65,7 +67,17 @@ export default function UserRegister() {
   } = useRegisterUser();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
   const strength = useMemo(() => passwordStrength(values.password), [values.password]);
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const attempted = await handleSubmit(event, captchaToken ?? '');
+    if (attempted) {
+      setCaptchaToken(null);
+      setCaptchaKey((key) => key + 1);
+    }
+  };
 
   // Props shared by every control: id, a11y wiring, blur tracking.
   const a11y = (id: string, hint = false) => ({
@@ -86,16 +98,15 @@ export default function UserRegister() {
     };
 
   return (
-    <main className="min-h-[calc(100vh-57px)] bg-[#0e0f11] flex items-center justify-center p-4 py-8">
-      <div className="w-full max-w-md bg-[#16171a] border border-white/10 rounded-2xl p-6 space-y-5">
-        <header className="space-y-1">
-          <h1 className="text-xl font-bold text-white">Create account</h1>
-          <p className="text-sm text-gray-500">
-            We&apos;ll email you a 6-digit code to confirm your address.
-          </p>
+    <AuthShell>
+      <div className="space-y-6">
+        <header className="space-y-2">
+          <p className="text-xs font-semibold uppercase text-violet-300">Join the conversation</p>
+          <h1 className="text-2xl font-semibold text-white">Create your account</h1>
+          <p className="text-sm text-zinc-400">We&apos;ll email you a 6-digit code to confirm your address.</p>
         </header>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <form onSubmit={submit} noValidate className="space-y-5">
           {errors.general && (
             <p role="alert" className="text-red-400 text-sm border border-red-400/30 bg-red-400/5 rounded-lg px-3 py-2">
               {errors.general}
@@ -213,11 +224,11 @@ export default function UserRegister() {
           <fieldset className="space-y-3" disabled={submitting}>
             <legend className="text-sm font-medium text-white mb-2">Location</legend>
 
-            <FieldShell id="location.country" label="Country" error={errors['location.country']}>
+            <FieldShell id="location.country" label="Country code" error={errors['location.country']} hint="Two-letter ISO code">
               <Input
                 {...a11y('location.country')}
                 autoComplete="country-name"
-                placeholder="e.g. Pakistan"
+                placeholder="e.g. PK"
                 value={values.country}
                 onChange={change('location.country', setters.setCountry)}
                 className={inputCls}
@@ -280,13 +291,22 @@ export default function UserRegister() {
             </div>
           </fieldset>
 
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-zinc-400">Security check</p>
+            <TurnstileCaptcha
+              key={captchaKey}
+              action="register"
+              onTokenChange={setCaptchaToken}
+            />
+          </div>
+
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !captchaToken}
             aria-busy={submitting}
-            className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 cursor-pointer text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#16171a]"
+            className="w-full rounded-lg bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-950/30 transition hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-45"
           >
-            {submitting ? 'Creating account…' : 'Create account'}
+            {submitting ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
@@ -296,22 +316,23 @@ export default function UserRegister() {
           <div className="flex-1 h-px bg-white/10" />
         </div>
 
-        <button
-          type="button"
+        <GoogleSignInButton
+          token={captchaToken}
+          action="register"
           disabled={submitting}
-          onClick={() => signIn('google', { callbackUrl: '/' })}
-          className="w-full bg-[#1e1f24] border border-white/10 text-gray-300 py-2 rounded-xl text-sm hover:bg-[#25262b] cursor-pointer transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60"
-        >
-          Continue with Google
-        </button>
+          onChallengeConsumed={() => {
+            setCaptchaToken(null);
+            setCaptchaKey((key) => key + 1);
+          }}
+        />
 
         <p className="text-center text-xs text-gray-500">
           Already have an account?{' '}
-          <Link href="/login" className="text-purple-400 hover:underline focus-visible:underline">
-            Log in
+          <Link href="/login" className="font-medium text-violet-300 hover:text-violet-200 hover:underline focus-visible:underline">
+            Sign in
           </Link>
         </p>
       </div>
-    </main>
+    </AuthShell>
   );
 }

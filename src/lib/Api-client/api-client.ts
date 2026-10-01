@@ -64,6 +64,13 @@ class ApiClient {
     });
   }
 
+  async authorizeGoogleCaptcha(token: string, action: 'login' | 'register'): Promise<{ verified: boolean }> {
+    return this.fetch<{ verified: boolean }>('/auth/google-captcha', {
+      method: 'POST',
+      body: { token, action },
+    });
+  }
+
   async fetchRandomFeed(data: FeedRequest): Promise<FeedResponse> {
     return await this.fetch<FeedResponse>('/videos/randomFeed', {
       method: 'POST',

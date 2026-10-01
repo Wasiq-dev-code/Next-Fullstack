@@ -4,6 +4,7 @@ import { registerUserSchema } from '@/validators/registerUser.schema';
 import User from '@/model/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 import { sendVerificationEmail } from '@/lib/Email';
+import { verifyTurnstileToken } from '@/lib/captcha';
 
 const generateVerifyCode = () => crypto.randomInt(100000, 1000000).toString();
 const VERIFY_CODE_TTL_MS = 10 * 60 * 1000;
@@ -11,6 +12,14 @@ const VERIFY_CODE_TTL_MS = 10 * 60 * 1000;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+    if (!(await verifyTurnstileToken(body?.captchaToken, 'register', remoteIp))) {
+      return NextResponse.json(
+        { error: 'Complete the security check and try again.' },
+        { status: 400 },
+      );
+    }
 
     console.log('Received registration request:', {
       username: body?.username,
@@ -103,10 +112,11 @@ export async function POST(request: NextRequest) {
 
     try {
       await sendVerificationEmail(data.email, data.username, verifyCode);
-    } catch (err: any) {
+    } catch (err: unknown) {
       await User.deleteOne({ _id: newUser._id });
+      const message = err instanceof Error ? err.message : 'Unable to send verification email';
       return NextResponse.json(
-        { error: `Email verification failed: ${err?.message}` },
+        { error: `Email verification failed: ${message}` },
         { status: 500 }
       );
     }
@@ -118,10 +128,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('User registration failed:', error);
+    const message = error instanceof Error ? error.message : 'Failed to register user';
     return NextResponse.json(
-      { error: error?.message || 'Failed to register user' },
+      { error: message },
       { status: 500 }
     );
   }

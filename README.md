@@ -16,6 +16,17 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## CAPTCHA configuration
+
+Create a Cloudflare Turnstile widget for your deployment hostnames and configure these environment variables:
+
+```env
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
+TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+```
+
+The site key is public; keep the secret server-side. CAPTCHA verification fails closed when the secret is missing. `NEXTAUTH_SECRET` must also be configured for the short-lived Google OAuth CAPTCHA proof.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

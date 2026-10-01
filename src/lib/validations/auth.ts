@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs';
 import Google from 'next-auth/providers/google';
 import { loginUserSchema } from '@/validators/loginUser';
 import User from '@/model/User.model';
+import { cookies } from 'next/headers';
+import { GOOGLE_CAPTCHA_COOKIE, isValidGoogleCaptchaProof, verifyTurnstileToken } from '@/lib/captcha';
 
 export const authOptions: NextAuthOptions = {
   // Google and github providers are need to be implement
@@ -15,6 +17,7 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
+        captchaToken: { label: 'Security check', type: 'text' },
       },
 
       async authorize(credentials) {
@@ -25,7 +28,11 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const { email, password } = parsed.data;
+        const { email, password, captchaToken } = parsed.data;
+
+        if (!(await verifyTurnstileToken(captchaToken, 'login'))) {
+          return null;
+        }
 
         // 2. Ensure DB connection
         await connectToDatabase();
@@ -125,6 +132,14 @@ export const authOptions: NextAuthOptions = {
 
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
+        const cookieStore = await cookies();
+        const captchaProof = cookieStore.get(GOOGLE_CAPTCHA_COOKIE)?.value;
+        cookieStore.set(GOOGLE_CAPTCHA_COOKIE, '', {
+          path: '/api/auth/callback/google',
+          maxAge: 0,
+        });
+        if (!isValidGoogleCaptchaProof(captchaProof)) return false;
+
         await connectToDatabase();
 
         // 1. Find existing user

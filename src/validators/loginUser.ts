@@ -4,6 +4,7 @@ import z from 'zod';
 export const loginUserSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(1),
+  captchaToken: z.string().min(1),
 });
 
 export type LoginUserType = z.infer<typeof loginUserSchema>;
