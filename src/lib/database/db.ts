@@ -24,7 +24,7 @@ export async function connectToDatabase() {
 
   // If no connection is being established yet
   if(!cached.promise){
-    mongoose.connect(MONGODB_URI)
+    cached.promise = mongoose.connect(MONGODB_URI)
       .then(() => mongoose.connection)
   }
 

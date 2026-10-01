@@ -26,12 +26,14 @@ export default function LoginForm() {
   useEffect(() => {
     const error = searchParams.get('error');
 
-    if (error === 'unauthorized') {
+    if (searchParams.get('passwordReset') === 'success') {
+      showNotification('Password reset successfully. Please sign in.', 'success');
+    } else if (error === 'unauthorized') {
       toast.error('Please login or register to access this page');
     } else if (error === 'session-expired') {
       toast.error('Session expired. Please login again');
     }
-  }, [searchParams]);
+  }, [searchParams, showNotification]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +100,12 @@ export default function LoginForm() {
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="login-password" className="text-sm font-medium text-zinc-300">Password</label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="login-password" className="text-sm font-medium text-zinc-300">Password</label>
+              <Link href="/forgot-password" className="text-xs font-medium text-violet-300 hover:text-violet-200 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <input
               id="login-password"

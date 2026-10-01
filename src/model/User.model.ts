@@ -36,6 +36,8 @@ export interface IUser {
   isVerified: boolean;
   verifyCode?: string;
   verifyCodeExpiry?: Date;
+  passwordResetTokenHash?: string;
+  passwordResetTokenExpiry?: Date;
 
   isPrivate?: boolean;
   passwordChangedAt?: Date;
@@ -161,6 +163,16 @@ const userSchema = new Schema<IUser>(
 
     verifyCodeExpiry: {
       type: Date,
+    },
+
+    passwordResetTokenHash: {
+      type: String,
+      select: false,
+    },
+
+    passwordResetTokenExpiry: {
+      type: Date,
+      select: false,
     },
 
      location: {

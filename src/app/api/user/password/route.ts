@@ -51,6 +51,8 @@ export async function PATCH(req: NextRequest) {
 
     user.password = newPassword;
     user.passwordChangedAt = new Date();
+    user.passwordResetTokenHash = undefined;
+    user.passwordResetTokenExpiry = undefined;
     await user.save();
 
     return NextResponse.json(

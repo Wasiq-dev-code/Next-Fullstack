@@ -19,6 +19,8 @@ export async function proxy(req: NextRequest) {
     pathname === '/' ||
     pathname === '/login' ||
     pathname === '/register' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password' ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/verify');
   // Public APIs
