@@ -47,15 +47,15 @@ export interface IUser {
 
   secondaryAccess?: ISecondaryAccess[];
 
-  location:{
-    country:  String, 
-    region:   String, 
-    city:     String, 
+  location?:{
+    country: string;
+    region: string;
+    city: string;
   };
 
   preferences:{
-    language: String, 
-    timezone: String
+    language: string;
+    timezone: string;
   } 
 
   _id?: mongoose.Types.ObjectId;
@@ -178,7 +178,9 @@ const userSchema = new Schema<IUser>(
      location: {
      country: {
       type: String,
-      required: true,
+      required: function (this: IUser) {
+        return this.provider === 'credentials';
+      },
       trim: true,
       uppercase: true, // Automatically converts "pk" to "PK"
       minLength: 2,
@@ -186,12 +188,16 @@ const userSchema = new Schema<IUser>(
     },
     region: {
       type: String,
-      required: true,
+      required: function (this: IUser) {
+        return this.provider === 'credentials';
+      },
       trim: true
     },
     city: {
       type: String,
-      required: true,
+      required: function (this: IUser) {
+        return this.provider === 'credentials';
+      },
       trim: true
     }
   },
@@ -217,7 +223,7 @@ const userSchema = new Schema<IUser>(
 
     provider: {
       type: String,
-      enum: ['credentials', 'google'],
+      enum: ['credentials', 'google', 'github'],
       required: true,
     },
 

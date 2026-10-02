@@ -3,6 +3,7 @@ export interface RegisterUserDTO {
   email: string;
   password: string;
   captchaToken: string;
+  recaptchaToken: string;
   profilePhoto: {
     url: string;
     fileId: string;
@@ -30,4 +31,5 @@ export type emailVeri = {
   username: string;
   code: string;
   captchaToken: string;
+  recaptchaToken: string;
 };

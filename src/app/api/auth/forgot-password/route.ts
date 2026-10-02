@@ -2,7 +2,7 @@ import { randomBytes, createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/database/db';
 import { sendPasswordResetEmail } from '@/lib/Email';
-import { verifyTurnstileToken } from '@/lib/captcha';
+import { verifyRecaptchaV3Token, verifyTurnstileToken } from '@/lib/captcha';
 import User from '@/model/User.model';
 import { forgotPasswordSchema } from '@/validators/passwordReset.schema';
 
@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
     }
 
     const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-    if (!(await verifyTurnstileToken(parsed.data.captchaToken, 'forgot-password', remoteIp))) {
+    if (
+      !(await verifyTurnstileToken(parsed.data.captchaToken, 'forgot-password', remoteIp)) ||
+      !(await verifyRecaptchaV3Token(parsed.data.recaptchaToken, 'forgot_password', remoteIp))
+    ) {
       return NextResponse.json(
         { error: 'Complete the security check and try again.' },
         { status: 400 },

@@ -44,6 +44,7 @@ export const registerUserSchema = z.object({
   email: z.string().email('Invalid Email'),
   username: z.string().min(3).max(15),
   password: z.string().min(8, 'Password should be at least 8 characters'),
+  recaptchaToken: z.string().min(1),
 
   profilePhoto: profilePhotoSchema,
   location: locationSchema,

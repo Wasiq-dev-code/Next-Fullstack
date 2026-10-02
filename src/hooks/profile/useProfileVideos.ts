@@ -5,8 +5,9 @@ import { VideoFeed } from '@/types/video';
 
 export function useProfileVideos(userId: string) {
   // Moving code flow towards useInfiniteScroll by passing fetcher, but keeping all the logic in fetcher related to apicall, when useInfiniteScroll needs to get the data coming from backend, it will call fetcher which is operating here and then returning the important data back to useInfiniteScroll.
-  return useInfiniteScroll<VideoFeed>({
+  return useInfiniteScroll<VideoFeed, number | null>({
     enabled: !!userId,
+    initialCursor: null,
     fetcher: async ({ cursor }) => {
       const res: ProfileVideoResponse = await apiClient.profileVideos(
         userId,

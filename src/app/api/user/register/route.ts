@@ -4,7 +4,7 @@ import { registerUserSchema } from '@/validators/registerUser.schema';
 import User from '@/model/User.model';
 import { NextRequest, NextResponse } from 'next/server';
 import { sendVerificationEmail } from '@/lib/Email';
-import { verifyTurnstileToken } from '@/lib/captcha';
+import { verifyRecaptchaV3Token, verifyTurnstileToken } from '@/lib/captcha';
 
 const generateVerifyCode = () => crypto.randomInt(100000, 1000000).toString();
 const VERIFY_CODE_TTL_MS = 10 * 60 * 1000;
@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-    if (!(await verifyTurnstileToken(body?.captchaToken, 'register', remoteIp))) {
+    if (
+      !(await verifyTurnstileToken(body?.captchaToken, 'register', remoteIp)) ||
+      !(await verifyRecaptchaV3Token(body?.recaptchaToken, 'register', remoteIp))
+    ) {
       return NextResponse.json(
         { error: 'Complete the security check and try again.' },
         { status: 400 },

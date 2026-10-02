@@ -8,6 +8,7 @@ export const forgotPasswordSchema = z.object({
     .email('Enter a valid email address')
     .transform((email) => email.toLowerCase()),
   captchaToken: z.string().min(1, 'Complete the security check'),
+  recaptchaToken: z.string().min(1, 'Complete the reCAPTCHA check'),
 });
 
 export const resetPasswordSchema = z
@@ -15,6 +16,7 @@ export const resetPasswordSchema = z
     token: z.string().regex(/^[a-f0-9]{64}$/i, 'Invalid or expired reset link'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
+    recaptchaToken: z.string().min(1, 'Complete the reCAPTCHA check'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',

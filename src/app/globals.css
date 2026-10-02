@@ -5,6 +5,14 @@ body {
   @apply bg-[#171922] text-white;
 }
 
+.grecaptcha-badge {
+  display: none !important;
+}
+
+body.recaptcha-active .grecaptcha-badge {
+  display: block !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

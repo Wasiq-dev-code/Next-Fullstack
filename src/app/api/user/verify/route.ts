@@ -1,14 +1,17 @@
 import { connectToDatabase } from '@/lib/database/db';
 import User from '@/model/User.model';
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyTurnstileToken } from '@/lib/captcha';
+import { verifyRecaptchaV3Token, verifyTurnstileToken } from '@/lib/captcha';
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, code, captchaToken } = await request.json();
+    const { username, code, captchaToken, recaptchaToken } = await request.json();
     const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
 
-    if (!(await verifyTurnstileToken(captchaToken, 'verify', remoteIp))) {
+    if (
+      !(await verifyTurnstileToken(captchaToken, 'verify', remoteIp)) ||
+      !(await verifyRecaptchaV3Token(recaptchaToken, 'verify', remoteIp))
+    ) {
       return NextResponse.json(
         { error: 'Complete the security check and try again.' },
         { status: 400 },

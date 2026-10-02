@@ -1,14 +1,16 @@
 'use client';
 
 import AuthShell from '@/components/auth/AuthShell';
+import RecaptchaV3, { type RecaptchaV3Handle } from '@/components/auth/RecaptchaV3';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
+  const recaptchaRef = useRef<RecaptchaV3Handle>(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,10 +23,15 @@ function ResetPasswordForm() {
     setError('');
 
     try {
+      const recaptchaToken = await recaptchaRef.current?.execute();
+      if (!recaptchaToken) {
+        throw new Error('Google reCAPTCHA is not ready. Please try again.');
+      }
+
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password, confirmPassword }),
+        body: JSON.stringify({ token, password, confirmPassword, recaptchaToken }),
       });
       const data = await response.json();
 
@@ -34,8 +41,12 @@ function ResetPasswordForm() {
       }
 
       router.replace('/login?passwordReset=success');
-    } catch {
-      setError('Unable to reset your password. Please try again.');
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Unable to reset your password. Please try again.',
+      );
     } finally {
       setLoading(false);
     }
@@ -95,6 +106,8 @@ function ResetPasswordForm() {
             </div>
 
             {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
+
+            <RecaptchaV3 ref={recaptchaRef} action="reset_password" />
 
             <button
               type="submit"

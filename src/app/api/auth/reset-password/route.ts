@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/database/db';
+import { verifyRecaptchaV3Token } from '@/lib/captcha';
 import User from '@/model/User.model';
 import { resetPasswordSchema } from '@/validators/passwordReset.schema';
 
@@ -16,6 +17,14 @@ export async function POST(request: NextRequest) {
           error: 'Validation failed',
           issues: parsed.error.flatten().fieldErrors,
         },
+        { status: 400 },
+      );
+    }
+
+    const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+    if (!(await verifyRecaptchaV3Token(parsed.data.recaptchaToken, 'reset_password', remoteIp))) {
+      return NextResponse.json(
+        { error: 'Complete the reCAPTCHA check and try again.' },
         { status: 400 },
       );
     }

@@ -64,10 +64,15 @@ class ApiClient {
     });
   }
 
-  async authorizeGoogleCaptcha(token: string, action: 'login' | 'register'): Promise<{ verified: boolean }> {
-    return this.fetch<{ verified: boolean }>('/auth/google-captcha', {
+  async authorizeOAuthCaptcha(
+    token: string,
+    recaptchaToken: string,
+    action: 'login' | 'register',
+    provider: 'google' | 'github',
+  ): Promise<{ verified: boolean }> {
+    return this.fetch<{ verified: boolean }>('/auth/oauth-captcha', {
       method: 'POST',
-      body: { token, action },
+      body: { token, recaptchaToken, action, provider },
     });
   }
 

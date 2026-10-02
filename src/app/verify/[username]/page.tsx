@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/Api-client/api-client';
 import { useNotification } from '@/components/notification';
 import AuthShell from '@/components/auth/AuthShell';
 import TurnstileCaptcha from '@/components/auth/TurnstileCaptcha';
+import RecaptchaV3, { type RecaptchaV3Handle } from '@/components/auth/RecaptchaV3';
 import Link from 'next/link';
 
 function getVerificationError(error: unknown) {
@@ -41,6 +42,7 @@ export default function VerifyPage() {
   const [alreadyVerified, setAlreadyVerified] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
+  const recaptchaRef = useRef<RecaptchaV3Handle>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -72,6 +74,7 @@ export default function VerifyPage() {
         username: username as string,
         code,
         captchaToken,
+        recaptchaToken: await recaptchaRef.current?.execute() ?? '',
       });
 
       if (!verifyCode) {
@@ -139,6 +142,7 @@ export default function VerifyPage() {
           <div className="space-y-2">
             <p className="text-xs font-medium text-zinc-400">Security check</p>
             <TurnstileCaptcha key={captchaKey} action="verify" onTokenChange={setCaptchaToken} />
+            <RecaptchaV3 ref={recaptchaRef} action="verify" />
           </div>
 
           <button

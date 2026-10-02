@@ -23,9 +23,25 @@ Create a Cloudflare Turnstile widget for your deployment hostnames and configure
 ```env
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
 TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your-recaptcha-v3-site-key
+RECAPTCHA_SECRET_KEY=your-recaptcha-v3-secret-key
 ```
 
-The site key is public; keep the secret server-side. CAPTCHA verification fails closed when the secret is missing. `NEXTAUTH_SECRET` must also be configured for the short-lived Google OAuth CAPTCHA proof.
+Register both widgets for your deployment hostnames. The reCAPTCHA keys must be for a v3 site key. Site keys are public; keep both secret keys server-side. Both CAPTCHA checks are required on login, registration, email verification, and forgot-password requests. The reset-password form also requires reCAPTCHA v3. reCAPTCHA v3 requests are verified for the expected action and must score at least `0.5`. Verification fails closed when a required secret is missing. `NEXTAUTH_SECRET` must also be configured for the short-lived Google OAuth CAPTCHA proof.
+
+## GitHub sign-in
+
+Configure the provider credentials and base URL alongside the existing CAPTCHA variables:
+
+```env
+NEXTAUTH_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+```
+
+For GitHub, create an OAuth App in GitHub Developer Settings and set its authorization callback URL to `${NEXTAUTH_URL}/api/auth/callback/github` (for local development, `http://localhost:3000/api/auth/callback/github`). For Google, register `${NEXTAUTH_URL}/api/auth/callback/google` as an authorized redirect URI. Use the matching client ID and secret for each provider. GitHub sign-in is available on login and registration and requires both CAPTCHA checks, just like Google sign-in.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

@@ -7,9 +7,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
 import AuthShell from '@/components/auth/AuthShell';
 import TurnstileCaptcha from '@/components/auth/TurnstileCaptcha';
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
+import RecaptchaV3, { type RecaptchaV3Handle } from '@/components/auth/RecaptchaV3';
+import OAuthSignInButton from '@/components/auth/OAuthSignInButton';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
+import { useRef } from 'react';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -18,6 +20,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
+  const recaptchaRef = useRef<RecaptchaV3Handle>(null);
 
   const { showNotification } = useNotification();
   const router = useRouter();
@@ -57,6 +60,7 @@ export default function LoginForm() {
         email,
         password,
         captchaToken,
+        recaptchaToken: await recaptchaRef.current?.execute(),
       });
 
       if (result?.error) {
@@ -66,8 +70,11 @@ export default function LoginForm() {
 
       showNotification('Login successful', 'success');
       router.push('/');
-    } catch {
-      showNotification('Something went wrong', 'error');
+    } catch (error) {
+      showNotification(
+        error instanceof Error ? error.message : 'Something went wrong',
+        'error',
+      );
     } finally {
       setCaptchaToken(null);
       setCaptchaKey((key) => key + 1);
@@ -126,6 +133,7 @@ export default function LoginForm() {
           <div className="space-y-2 pt-1">
             <p className="text-xs font-medium text-zinc-400">Security check</p>
             <TurnstileCaptcha key={captchaKey} action="login" onTokenChange={setCaptchaToken} />
+            <RecaptchaV3 ref={recaptchaRef} action="login" />
           </div>
           <button
             type="submit"
@@ -142,9 +150,30 @@ export default function LoginForm() {
           <div className="h-px flex-1 bg-white/10" />
         </div>
 
-        <GoogleSignInButton
+        <OAuthSignInButton
           token={captchaToken}
           action="login"
+          provider="google"
+          executeRecaptcha={async () => {
+            const token = await recaptchaRef.current?.execute();
+            if (!token) throw new Error('Google reCAPTCHA is not ready.');
+            return token;
+          }}
+          disabled={loading}
+          onChallengeConsumed={() => {
+            setCaptchaToken(null);
+            setCaptchaKey((key) => key + 1);
+          }}
+        />
+        <OAuthSignInButton
+          token={captchaToken}
+          action="login"
+          provider="github"
+          executeRecaptcha={async () => {
+            const token = await recaptchaRef.current?.execute();
+            if (!token) throw new Error('Google reCAPTCHA is not ready.');
+            return token;
+          }}
           disabled={loading}
           onChallengeConsumed={() => {
             setCaptchaToken(null);

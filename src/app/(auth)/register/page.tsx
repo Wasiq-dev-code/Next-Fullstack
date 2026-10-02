@@ -3,11 +3,12 @@
 import UploadExample from '@/components/fileUploads';
 import AuthShell from '@/components/auth/AuthShell';
 import TurnstileCaptcha from '@/components/auth/TurnstileCaptcha';
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
+import RecaptchaV3, { type RecaptchaV3Handle } from '@/components/auth/RecaptchaV3';
+import OAuthSignInButton from '@/components/auth/OAuthSignInButton';
 import { Input } from '@/components/ui/input';
 import useRegisterUser, { LANGUAGES } from '@/hooks/user/useRegisterUser';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 const inputCls =
   'bg-[#1e1f24] border-white/10 text-white placeholder:text-gray-600 w-full h-9 text-sm ' +
@@ -69,10 +70,25 @@ export default function UserRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
+  const recaptchaRef = useRef<RecaptchaV3Handle>(null);
   const strength = useMemo(() => passwordStrength(values.password), [values.password]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    const attempted = await handleSubmit(event, captchaToken ?? '');
+    event.preventDefault();
+    if (!captchaToken) {
+      await handleSubmit(event, '', '');
+      return;
+    }
+
+    let recaptchaToken = '';
+    try {
+      recaptchaToken = await recaptchaRef.current?.execute() ?? '';
+    } catch {
+      await handleSubmit(event, captchaToken, '');
+      return;
+    }
+
+    const attempted = await handleSubmit(event, captchaToken, recaptchaToken);
     if (attempted) {
       setCaptchaToken(null);
       setCaptchaKey((key) => key + 1);
@@ -298,6 +314,7 @@ export default function UserRegister() {
               action="register"
               onTokenChange={setCaptchaToken}
             />
+            <RecaptchaV3 ref={recaptchaRef} action="register" />
           </div>
 
           <button
@@ -316,9 +333,30 @@ export default function UserRegister() {
           <div className="flex-1 h-px bg-white/10" />
         </div>
 
-        <GoogleSignInButton
+        <OAuthSignInButton
           token={captchaToken}
           action="register"
+          provider="google"
+          executeRecaptcha={async () => {
+            const token = await recaptchaRef.current?.execute();
+            if (!token) throw new Error('Google reCAPTCHA is not ready.');
+            return token;
+          }}
+          disabled={submitting}
+          onChallengeConsumed={() => {
+            setCaptchaToken(null);
+            setCaptchaKey((key) => key + 1);
+          }}
+        />
+        <OAuthSignInButton
+          token={captchaToken}
+          action="register"
+          provider="github"
+          executeRecaptcha={async () => {
+            const token = await recaptchaRef.current?.execute();
+            if (!token) throw new Error('Google reCAPTCHA is not ready.');
+            return token;
+          }}
           disabled={submitting}
           onChallengeConsumed={() => {
             setCaptchaToken(null);

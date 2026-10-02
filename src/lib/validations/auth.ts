@@ -3,14 +3,18 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '@/lib/database/db';
 import bcrypt from 'bcryptjs';
 import Google from 'next-auth/providers/google';
+import GitHub from 'next-auth/providers/github';
 import { loginUserSchema } from '@/validators/loginUser';
 import User from '@/model/User.model';
 import { cookies } from 'next/headers';
-import { GOOGLE_CAPTCHA_COOKIE, isValidGoogleCaptchaProof, verifyTurnstileToken } from '@/lib/captcha';
+import {
+  OAUTH_CAPTCHA_COOKIE,
+  isValidOAuthCaptchaProof,
+  verifyRecaptchaV3Token,
+  verifyTurnstileToken,
+} from '@/lib/captcha';
 
 export const authOptions: NextAuthOptions = {
-  // Google and github providers are need to be implement
-
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -18,6 +22,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
         captchaToken: { label: 'Security check', type: 'text' },
+        recaptchaToken: { label: 'reCAPTCHA', type: 'text' },
       },
 
       async authorize(credentials) {
@@ -28,9 +33,12 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const { email, password, captchaToken } = parsed.data;
+        const { email, password, captchaToken, recaptchaToken } = parsed.data;
 
-        if (!(await verifyTurnstileToken(captchaToken, 'login'))) {
+        if (
+          !(await verifyTurnstileToken(captchaToken, 'login')) ||
+          !(await verifyRecaptchaV3Token(recaptchaToken, 'login'))
+        ) {
           return null;
         }
 
@@ -75,6 +83,13 @@ export const authOptions: NextAuthOptions = {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      authorization: {
+        params: { scope: 'read:user user:email' },
+      },
     }),
   ],
 
@@ -131,48 +146,50 @@ export const authOptions: NextAuthOptions = {
     },
 
     async signIn({ user, account }) {
-      if (account?.provider === 'google') {
+      if (account?.provider === 'google' || account?.provider === 'github') {
+        const provider = account.provider;
         const cookieStore = await cookies();
-        const captchaProof = cookieStore.get(GOOGLE_CAPTCHA_COOKIE)?.value;
-        cookieStore.set(GOOGLE_CAPTCHA_COOKIE, '', {
+        const captchaProof = cookieStore.get(OAUTH_CAPTCHA_COOKIE)?.value;
+        cookieStore.set(OAUTH_CAPTCHA_COOKIE, '', {
           path: '/api/auth/callback/google',
           maxAge: 0,
         });
-        if (!isValidGoogleCaptchaProof(captchaProof)) return false;
+        cookieStore.set(OAUTH_CAPTCHA_COOKIE, '', {
+          path: '/api/auth/callback/github',
+          maxAge: 0,
+        });
+        if (!isValidOAuthCaptchaProof(captchaProof, provider)) return false;
 
         await connectToDatabase();
 
-        // 1. Find existing user
-        let existingUser = await User.findOne({ email: user.email });
+        const email = user.email?.trim().toLowerCase();
+        if (!email) {
+          throw new Error(`${provider === 'github' ? 'GitHub' : 'Google'} did not provide an email address.`);
+        }
 
+        let existingUser = await User.findOne({ email });
         if (existingUser) {
-          // 2. Conflict: credentials vs google
           if (existingUser.provider === 'credentials') {
             throw new Error(
-              'Account already exists with email and password. Please login using credentials.',
+              'An account already exists with this email and password. Please sign in with your password.',
             );
           }
         } else {
-          // 3. Create new user (Google OAuth)
-          if (!user.email) {
-            throw new Error('Email is required for Google OAuth');
-          }
-
           existingUser = await User.create({
-            email: user.email,
-            username: user.name ?? 'Google User',
-            provider: 'google',
+            email,
+            username: user.name ?? email.split('@')[0],
+            provider,
             profilePhoto: user.image
               ? {
                   url: user.image,
-                  fileId: 'google-oauth',
+                  fileId: `${provider}-oauth`,
                 }
               : undefined,
-            isPrivate: false,
+              isPrivate: false,
+              isVerified: true,
           });
         }
 
-        // 4. Attach required fields to NextAuth user object
         user.id = existingUser._id.toString();
         user.provider = existingUser.provider;
         user.isPrivate = existingUser.isPrivate;
@@ -180,7 +197,6 @@ export const authOptions: NextAuthOptions = {
           existingUser.passwordChangedAt ?? undefined;
         user.emailChangedAt = existingUser.emailChangedAt ?? undefined;
 
-        // ADDED
         user.role = existingUser.role;
       }
 

@@ -2,13 +2,15 @@
 
 import AuthShell from '@/components/auth/AuthShell';
 import TurnstileCaptcha from '@/components/auth/TurnstileCaptcha';
+import RecaptchaV3, { type RecaptchaV3Handle } from '@/components/auth/RecaptchaV3';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
+  const recaptchaRef = useRef<RecaptchaV3Handle>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -24,7 +26,11 @@ export default function ForgotPasswordPage() {
       const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, captchaToken }),
+        body: JSON.stringify({
+          email,
+          captchaToken,
+          recaptchaToken: await recaptchaRef.current?.execute(),
+        }),
       });
       const data = await response.json();
 
@@ -34,8 +40,12 @@ export default function ForgotPasswordPage() {
       }
 
       setMessage(data.message);
-    } catch {
-      setError('Unable to request a password reset. Please try again.');
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Unable to request a password reset. Please try again.',
+      );
     } finally {
       setCaptchaToken(null);
       setCaptchaKey((key) => key + 1);
@@ -80,6 +90,7 @@ export default function ForgotPasswordPage() {
               action="forgot-password"
               onTokenChange={setCaptchaToken}
             />
+            <RecaptchaV3 ref={recaptchaRef} action="forgot_password" />
           </div>
 
           {message && <p role="status" className="text-sm text-emerald-300">{message}</p>}

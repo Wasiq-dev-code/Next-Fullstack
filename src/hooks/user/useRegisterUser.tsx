@@ -180,7 +180,11 @@ export default function useRegisterUser() {
     if (first) document.getElementById(first)?.focus();
   };
 
-  const handleSubmit = async (e: React.FormEvent, captchaToken: string) => {
+  const handleSubmit = async (
+    e: React.FormEvent,
+    captchaToken: string,
+    recaptchaToken: string,
+  ) => {
     e.preventDefault();
     if (submitting) return;
 
@@ -196,6 +200,10 @@ export default function useRegisterUser() {
       setServerErrors({ general: 'Complete the security check before continuing.' });
       return false;
     }
+    if (!recaptchaToken) {
+      setServerErrors({ general: 'Complete the reCAPTCHA check before continuing.' });
+      return false;
+    }
 
     setSubmitting(true);
     try {
@@ -204,6 +212,7 @@ export default function useRegisterUser() {
         email: email.trim().toLowerCase(),
         password,
         captchaToken,
+        recaptchaToken,
         profilePhoto: { url: profilePhotoUrl!, fileId: profilePhotoId! },
         location: {
           country: country.trim(),
