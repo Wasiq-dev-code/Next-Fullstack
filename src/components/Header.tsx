@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SearchBar } from './feed/SearchBar';
 import { usePathname, useRouter } from 'next/navigation';
+import NotificationBell from './notification/notificationBell';
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -37,14 +38,14 @@ export default function Header() {
           <span className="text-base font-semibold text-white">Home</span>
         </Link>
 
-         {/* Center */}
-    <SearchBar
-      onSearch={(query) => {
-        const q = query.trim();
-        if (!q) return;
-        router.push(`/search?q=${encodeURIComponent(q)}`);
-      }}
-    />
+        {/* Center */}
+        <SearchBar
+          onSearch={(query) => {
+            const q = query.trim();
+            if (!q) return;
+            router.push(`/search?q=${encodeURIComponent(q)}`);
+          }}
+        />
 
         <div className="flex-1" />
 
@@ -61,6 +62,9 @@ export default function Header() {
                 Video Upload
               </Button>
             </Link>
+
+            {/* Has its own DropdownMenu: keep it as a sibling, not nested */}
+            <NotificationBell />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -95,6 +99,16 @@ export default function Header() {
                     className="text-gray-300 focus:bg-white/5 focus:text-white"
                   >
                     Edit Profile
+                  </Link>
+                </DropdownMenuItem>
+
+                {/* Moved inside DropdownMenuContent (this was the error) */}
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/notification"
+                    className="text-gray-300 focus:bg-white/5 focus:text-white"
+                  >
+                    Notifications
                   </Link>
                 </DropdownMenuItem>
 

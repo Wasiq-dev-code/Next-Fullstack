@@ -24,6 +24,7 @@ import {
   ProfileVideoResponse,
 } from '@/types/profile';
 import { emailVeri, RegisterUserDTO, RegisterUserResponse } from '@/types/user';
+import { NotificationLevel, NotificationListResponse } from '@/types/notification';
 
 class ApiClient {
   private async fetch<T>(
@@ -263,6 +264,38 @@ class ApiClient {
       method: 'POST',
       body: { action: 'verify', email, code },
     });
+  }
+
+   async fetchNotifications(
+    cursor: string | null = null,
+    unreadOnly = false,
+    limit = 20,
+  ): Promise<NotificationListResponse> {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (cursor) params.set('cursor', cursor);
+    if (unreadOnly) params.set('unread', 'true');
+    return await this.fetch<NotificationListResponse>(
+      `/notifications?${params.toString()}`,
+    );
+  }
+
+  async markNotificationsRead(
+    payload: { all: true } | { ids: string[] },
+  ): Promise<{ updated: number }> {
+    return await this.fetch<{ updated: number }>('/notifications', {
+      method: 'PATCH',
+      body: payload,
+    });
+  }
+
+  async setFollowNotificationLevel(
+    accountId: string,
+    notificationLevel: NotificationLevel,
+  ): Promise<{ notificationLevel: NotificationLevel }> {
+    return await this.fetch<{ notificationLevel: NotificationLevel }>(
+      `/follow/${accountId}/notifications`,
+      { method: 'PATCH', body: { notificationLevel } },
+    );
   }
 }
 

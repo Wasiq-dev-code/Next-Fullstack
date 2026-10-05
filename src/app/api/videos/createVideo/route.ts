@@ -4,6 +4,7 @@ import Video from '@/model/Video.model';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { registerVideoSchema } from '@/validators/registerVideo';
+import { notifySubscribersOfNewVideo } from '@/lib/notification/notifySubsOfNewVideo';
 
 // Create Video
 export async function POST(request: NextRequest) {
@@ -50,6 +51,20 @@ export async function POST(request: NextRequest) {
       randomScore: Math.random(), // For random feeds
     });
 
+    after(async () => {
+  try {
+    await notifySubscribersOfNewVideo({
+      videoId: video._id,
+      ownerId: video.owner,
+      title: video.title,
+      thumbnailUrl: video.thumbnail.url,
+      isPrivate: video.isPrivate,
+    });
+  } catch (err) {
+    console.error('Notify subscribers failed:', err);
+  }
+});
+
     return NextResponse.json(
       {
         message: 'Video created successfully',
@@ -65,3 +80,15 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+function after(task: () => Promise<void> | void) {
+  setTimeout(() => {
+    void (async () => {
+      try {
+        await task();
+      } catch (error) {
+        console.error('Deferred task failed:', error);
+      }
+    })();
+  }, 0);
+}
+

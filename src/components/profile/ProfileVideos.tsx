@@ -8,13 +8,14 @@ export default function ProfileVideoFeed({ userId }: { userId: string }) {
   const { hasMore, items: videos, loading } = useProfileVideos(userId);
   return (
     <section className="bg-[#171922] px-4 pb-8 sm:px-6">
-      <div className="mx-auto max-w-4xl">
+      {/* Widened from max-w-4xl so 3 columns fit */}
+      <div className="mx-auto max-w-7xl">
         <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
           <h2 className="text-lg font-semibold text-white">Videos</h2>
           <span className="text-xs text-gray-500 sm:text-sm">Latest uploads</span>
         </div>
-        {/* Videos Grid */}
-        <div className="space-y-4">
+        {/* Videos Grid: 1 col mobile, 2 tablet, 3 laptop and up */}
+        <div className="grid grid-cols-1 items-start gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           {videos.map((video) => (
             <div
               key={video._id}

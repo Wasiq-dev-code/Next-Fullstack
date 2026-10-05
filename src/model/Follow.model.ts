@@ -4,6 +4,7 @@ export interface IFollow {
   _id?: mongoose.Types.ObjectId;
   follower: mongoose.Types.ObjectId;
   account: mongoose.Types.ObjectId;
+  notificationLevel?: 'ALL' | 'NONE';
   createdAt?: Date;
   updatedAt?: Date;
 }
