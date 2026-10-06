@@ -275,14 +275,14 @@ class ApiClient {
     if (cursor) params.set('cursor', cursor);
     if (unreadOnly) params.set('unread', 'true');
     return await this.fetch<NotificationListResponse>(
-      `/notifications?${params.toString()}`,
+      `/notification?${params.toString()}`,
     );
   }
 
   async markNotificationsRead(
     payload: { all: true } | { ids: string[] },
   ): Promise<{ updated: number }> {
-    return await this.fetch<{ updated: number }>('/notifications', {
+    return await this.fetch<{ updated: number }>('/notification', {
       method: 'PATCH',
       body: payload,
     });

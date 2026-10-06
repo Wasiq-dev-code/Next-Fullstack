@@ -45,6 +45,8 @@ export async function GET(request: NextRequest) {
     const hasMore = items.length > limit;
     const page = hasMore ? items.slice(0, limit) : items;
 
+    console.log(`Fetched ${page.length} notifications for user ${auth.data}, unread count: ${unreadCount}, has more: ${hasMore}`)
+
     return NextResponse.json({
       notifications: page,
       unreadCount,
