@@ -1,14 +1,5 @@
 export const settingsNav = [
-  {
-    title: 'Profile',
-    href: '/settings/profile',
-  },
-  {
-    title: 'Account',
-    href: '/settings/account',
-  },
-  {
-    title: 'Security',
-    href: '/settings/security',
-  },
+ { title: 'Profile',  href: '/dashboard/settings/profile' },
+  { title: 'Account',  href: '/dashboard/settings/account' },
+  { title: 'Security', href: '/dashboard/settings/security' },
 ];
