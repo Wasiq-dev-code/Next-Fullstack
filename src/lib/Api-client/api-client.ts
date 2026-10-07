@@ -25,6 +25,7 @@ import {
 } from '@/types/profile';
 import { emailVeri, RegisterUserDTO, RegisterUserResponse } from '@/types/user';
 import { NotificationLevel, NotificationListResponse } from '@/types/notification';
+import { ChannelStatsResponse } from '@/types/channel';
 
 class ApiClient {
   private async fetch<T>(
@@ -297,6 +298,10 @@ class ApiClient {
       { method: 'PATCH', body: { notificationLevel } },
     );
   }
+
+async fetchChannelStats(): Promise<ChannelStatsResponse> {
+  return await this.fetch<ChannelStatsResponse>('/channel/stats');
+}
 }
 
 export const apiClient = new ApiClient();

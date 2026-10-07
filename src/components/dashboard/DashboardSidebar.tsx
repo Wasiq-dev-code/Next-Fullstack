@@ -10,7 +10,7 @@ import { settingsNav } from '@/lib/validations/SettingNav';
 
 const items = [
   { title: 'Overview',      href: '/dashboard',              icon: LayoutDashboard },
-  { title: 'My Videos',     href: '/dashboard/videos',       icon: Video },
+  { title: 'My Videos',     href: '/dashboard/myVideos',       icon: Video },
   { title: 'Analytics',     href: '/dashboard/analytics',    icon: BarChart3 },
   { title: 'Comments',      href: '/dashboard/comments',     icon: MessageSquare },
   { title: 'Notifications', href: '/dashboard/notification', icon: Bell },
