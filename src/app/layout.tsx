@@ -4,6 +4,7 @@ import './globals.css';
 import Providers from '@/app/providers/providers';
 import { NotificationProvider } from '@/components/notification';
 import Header from '@/components/Header';
+import { SidebarProvider } from '@/components/sidebarContext';
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -31,8 +32,10 @@ export default function RootLayout({
       >
         <Providers>
           <NotificationProvider>
+            <SidebarProvider>
             <Header />
             {children}
+            </SidebarProvider>
           </NotificationProvider>
         </Providers>
       </body>

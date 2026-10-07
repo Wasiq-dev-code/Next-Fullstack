@@ -1,193 +1,268 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { signIn, useSession } from 'next-auth/react';
+import { Check, Link2, Pencil, UserPlus } from 'lucide-react';
 import { apiClient } from '@/lib/Api-client/api-client';
 import type { Profile, ProfileResponse } from '@/types/profile';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import PrivateProfile from '@/app/profile/private/page';
-import Image from 'next/image';
 
-function getProfilePhotoUrl(profilePhoto: Profile['profilePhoto']) {
-  const url =
-    typeof profilePhoto === 'string' ? profilePhoto : profilePhoto?.url;
+type ExtendedProfile = Profile & {
+  bio?: string;
+  coverPhoto?: string | { url?: string };
+};
+
+const BG = '#171922';
+const BANNER_HEIGHT = 176;
+const AVATAR_SIZE = 112;
+const compact = new Intl.NumberFormat(undefined, { notation: 'compact' });
+
+function getImageUrl(value?: string | { url?: string } | null) {
+  const url = typeof value === 'string' ? value : value?.url;
   return url?.trim() && url !== '/' ? url : null;
 }
 
+function ProfileSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="rounded-2xl bg-white/5" style={{ height: BANNER_HEIGHT }} />
+      <div
+        className="flex items-end gap-5"
+        style={{ marginTop: -AVATAR_SIZE / 2, paddingLeft: 24, paddingRight: 24 }}
+      >
+        <div
+          className="rounded-full bg-white/10"
+          style={{
+            width: AVATAR_SIZE,
+            height: AVATAR_SIZE,
+            border: `4px solid ${BG}`,
+          }}
+        />
+        <div className="mb-2 space-y-2">
+          <div className="h-6 w-48 rounded bg-white/10" />
+          <div className="h-4 w-32 rounded bg-white/5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfileInfo({ userId }: { userId: string }) {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<ExtendedProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
-  const user = session?.user.id;
+  const user = session?.user?.id;
 
   useEffect(() => {
     apiClient
       .profileInformation(userId)
-      .then((res: ProfileResponse) => setProfile(res.profile))
+      .then((res: ProfileResponse) => setProfile(res.profile as ExtendedProfile))
       .finally(() => setLoading(false));
   }, [userId]);
 
   const handleFollowToggle = async () => {
-    if (!profile || isSubmitting || !user) return;
+    if (!user) return signIn();
+    if (!profile || isSubmitting) return;
 
     setIsSubmitting(true);
-
     try {
       const response = await apiClient.toggleFollow(profile._id);
-
-      setProfile((current) => {
-        if (!current) return current;
-
-        return {
-          ...current,
-          isFollowed: response.followed,
-          followersCount: Math.max(
-            0,
-            current.followersCount + (response.followed ? 1 : -1),
-          ),
-        };
-      });
+      setProfile((current) =>
+        current
+          ? {
+              ...current,
+              isFollowed: response.followed,
+              followersCount: Math.max(
+                0,
+                current.followersCount + (response.followed ? 1 : -1),
+              ),
+            }
+          : current,
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center bg-[#171922]">
-        <div className="text-center space-y-4">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-violet-500 border-t-transparent"></div>
-          <p className="font-medium text-gray-400">Loading profile...</p>
-        </div>
-      </div>
-    );
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
+  if (loading) return <ProfileSkeleton />;
 
   if (!profile)
     return (
-      <div className="flex min-h-[50vh] items-center justify-center bg-[#171922] px-4">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#20222b] p-8 text-center shadow-xl">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-violet-500/15">
-            <svg
-              className="w-10 h-10 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
-          <h2 className="mb-2 text-2xl font-bold text-white">
-            Profile not found
-          </h2>
-          <p className="text-gray-400">
-            The user profile you are looking for does not exist.
-          </p>
-        </div>
+      <div className="rounded-2xl border border-white/10 bg-[#20222b] p-10 text-center">
+        <h2 className="text-2xl font-bold text-white">Profile not found</h2>
+        <p className="mt-2 text-gray-400">
+          The user profile you are looking for does not exist.
+        </p>
+        <Link
+          href="/"
+          className="mt-6 inline-block rounded-lg bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+        >
+          Back to home
+        </Link>
       </div>
     );
 
+  const avatarUrl = getImageUrl(profile.profilePhoto);
+  const coverUrl = getImageUrl(profile.coverPhoto);
+  const isOwner = !!profile.isMe || user === profile._id;
+
+  const stats = [
+    { label: 'videos', value: profile.postsCount },
+    { label: 'followers', value: profile.followersCount },
+    { label: 'following', value: profile.followToCount },
+  ];
+
   return (
-    <div className="bg-[#171922] px-4 py-5 sm:px-6 sm:py-7">
-      <div className="mx-auto max-w-4xl">
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#20222b] shadow-xl shadow-black/30">
-          {/* Profile Content */}
-          <div className="relative px-4 pb-5 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
-            {/* Avatar */}
-            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="relative self-start">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#20222b] bg-linear-to-br from-violet-500 to-fuchsia-600 shadow-xl sm:h-28 sm:w-28 sm:border-6">
-                  {getProfilePhotoUrl(profile.profilePhoto) ? (
-                    <Image
-                      src={getProfilePhotoUrl(profile.profilePhoto)!}
-                      alt={profile.username}
-                      fill
-                      className="rounded-full object-cover"
-                      sizes="(max-width: 640px) 80px, 112px"
-                    />
-                  ) : (
-                    <span className="text-3xl font-bold text-white sm:text-4xl">
-                      {profile.username.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full border-3 border-[#20222b] bg-emerald-400 sm:bottom-1 sm:right-1 sm:h-6 sm:w-6"></div>
-              </div>
+    <section>
+      {/* Banner: height is inline so it can never collapse */}
+      <div
+        className="relative overflow-hidden rounded-2xl"
+        style={{
+          height: BANNER_HEIGHT,
+          minHeight: BANNER_HEIGHT,
+          background:
+            'linear-gradient(90deg, #4c1d95 0%, #7c3aed 55%, #c026d3 100%)',
+        }}
+      >
+        {coverUrl && (
+          <Image
+            src={coverUrl}
+            alt=""
+            fill
+            priority
+            className="object-cover"
+            sizes="(max-width: 1280px) 100vw, 1280px"
+          />
+        )}
+      </div>
 
-              {/* Follow Button */}
-              {!profile.isMe && (
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={handleFollowToggle}
-                  className="w-full rounded-lg bg-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-950/30 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-70 sm:mb-1 sm:w-auto"
-                >
-                  {isSubmitting
-                    ? 'Please wait...'
-                    : profile.isFollowed
-                      ? 'Unfollow'
-                      : 'Follow'}
-                </button>
-              )}
-              {user === profile._id && (
-                <div className="flex w-full flex-col gap-2 sm:mb-1 sm:w-auto sm:flex-row">
-                  <Link href="/profile/edit" className="w-full sm:w-auto">
-                    <span className="block rounded-lg bg-violet-600 px-5 py-2 text-center text-sm font-semibold text-white shadow-lg shadow-violet-950/30 transition hover:bg-violet-500">
-                      Edit profile
-                    </span>
-                  </Link>
-                  <PrivateProfile />
-                </div>
-              )}
-            </div>
+      {/* Avatar + identity + actions, overlapping the banner's bottom edge */}
+      <div
+        className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+        style={{ marginTop: -AVATAR_SIZE / 2, paddingLeft: 24, paddingRight: 24 }}
+      >
+        <div className="flex items-end gap-5">
+          <div
+            className="relative shrink-0 overflow-hidden rounded-full bg-violet-600 shadow-xl"
+            style={{
+              width: AVATAR_SIZE,
+              height: AVATAR_SIZE,
+              border: `4px solid ${BG}`,
+            }}
+          >
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt={profile.username}
+                fill
+                className="object-cover"
+                sizes="112px"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-4xl font-bold text-white">
+                {profile.username.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
 
-            {/* Username and Bio Section */}
-            <div className="mb-5">
-              <h1 className="mb-1 break-words text-2xl font-bold text-white sm:text-3xl">
-                {profile.username}
-              </h1>
-              <p className="text-sm text-gray-400 sm:text-base">
-                @{profile.username.toLowerCase()}
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 border-y border-white/10 py-4 sm:py-5">
-              <div className="group cursor-pointer text-center">
-                <div className="mb-1 text-xl font-bold text-white transition-colors group-hover:text-violet-300 sm:text-2xl">
-                  {profile.postsCount}
-                </div>
-                <div className="text-[10px] font-medium uppercase tracking-wider text-gray-500 sm:text-sm">
-                  Posts
-                </div>
-              </div>
-
-              <div className="group cursor-pointer border-x border-white/10 text-center">
-                <div className="mb-1 text-xl font-bold text-white transition-colors group-hover:text-violet-300 sm:text-2xl">
-                  {profile.followersCount}
-                </div>
-                <div className="text-[10px] font-medium uppercase tracking-wider text-gray-500 sm:text-sm">
-                  Followers
-                </div>
-              </div>
-
-              <div className="group cursor-pointer text-center">
-                <div className="mb-1 text-xl font-bold text-white transition-colors group-hover:text-violet-300 sm:text-2xl">
-                  {profile.followToCount}
-                </div>
-                <div className="text-[10px] font-medium uppercase tracking-wider text-gray-500 sm:text-sm">
-                  Following
-                </div>
-              </div>
-            </div>
+          <div className="min-w-0" style={{ paddingBottom: 6 }}>
+            <h1 className="truncate text-2xl font-bold text-white sm:text-3xl">
+              {profile.username}
+            </h1>
+            <p className="truncate text-sm text-slate-400">
+              @{profile.username.toLowerCase()}
+            </p>
           </div>
         </div>
+
+        <div className="flex items-center gap-2" style={{ paddingBottom: 6 }}>
+          {isOwner ? (
+            <Link
+              href="/dashboard/settings/profile"
+              className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-500"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit profile
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={handleFollowToggle}
+              className={`inline-flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70 ${
+                profile.isFollowed
+                  ? 'border border-white/15 bg-white/5 text-slate-200 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-300'
+                  : 'bg-violet-600 text-white hover:bg-violet-500'
+              }`}
+            >
+              {profile.isFollowed ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <UserPlus className="h-4 w-4" />
+              )}
+              {isSubmitting
+                ? 'Please wait...'
+                : profile.isFollowed
+                  ? 'Following'
+                  : 'Follow'}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={copyLink}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+            {copied ? 'Copied' : 'Share'}
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Stats */}
+      <div
+        className="text-sm text-slate-400"
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          columnGap: 24,
+          rowGap: 4,
+          marginTop: 20,
+          paddingLeft: 24,
+          paddingRight: 24,
+        }}
+      >
+        {stats.map((s) => (
+          <span key={s.label}>
+            <strong className="text-base font-bold text-white">
+              {compact.format(s.value ?? 0)}
+            </strong>{' '}
+            {s.label}
+          </span>
+        ))}
+      </div>
+
+      {profile.bio && (
+        <p
+          className="max-w-2xl whitespace-pre-line text-sm leading-relaxed text-slate-300"
+          style={{ marginTop: 12, paddingLeft: 24, paddingRight: 24 }}
+        >
+          {profile.bio}
+        </p>
+      )}
+    </section>
   );
 }

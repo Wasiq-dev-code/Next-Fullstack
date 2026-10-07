@@ -1,24 +1,35 @@
 'use client';
 
 import Link from 'next/link';
+import { Menu, Upload, User, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SearchBar } from './feed/SearchBar';
 import { usePathname, useRouter } from 'next/navigation';
 import NotificationBell from './notification/notificationBell';
+import { useSidebar } from '@/components/sidebarContext';
+
+const BRAND = 'Echo'; // change to your product name
+
+const menuItemClass =
+  'flex cursor-pointer items-center gap-2.5 text-gray-300 focus:bg-white/5 focus:text-white';
 
 export default function Header() {
   const { data: session, status } = useSession();
   const isAuth = status === 'authenticated' && !!session?.user;
+  const isLoading = status === 'loading';
   const pathname = usePathname();
   const router = useRouter();
+  const { toggle } = useSidebar();
 
   if (
     pathname === '/login' ||
@@ -28,128 +39,157 @@ export default function Header() {
     return null;
   }
 
+  const user = session?.user;
+
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#171922]">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-7 w-9 items-center justify-center rounded-md bg-violet-600 text-sm font-semibold text-white">
-            N
+    <header className="sticky top-0 z-40 h-16 border-b border-white/10 bg-[#171922]">
+      <div className="flex h-full items-center gap-4 px-4 lg:gap-8 lg:px-6">
+        {/* Left: hamburger + brand */}
+        <div className="flex shrink-0 items-center gap-2 ">
+          {/* <button
+            onClick={toggle}
+            aria-label="Toggle sidebar"
+            className="cursor-pointer rounded-full p-2.5 text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+          >
+            <Menu className="h-5 w-5" />
+          </button> */}
+
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-600 text-base font-bold text-white shadow-md shadow-violet-950/40 ml-3">
+              N
+            </span>
+            <span className="text-lg font-semibold tracking-tight text-white">
+              {BRAND}
+            </span>
+          </Link>
+        </div>
+
+        {/* Center: search fills the space between left and right */}
+        <div className="min-w-0 flex-1">
+          <div className="mx-auto w-full max-w-3xl">
+            <SearchBar
+              onSearch={(query) => {
+                const q = query.trim();
+                if (!q) return;
+                router.push(`/search?q=${encodeURIComponent(q)}`);
+              }}
+            />
           </div>
-          <span className="text-base font-semibold text-white">Home</span>
-        </Link>
+        </div>
 
-        {/* Center */}
-        <SearchBar
-          onSearch={(query) => {
-            const q = query.trim();
-            if (!q) return;
-            router.push(`/search?q=${encodeURIComponent(q)}`);
-          }}
-        />
+        {/* Right: actions */}
+        <div className="flex shrink-0 items-center justify-end gap-3">
+          {isLoading ? (
+            // skeleton avoids flashing "Log in / Sign up" before the session loads
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-28 animate-pulse rounded-lg bg-white/10" />
+              <div className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
+            </div>
+          ) : isAuth ? (
+            <>
+              <Link href="/videos/registerVideo" aria-label="Upload video">
+                <Button
+                  size="sm"
+                  className="h-9 cursor-pointer gap-2 bg-violet-600 px-4 text-white shadow-md shadow-violet-950/30 hover:bg-violet-500"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
+              </Link>
 
-        <div className="flex-1" />
+              {/* Has its own DropdownMenu: keep it as a sibling, not nested */}
+              <NotificationBell />
 
-        {isAuth ? (
-          <div className="flex items-center gap-3">
-            <Link
-              href="/videos/registerVideo"
-              className="hidden sm:inline-flex"
-            >
-              <Button
-                size="sm"
-                className="bg-violet-600 hover:bg-violet-500 cursor-pointer text-white"
-              >
-                Video Upload
-              </Button>
-            </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="Account menu"
+                    className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                  >
+                    <Avatar className="h-9 w-9 cursor-pointer border border-violet-500/70 transition hover:border-violet-400">
+                      <AvatarImage src={user?.image ?? undefined} />
+                      <AvatarFallback className="bg-violet-600 text-white">
+                        {(user?.name || 'U')[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
 
-            {/* Has its own DropdownMenu: keep it as a sibling, not nested */}
-            <NotificationBell />
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={10}
+                  className="w-60 border border-white/10 bg-[#20222b] p-1.5 shadow-xl shadow-black/40"
+                >
+                  <DropdownMenuLabel className="px-2.5 py-2 font-normal">
+                    <p className="truncate text-sm font-semibold text-white">
+                      {user?.name ?? 'Account'}
+                    </p>
+                    {user?.email && (
+                      <p className="truncate text-xs text-slate-400">{user.email}</p>
+                    )}
+                  </DropdownMenuLabel>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="rounded-full focus:outline-none">
-                  <Avatar className="h-9 w-9 hover:cursor-pointer border border-violet-500">
-                    <AvatarImage src={session.user?.image ?? ''} />
-                    <AvatarFallback className="bg-violet-600 text-white">
-                      {(session.user?.name || 'U')[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
-              </DropdownMenuTrigger>
+                  <DropdownMenuSeparator className="bg-white/10" />
 
-              <DropdownMenuContent
-                align="end"
-                className="w-48 border border-white/10 bg-[#20222b]"
-              >
-                {session?.user?.id && (
+                  {user?.id && (
+                    <DropdownMenuItem asChild>
+                      <Link href={`/profile/${user.id}`} className={menuItemClass}>
+                        <User className="h-4 w-4" />
+                        Your profile
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+
                   <DropdownMenuItem asChild>
-                    <Link
-                      href={`/profile/${session.user.id}`}
-                      className="text-gray-300 focus:bg-white/5 focus:text-white"
-                    >
-                      Profile
+                    <Link href="/dashboard" className={menuItemClass}>
+                      <LayoutDashboard className="h-4 w-4" />
+                      Creator dashboard
                     </Link>
                   </DropdownMenuItem>
-                )}
 
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/profile/edit"
-                    className="text-gray-300 focus:bg-white/5 focus:text-white"
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings/profile" className={menuItemClass}>
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className="bg-white/10" />
+
+                  <DropdownMenuItem
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="flex cursor-pointer items-center gap-2.5 text-red-400 focus:bg-white/5 focus:text-red-300"
                   >
-                    Edit Profile
-                  </Link>
-                </DropdownMenuItem>
-
-                {/* Moved inside DropdownMenuContent (this was the error) */}
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/notification"
-                    className="text-gray-300 focus:bg-white/5 focus:text-white"
-                  >
-                    Notifications
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/settings"
-                    className="text-gray-300 focus:bg-white/5 focus:text-white"
-                  >
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => signOut()}
-                  className="text-red-400 focus:bg-white/5 focus:text-red-300"
-                >
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => signIn()}
-              className="text-gray-300 hover:text-white cursor-pointer hover:bg-white/10"
-            >
-              Log in
-            </Button>
-            <Link href="/register">
+                    <LogOut className="h-4 w-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
               <Button
+                variant="ghost"
                 size="sm"
-                className="bg-violet-600 hover:bg-violet-500 cursor-pointer text-white"
+                onClick={() => signIn()}
+                className="cursor-pointer text-gray-300 hover:bg-white/10 hover:text-white"
               >
-                Sign up
+                Log in
               </Button>
-            </Link>
-          </div>
-        )}
+              <Link href="/register">
+                <Button
+                  size="sm"
+                  className="cursor-pointer bg-violet-600 text-white hover:bg-violet-500"
+                >
+                  Sign up
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

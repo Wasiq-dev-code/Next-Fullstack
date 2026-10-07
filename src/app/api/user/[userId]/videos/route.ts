@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/validations/requireAuth';
 import { VideoQuery } from '@/types/result';
 import User from '@/model/User.model';
 import Video from '@/model/Video.model';
+import Follow from '@/model/Follow.model'; // change to the model your toggleFollow route uses
 import mongoose from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -22,18 +23,40 @@ export async function GET(
 
     // Soft auth (optional)
     const auth = await requireAuth();
-    const authUserId = auth.ok ? auth.data : null;
+    const viewerId = auth.ok ? String(auth.data) : null;
 
     const user = await User.findById(userId).select('+isPrivate');
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Private profile protection
-    if (user.isPrivate && authUserId !== userId) {
+    // Private profile protection: owner and followers may view
+    const isOwner = viewerId === userId;
+    let canView = !user.isPrivate || isOwner;
+
+    if (!canView && viewerId) {
+      const viewerObjId = new mongoose.Types.ObjectId(viewerId);
+      const targetObjId = new mongoose.Types.ObjectId(userId);
+
+      // Tries the common field-name pairs, since the schema isn't known.
+      // Replace with the single exact pair once confirmed.
+      const follows = await Follow.exists({
+        $or: [
+          { follower: viewerObjId, following: targetObjId },
+          { followerId: viewerObjId, followingId: targetObjId },
+          { follower: viewerObjId, followee: targetObjId },
+          { follower: viewerObjId, followTo: targetObjId },
+          { user: viewerObjId, followTo: targetObjId },
+        ],
+      });
+      canView = !!follows;
+    }
+
+    if (!canView) {
       return NextResponse.json(
         {
           message: 'Profile is private',
+          isPrivate: true,
           videos: [],
           nextCursor: null,
         },
@@ -59,8 +82,6 @@ export async function GET(
       { $match: query },
       { $sort: { createdAt: -1 } },
       { $limit: LIMIT },
-
-      // owner info
       {
         $lookup: {
           from: 'users',
@@ -70,7 +91,6 @@ export async function GET(
         },
       },
       { $unwind: '$owner' },
-
       {
         $lookup: {
           from: 'likes',
@@ -79,11 +99,7 @@ export async function GET(
           as: 'likes',
         },
       },
-      {
-        $addFields: {
-          likesCount: { $size: '$likes' },
-        },
-      },
+      { $addFields: { likesCount: { $size: '$likes' } } },
       {
         $project: {
           _id: 1,

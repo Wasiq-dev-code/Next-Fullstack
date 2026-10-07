@@ -24,16 +24,11 @@ export default function VideoFeed() {
         </div>
 
         {/* Videos Grid: 1 col mobile, 2 tablet, 3 laptop, 4 large screens */}
-        <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {videos.map((video) => (
-            <div
-              key={video._id.toString()}
-              className="overflow-hidden rounded-2xl border border-white/10 bg-[#20222b] shadow-xl shadow-black/20 transition-shadow duration-300 hover:border-violet-500/30 hover:shadow-violet-950/20"
-            >
-              <VideoInfo videoObj={video} />
-            </div>
-          ))}
-        </div>
+       <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+  {videos.map((v) => (
+    <VideoInfo key={v._id} videoObj={v} />
+  ))}
+</div>
 
         {/* Loading State */}
         {loading && (
