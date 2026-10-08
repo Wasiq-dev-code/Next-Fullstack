@@ -26,6 +26,7 @@ import {
 import { emailVeri, RegisterUserDTO, RegisterUserResponse } from '@/types/user';
 import { NotificationLevel, NotificationListResponse } from '@/types/notification';
 import { ChannelStatsResponse } from '@/types/channel';
+import { AnalyticsRange } from '@/types/analytics';
 
 class ApiClient {
   private async fetch<T>(
@@ -301,6 +302,15 @@ class ApiClient {
 
 async fetchChannelStats(): Promise<ChannelStatsResponse> {
   return await this.fetch<ChannelStatsResponse>('/channel/stats');
+}
+
+async fetchAnalytics<T>(
+  endpoint: string,
+  range: AnalyticsRange,
+  extra: Record<string, string> = {},
+): Promise<T> {
+  const qs = new URLSearchParams({ range, ...extra });
+  return this.fetch<T>(`/analytics/${endpoint}?${qs}`);
 }
 }
 
