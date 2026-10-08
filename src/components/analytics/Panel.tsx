@@ -1,7 +1,7 @@
-
 'use client';
 
 import { ReactNode } from 'react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface State {
   data: unknown | null;
@@ -26,15 +26,20 @@ export function AsyncBlock({
   // Error state
   if (!state.data && state.error) {
     return (
-      <div className="rounded-lg border border-red-900/50 bg-red-950/20 px-4 py-3 text-sm text-red-300">
-        <div className="flex flex-wrap items-center gap-2">
-          <span>{state.error}</span>
+      <div className="flex min-h-24 items-center justify-center">
+        <div className="flex items-center gap-3 rounded-lg border border-red-500/10 bg-red-500/[0.04] px-4 py-3">
+          <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+
+          <span className="text-sm text-slate-400">
+            {state.error}
+          </span>
 
           <button
             type="button"
             onClick={state.retry}
-            className="font-medium text-red-200 underline underline-offset-2 transition-colors hover:text-white"
+            className="ml-1 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 transition-colors hover:text-white"
           >
+            <RefreshCw className="h-3.5 w-3.5" />
             Retry
           </button>
         </div>
@@ -48,7 +53,7 @@ export function AsyncBlock({
       <div
         className={[
           'w-full animate-pulse rounded-lg',
-          'bg-slate-800/50',
+          'bg-gradient-to-r from-slate-800/40 via-slate-800/60 to-slate-800/40',
           skeletonClass,
         ].join(' ')}
         aria-hidden="true"
@@ -61,7 +66,7 @@ export function AsyncBlock({
     <div
       className={[
         'w-full min-w-0 transition-opacity duration-200',
-        state.loading ? 'opacity-60' : 'opacity-100',
+        state.loading ? 'opacity-50' : 'opacity-100',
       ].join(' ')}
     >
       {children}
@@ -70,10 +75,10 @@ export function AsyncBlock({
 }
 
 /**
- * Reusable analytics card.
+ * Reusable analytics panel.
  *
- * The panel does not control the height of its content.
- * Its height is determined naturally by whatever is inside it.
+ * Provides consistent dashboard framing while allowing
+ * the content to determine its own height.
  */
 export function Panel({
   title,
@@ -89,22 +94,24 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/40 shadow-sm">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950 shadow-sm">
       {/* Header */}
-      <div className="flex min-h-14 items-center justify-between gap-4 border-b border-slate-800/70 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-100">
-          {title}
-        </h2>
+      <header className="flex min-h-[64px] items-center justify-between gap-4 border-b border-slate-800/70 px-5 sm:px-6">
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-semibold tracking-tight text-white">
+            {title}
+          </h2>
+        </div>
 
         {actions && (
-          <div className="shrink-0">
+          <div className="flex shrink-0 items-center">
             {actions}
           </div>
         )}
-      </div>
+      </header>
 
       {/* Content */}
-      <div className="min-w-0 p-5">
+      <div className="min-w-0 p-5 sm:p-6">
         <AsyncBlock
           state={state}
           skeletonClass={skeletonClass}
@@ -115,4 +122,3 @@ export function Panel({
     </section>
   );
 }
-
