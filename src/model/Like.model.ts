@@ -5,6 +5,8 @@ export interface ILike {
   video?: mongoose.Types.ObjectId;
   comment?: mongoose.Types.ObjectId;
   userLiked: mongoose.Types.ObjectId;
+  targetOwner: mongoose.Types.ObjectId;
+  type:string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -26,10 +28,17 @@ const likeSchema = new Schema<ILike>(
       ref: 'User',
       required: true,
     },
+    targetOwner: { 
+      type: Schema.Types.ObjectId,
+       ref: 'User',
+      required: true
+     },
+
+    type: { 
+      type: String, enum: ['like', 'dislike'], default: 'like' 
+    },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: { createdAt: true, updatedAt: false } }
 );
 
 likeSchema.path('video').validate(function () {
@@ -47,6 +56,10 @@ likeSchema.index(
   { userLiked: 1, comment: 1 },
   { unique: true, partialFilterExpression: { comment: { $exists: true } } },
 );
+
+likeSchema.index({ video: 1, createdAt: -1 }, { partialFilterExpression: { video: { $exists: true } } });
+likeSchema.index({ comment: 1, createdAt: -1 }, { partialFilterExpression: { comment: { $exists: true } } });
+likeSchema.index({ targetOwner: 1, createdAt: -1 });
 
 const Like = models?.Like || model<ILike>('Like', likeSchema);
 
